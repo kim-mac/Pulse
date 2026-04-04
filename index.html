@@ -1,0 +1,3272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PulseBoard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg: #f5f2ee;
+      --surface: #eae5dd;
+      --card: #ffffff;
+      --border: rgba(26, 26, 46, 0.1);
+      --ink: #1a1a2e;
+      --ink-soft: rgba(26, 26, 46, 0.06);
+      --text-primary: #1a1a2e;
+      --text-secondary: rgba(26, 26, 46, 0.55);
+      --text-muted: rgba(26, 26, 46, 0.3);
+      --urgent: #c0392b;
+      --urgent-bg: rgba(192, 57, 43, 0.08);
+      --notable: #b7770d;
+      --notable-bg: rgba(183, 119, 13, 0.08);
+      --fyi: rgba(26, 26, 46, 0.45);
+      --fyi-bg: rgba(26, 26, 46, 0.04);
+      --success: #3b6d11;
+      --success-bg: rgba(59, 109, 17, 0.08);
+      --danger-bg: rgba(192, 57, 43, 0.1);
+      --shadow: 0 18px 48px rgba(26, 26, 46, 0.08);
+      --max-width: 1180px;
+      --transition: 220ms ease;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at top left, rgba(255,255,255,0.82), transparent 34%),
+        radial-gradient(circle at bottom right, rgba(234,229,221,0.9), transparent 36%),
+        var(--bg);
+      color: var(--text-primary);
+      font-family: "DM Sans", sans-serif;
+      line-height: 1.6;
+    }
+
+    button, input, select, textarea { font: inherit; color: inherit; }
+    button { border: 0; background: none; cursor: pointer; }
+    [hidden] { display: none !important; }
+
+    .app-shell { width: min(100%, var(--max-width)); margin: 0 auto; padding: 20px; }
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin: 12px 0 28px;
+      padding: 18px 22px;
+      border: 1px solid var(--border);
+      border-radius: 30px;
+      background: rgba(234, 229, 221, 0.88);
+      backdrop-filter: blur(14px);
+      box-shadow: 0 10px 32px rgba(26, 26, 46, 0.04);
+    }
+
+    .brand-lockup, .topbar-actions, .status-inline, .card-header, .utility-row, .dashboard-header, .brief-header, .tier-heading, .provider-row, .section-intro {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-lockup { min-width: 0; padding: 0; text-align: left; }
+    .topbar-actions { justify-content: flex-end; flex-wrap: wrap; }
+    .brand-mark {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: var(--card);
+      border: 1px solid var(--border);
+    }
+
+    .brand-title, .hero-title, .connection-title {
+      margin: 0;
+      font-family: "Playfair Display", serif;
+      letter-spacing: -0.03em;
+    }
+
+    .brand-title { font-size: 24px; }
+    .brand-meta, .muted { color: var(--text-secondary); }
+    .brand-meta { font-size: 12px; display: flex; gap: 10px; flex-wrap: wrap; }
+
+    .badge, .status-badge, .phase-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.75);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .status-badge.complete { color: var(--success); background: var(--success-bg); }
+    .status-badge.analyzing { color: var(--ink); background: rgba(26,26,46,0.08); }
+    .status-badge.error { color: var(--urgent); background: var(--danger-bg); }
+    .status-badge.waiting { color: var(--text-secondary); background: rgba(26,26,46,0.05); }
+    .dot, .spinner {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .dot { background: currentColor; animation: pulse 1.5s ease-in-out infinite; }
+    .spinner {
+      border: 2px solid rgba(26,26,46,0.18);
+      border-top-color: currentColor;
+      background: transparent;
+      animation: spin 0.8s linear infinite;
+    }
+
+    .ghost-button, .secondary-button, .chip, .cta-button {
+      transition: transform var(--transition), background var(--transition), border-color var(--transition), opacity var(--transition);
+    }
+
+    .ghost-button, .secondary-button, .chip {
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.72);
+      color: var(--ink);
+    }
+
+    .ghost-button, .secondary-button {
+      padding: 11px 16px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .ghost-button:hover, .secondary-button:hover, .chip:hover, .cta-button:hover:not(:disabled) {
+      transform: translateY(-1px);
+    }
+
+    .panel, .hero, .query-panel, .dashboard, .brief-section, .connection-card, .modal-card {
+      border-radius: 30px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.82);
+      box-shadow: var(--shadow);
+    }
+
+    .hero {
+      padding: clamp(28px, 5vw, 52px);
+      margin-bottom: 28px;
+      overflow: hidden;
+      background: linear-gradient(145deg, rgba(255,255,255,0.88), rgba(245,242,238,0.9)), var(--card);
+    }
+
+    .hero-grid, .query-form-row, .connection-grid, .score-grid, .brief-columns, .signal-grid {
+      display: grid;
+      gap: 16px;
+    }
+
+    .hero-grid { grid-template-columns: minmax(0,1.25fr) minmax(300px,0.75fr); align-items: stretch; }
+    .hero-rail { display: grid; gap: 14px; align-content: start; }
+    .eyebrow {
+      display: inline-flex;
+      gap: 10px;
+      margin-bottom: 16px;
+      color: var(--text-secondary);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+    .hero-title { font-size: clamp(42px, 8vw, 76px); line-height: 0.98; max-width: 10ch; }
+    .hero-subtitle { margin: 14px 0 0; max-width: 52ch; color: var(--text-secondary); }
+    .hero-rail, .info-note, .mini-panel, .list-card, .tier-card, .modal-note {
+      padding: 16px;
+      border-radius: 20px;
+      border: 1px solid rgba(26,26,46,0.08);
+      background: rgba(26,26,46,0.03);
+    }
+
+    .section-intro {
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+    .section-intro > :first-child {
+      flex: 1 1 320px;
+      min-width: 0;
+    }
+
+    .metric-label, .query-label, .score-label, .list-meta, .meta-label {
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .metric-value, .metric-big, .score-value { font-size: 26px; font-weight: 700; color: var(--ink); line-height: 1.05; }
+    .metric-direction {
+      margin-top: 8px;
+      color: var(--text-secondary);
+      font-size: 11px;
+      line-height: 1.4;
+    }
+    .mini-panel {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: flex-start;
+      gap: 10px;
+      min-height: 148px;
+      height: 100%;
+    }
+    .mini-panel p,
+    .info-note p,
+    .list-card p,
+    .tier-card p,
+    .modal-note p { margin: 0; }
+    .mini-panel strong,
+    .info-note strong,
+    .list-card strong,
+    .tier-card strong { display: block; line-height: 1.3; }
+    .list-card ul,
+    .list-card ol {
+      margin: 12px 0 0;
+      padding-left: 18px;
+    }
+    .signal-grid > .mini-panel,
+    .score-grid > .score-card,
+    .csv-metric-grid > .csv-metric-card,
+    .csv-insight-grid > .csv-insight-card { align-self: stretch; }
+    .query-panel, .dashboard, .brief-section, .connection-card { padding: 24px; margin-bottom: 28px; }
+    .section-title { margin: 0; font-size: 22px; font-weight: 500; letter-spacing: -0.02em; }
+    .section-subtitle { margin: 6px 0 0; color: var(--text-secondary); font-size: 13px; }
+    .query-form { display: grid; gap: 18px; }
+    .query-form-row { grid-template-columns: 1.45fr 0.85fr; align-items: end; }
+    .query-input, .mode-select, .field-input, .field-select, .field-textarea {
+      width: 100%;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--ink);
+      padding: 16px 18px;
+      border-radius: 18px;
+      outline: none;
+    }
+
+    .field-textarea { min-height: 78px; resize: vertical; }
+    .cta-button {
+      width: 100%;
+      padding: 17px 18px;
+      border-radius: 18px;
+      background: var(--ink);
+      color: var(--bg);
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      box-shadow: 0 16px 32px rgba(26,26,46,0.16);
+    }
+
+    .cta-button:disabled { opacity: 0.6; cursor: not-allowed; }
+    .chip-row, .tag-row, .badge-row { display: flex; flex-wrap: wrap; gap: 10px; }
+    .chip { padding: 9px 14px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+
+    .connection-card {
+      width: min(100%, 760px);
+      margin-inline: auto;
+      text-align: left;
+      background: linear-gradient(160deg, rgba(255,255,255,0.96), rgba(245,242,238,0.92)), var(--card);
+    }
+
+    .connection-title { font-size: clamp(28px, 4vw, 44px); line-height: 1.05; }
+    .connection-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 20px; align-items: stretch; }
+    .provider-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(26,26,46,0.04);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .dashboard-header, .brief-header, .utility-row { justify-content: space-between; flex-wrap: wrap; }
+    .progress-track, .score-track { width: 100%; background: rgba(26,26,46,0.08); border-radius: 999px; overflow: hidden; }
+    .progress-track { height: 3px; margin-top: 10px; }
+    .progress-fill, .score-fill { height: 100%; transition: width 320ms ease; }
+    .progress-fill { width: 0; background: var(--ink); }
+    .aggregator-banner {
+      display: none;
+      align-items: center;
+      gap: 12px;
+      margin: 18px 0 20px;
+      padding: 14px 18px;
+      border-radius: 18px;
+      border: 1px solid var(--border);
+      background: rgba(26,26,46,0.05);
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .aggregator-banner.visible { display: flex; }
+    .agent-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+    .agent-card {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      min-height: 285px;
+      padding: 22px;
+      border-radius: 24px;
+      border: 1px solid var(--border);
+      background: var(--card);
+    }
+    .agent-card.full-span { grid-column: 1 / -1; }
+    .list-stack, .summary-stack, .tier-stack { display: grid; gap: 14px; }
+    .summary-stack { align-content: start; }
+    .pill, .tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 7px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .pill.positive, .tag.positive { background: var(--success-bg); color: var(--success); }
+    .pill.warning, .tag.warning { background: var(--notable-bg); color: var(--notable); }
+    .pill.danger, .tag.danger { background: var(--urgent-bg); color: var(--urgent); }
+    .pill.neutral, .tag.neutral { background: var(--fyi-bg); color: var(--fyi); }
+
+    .brief-summary {
+      padding: 22px;
+      margin-bottom: 20px;
+      border-radius: 26px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.78);
+    }
+    .one-line-summary { margin: 0; font-size: clamp(22px, 2.7vw, 34px); font-weight: 500; line-height: 1.15; }
+    .csv-summary-callout {
+      padding: 28px 26px;
+      border-left: 4px solid var(--ink);
+      background: linear-gradient(160deg, rgba(255,255,255,0.94), rgba(245,242,238,0.9));
+    }
+    .csv-summary-callout .one-line-summary {
+      font-family: "Playfair Display", serif;
+      font-size: clamp(22px, 2.8vw, 36px);
+      line-height: 1.18;
+      letter-spacing: -0.02em;
+    }
+    .score-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 18px; }
+    .score-card {
+      padding: 18px;
+      border-radius: 22px;
+      border: 1px solid rgba(26,26,46,0.08);
+      background: rgba(26,26,46,0.03);
+    }
+    .score-track { height: 8px; margin-top: 12px; }
+    .score-fill.risk { background: linear-gradient(90deg, #d9725b, var(--urgent)); }
+    .score-fill.opportunity { background: linear-gradient(90deg, #7c9b52, var(--success)); }
+    .brief-columns { grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 20px; }
+    .tier-block { padding: 18px; border-radius: 24px; }
+    .tier-block.urgent { background: var(--urgent-bg); }
+    .tier-block.notable { background: var(--notable-bg); }
+    .tier-block.fyi { background: var(--fyi-bg); }
+    .brief-actions { display: flex; gap: 12px; flex-wrap: wrap; justify-content: flex-end; }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      z-index: 30;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+      background: rgba(26,26,46,0.28);
+      backdrop-filter: blur(8px);
+    }
+
+    .modal-card {
+      width: min(100%, 500px);
+      padding: 18px;
+      background: linear-gradient(160deg, rgba(255,255,255,0.96), rgba(245,242,238,0.92)), var(--card);
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      flex-wrap: nowrap;
+      margin-top: 16px;
+    }
+
+    .modal-actions .secondary-button,
+    .modal-actions .cta-button {
+      width: auto;
+      flex: 1 1 0;
+    }
+
+    .connection-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .connection-grid .field-span { grid-column: 1 / -1; }
+    .field-group { display: grid; gap: 8px; }
+    .field-help { color: var(--text-secondary); font-size: 12px; }
+    .inline-alert {
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: rgba(26,26,46,0.05);
+      color: var(--text-secondary);
+      font-size: 12px;
+    }
+    .inline-alert.warning { background: var(--notable-bg); color: var(--notable); }
+    .inline-alert.error { background: var(--urgent-bg); color: var(--urgent); }
+    .inline-alert.success { background: var(--success-bg); color: var(--success); }
+
+    .csv-upload-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(260px, 0.9fr);
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .mode-toggle {
+      display: inline-flex;
+      gap: 8px;
+      padding: 6px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.72);
+      margin-bottom: 18px;
+    }
+
+    .mode-toggle-button {
+      padding: 10px 16px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      color: var(--text-secondary);
+    }
+
+    .mode-toggle-button.active {
+      background: var(--ink);
+      color: var(--bg);
+      box-shadow: 0 12px 24px rgba(26,26,46,0.12);
+    }
+
+    .csv-dropzone {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 18px;
+      height: 100%;
+      border-radius: 22px;
+      border: 1px dashed rgba(26,26,46,0.18);
+      background: linear-gradient(160deg, rgba(255,255,255,0.92), rgba(245,242,238,0.88));
+    }
+
+    .csv-demo-card {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 18px;
+      height: 100%;
+      border-radius: 22px;
+      border: 1px solid rgba(26,26,46,0.08);
+      background: rgba(26,26,46,0.035);
+    }
+
+    .csv-demo-title,
+    .csv-section-title {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .csv-demo-list {
+      display: grid;
+      gap: 10px;
+      margin: 0;
+      padding-left: 18px;
+      color: var(--text-secondary);
+      font-size: 13px;
+      flex: 1 1 auto;
+    }
+
+    .compare-upload-grid,
+    .file-overview-grid,
+    .schema-grid,
+    .change-columns-grid,
+    .pattern-grid,
+    .anomaly-grid {
+      display: grid;
+      gap: 18px;
+    }
+
+    .compare-upload-grid,
+    .file-overview-grid,
+    .change-columns-grid,
+    .pattern-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+    .schema-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+    .compare-file-card,
+    .file-overview-card,
+    .schema-column,
+    .pattern-card,
+    .anomaly-card,
+    .insight-callout,
+    .data-story-card {
+      padding: 18px;
+      border-radius: 24px;
+      border: 1px solid rgba(26,26,46,0.08);
+      background: rgba(255,255,255,0.76);
+    }
+
+    .compare-file-card {
+      display: grid;
+      gap: 12px;
+      min-height: 100%;
+    }
+
+    .compare-file-card.file-a {
+      background: linear-gradient(160deg, rgba(226,234,245,0.72), rgba(255,255,255,0.88));
+    }
+
+    .compare-file-card.file-b {
+      background: linear-gradient(160deg, rgba(232,241,229,0.8), rgba(255,255,255,0.88));
+    }
+
+    .file-overview-card.file-a { border-color: rgba(96,124,160,0.24); }
+    .file-overview-card.file-b { border-color: rgba(97,133,89,0.24); }
+
+    .overview-stats {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .overview-stat {
+      padding: 14px;
+      border-radius: 18px;
+      border: 1px solid rgba(26,26,46,0.08);
+      background: rgba(255,255,255,0.7);
+    }
+
+    .schema-banner,
+    .compare-banner {
+      padding: 14px 16px;
+      border-radius: 18px;
+      border: 1px solid var(--border);
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 18px;
+    }
+
+    .schema-banner { background: rgba(59,109,17,0.08); color: var(--success); }
+    .compare-banner.warning { background: var(--notable-bg); color: var(--notable); }
+    .compare-banner.alert { background: var(--urgent-bg); color: var(--urgent); }
+
+    .schema-tags,
+    .chip-cluster {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .schema-tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      border: 1px solid rgba(26,26,46,0.08);
+      background: rgba(255,255,255,0.74);
+    }
+
+    .schema-tag.only-a,
+    .chip.negative { background: var(--urgent-bg); color: var(--urgent); }
+    .schema-tag.shared { background: var(--fyi-bg); color: var(--ink); }
+    .schema-tag.only-b,
+    .chip.positive { background: var(--success-bg); color: var(--success); }
+
+    .table-wrap {
+      overflow-x: auto;
+      margin-top: 20px;
+      border-radius: 24px;
+      border: 1px solid rgba(26,26,46,0.08);
+      background: rgba(255,255,255,0.82);
+    }
+
+    .comparison-table {
+      width: 100%;
+      min-width: 760px;
+      border-collapse: collapse;
+    }
+
+    .comparison-table th,
+    .comparison-table td {
+      padding: 14px 16px;
+      text-align: left;
+      border-bottom: 1px solid rgba(26,26,46,0.08);
+      font-size: 13px;
+      vertical-align: top;
+    }
+
+    .comparison-table th {
+      color: var(--text-muted);
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      background: rgba(26,26,46,0.03);
+    }
+
+    .change-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 7px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .change-pill.up { background: var(--success-bg); color: var(--success); }
+    .change-pill.down { background: var(--urgent-bg); color: var(--urgent); }
+    .change-pill.same { background: var(--fyi-bg); color: var(--fyi); }
+
+    .significance-pill.high { background: var(--urgent-bg); color: var(--urgent); }
+    .significance-pill.medium { background: var(--notable-bg); color: var(--notable); }
+    .significance-pill.low { background: var(--fyi-bg); color: var(--fyi); }
+
+    .pattern-card.new { border-left: 4px solid var(--success); }
+    .pattern-card.gone { border-left: 4px solid var(--urgent); }
+    .anomaly-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 20px; }
+    .anomaly-card { display: grid; gap: 10px; }
+    .insight-callout {
+      margin-top: 20px;
+      background: linear-gradient(160deg, rgba(255,255,255,0.92), rgba(245,242,238,0.86));
+    }
+    .insight-callout .one-line-summary { font-size: clamp(24px, 3vw, 36px); }
+    .data-story-card {
+      margin-top: 20px;
+      font-family: "Playfair Display", serif;
+      font-size: clamp(20px, 2.4vw, 28px);
+      line-height: 1.5;
+      background: linear-gradient(160deg, rgba(255,255,255,0.92), rgba(245,242,238,0.86));
+    }
+
+    .charts-section {
+      margin-top: 32px;
+      display: grid;
+      gap: 18px;
+    }
+    .charts-heading {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 500;
+      color: var(--ink);
+    }
+    .chart-card {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #ffffff;
+      padding: 20px;
+      display: grid;
+      gap: 10px;
+    }
+    .chart-card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .chart-title {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--ink);
+      line-height: 1.35;
+    }
+    .chart-reason {
+      margin: 0;
+      font-size: 11px;
+      color: rgba(26,26,46,0.5);
+      line-height: 1.45;
+    }
+    .chart-reason-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 22px;
+      height: 22px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(26,26,46,0.03);
+      color: var(--ink);
+      font-size: 12px;
+      flex-shrink: 0;
+    }
+    .chart-canvas-wrap {
+      position: relative;
+      height: 260px;
+      min-height: 260px;
+    }
+    .chart-empty {
+      min-height: 260px;
+      border-radius: 14px;
+      border: 1px dashed rgba(26,26,46,0.14);
+      display: grid;
+      place-items: center;
+      padding: 20px;
+      color: var(--text-secondary);
+      background: rgba(26,26,46,0.02);
+      text-align: center;
+      font-size: 13px;
+    }
+    .chart-skeleton {
+      min-height: 260px;
+      border-radius: 14px;
+      background: linear-gradient(90deg, rgba(26,26,46,0.05), rgba(26,26,46,0.1), rgba(26,26,46,0.05));
+      background-size: 220% 100%;
+      animation: shimmer 1.4s linear infinite;
+    }
+
+    .csv-helper-text {
+      color: var(--text-secondary);
+      font-size: 13px;
+      margin: 0;
+    }
+
+    .csv-metric-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 18px;
+    }
+
+    .csv-metric-card {
+      padding: 18px;
+      border-radius: 22px;
+      border: 1px solid rgba(26,26,46,0.08);
+      background: linear-gradient(160deg, rgba(255,255,255,0.94), rgba(245,242,238,0.8));
+    }
+
+    .csv-metric-value {
+      margin-top: 10px;
+      font-size: clamp(24px, 3vw, 34px);
+      font-weight: 700;
+      line-height: 1;
+      color: var(--ink);
+    }
+
+    .csv-columns-card,
+    .csv-actions-card {
+      margin-top: 20px;
+      padding: 20px;
+      border-radius: 24px;
+      border: 1px solid rgba(26,26,46,0.08);
+      background: rgba(255,255,255,0.76);
+    }
+
+    .csv-columns-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .csv-insight-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+      margin-top: 20px;
+    }
+
+    .csv-insight-card {
+      padding: 18px;
+      border-radius: 24px;
+      min-height: 100%;
+    }
+
+    .csv-insight-card.findings { background: var(--notable-bg); }
+    .csv-insight-card.risks { background: var(--urgent-bg); }
+    .csv-insight-card.opportunities { background: var(--fyi-bg); }
+
+    .csv-insight-list {
+      display: grid;
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .csv-insight-item {
+      padding: 14px;
+      border-radius: 18px;
+      border: 1px solid rgba(26,26,46,0.08);
+      background: rgba(255,255,255,0.74);
+      font-size: 14px;
+    }
+
+    .csv-empty-state {
+      display: grid;
+      gap: 10px;
+      place-items: start;
+      min-height: 100%;
+      padding: 14px;
+      border-radius: 18px;
+      border: 1px dashed rgba(26,26,46,0.14);
+      background: rgba(255,255,255,0.54);
+      color: var(--text-secondary);
+      font-size: 13px;
+    }
+
+    .csv-actions-card ol {
+      margin: 14px 0 0;
+      padding-left: 20px;
+      display: grid;
+      gap: 0;
+    }
+
+    .csv-actions-card li {
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(26,26,46,0.08);
+    }
+
+    .csv-actions-card li:last-child {
+      border-bottom: 0;
+    }
+
+    .placeholder-stack { display: grid; gap: 12px; margin-top: 12px; }
+    .skeleton-line {
+      height: 12px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, rgba(26,26,46,0.06), rgba(26,26,46,0.12), rgba(26,26,46,0.06));
+      background-size: 200% 100%;
+      animation: shimmer 1.4s linear infinite;
+    }
+
+    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes pulse { 0%, 100% { opacity: 0.45; transform: scale(0.9); } 50% { opacity: 1; transform: scale(1.15); } }
+
+    @media (max-width: 960px) {
+      .hero-grid, .query-form-row, .brief-columns, .score-grid, .connection-grid { grid-template-columns: 1fr; }
+      .csv-upload-grid, .csv-insight-grid, .csv-metric-grid, .compare-upload-grid, .file-overview-grid, .schema-grid, .change-columns-grid, .pattern-grid, .anomaly-grid { grid-template-columns: 1fr; }
+      .agent-grid { grid-template-columns: 1fr; }
+      .agent-card.full-span { grid-column: auto; }
+    }
+
+    @media (max-width: 720px) {
+      .app-shell { padding: 14px; }
+    .topbar, .hero, .query-panel, .dashboard, .brief-section, .connection-card, .modal-card { border-radius: 30px; }
+      .topbar, .dashboard-header, .brief-header, .utility-row { align-items: stretch; }
+      .topbar { flex-direction: column; }
+      .topbar-actions { width: 100%; }
+      .ghost-button, .secondary-button { flex: 1 1 180px; text-align: center; }
+    }
+
+    @media print {
+      body { background: #fff; }
+      .topbar, .hero, .query-panel, .dashboard, .connection-card, .modal, .footnote { display: none !important; }
+      .brief-section { display: block !important; border: 0; box-shadow: none; margin: 0; padding: 0; background: #fff; }
+      .brief-actions { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <button class="brand-lockup" type="button" id="brandHomeButton" aria-label="Go to PulseBoard home">
+        <div class="brand-mark" aria-hidden="true">◌</div>
+        <div>
+          <p class="brand-title">PulseBoard</p>
+          <div class="brand-meta">
+            <span id="topbarMonitoringLabel">Real-time multi-agent intelligence monitor</span>
+          </div>
+        </div>
+      </button>
+      <div class="topbar-actions">
+        <span class="badge" id="providerStatusBadge">Not connected</span>
+<button class="ghost-button" type="button" id="apiKeyButton">Add API Key</button>
+        <button class="ghost-button" type="button" id="newQueryButton">New Query</button>
+        <button class="ghost-button" type="button" id="openCsvButton">Analyze CSV</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero" id="homePage" aria-labelledby="heroTitle">
+        <div class="hero-grid">
+          <div>
+            <div class="eyebrow">Editorial intelligence in under 60 seconds</div>
+            <h1 class="hero-title" id="heroTitle">Type anything. Five agents watch it.</h1>
+            <p class="hero-subtitle">PulseBoard turns a company, industry, or trend into a live intelligence brief. News, hiring, sentiment, regulatory pressure, and competitor motion arrive in parallel, then collapse into one concise briefing you can act on.</p>
+          </div>
+          <aside class="hero-rail">
+            <div class="mini-panel">
+              <div class="metric-label">Signal channels</div>
+              <div class="metric-value">5 live agents</div>
+              <div class="muted">Each card resolves independently as results arrive.</div>
+            </div>
+            <div class="mini-panel">
+              <div class="metric-label">Connection model</div>
+              <div class="muted">Add a provider key for this tab, then launch a monitoring run or CSV analysis when you're ready.</div>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section class="connection-card" id="apiKeyPage" aria-labelledby="connectionTitle" hidden>
+        <div class="section-intro">
+          <div>
+            <p class="badge">Add API Key</p>
+            <h2 class="connection-title" id="connectionTitle">Choose a provider and add credentials for this tab.</h2>
+            <p class="section-subtitle">Keys stay in memory only for this tab and clear on refresh.</p>
+          </div>
+          <div class="provider-row" id="connectionProviderChips"></div>
+        </div>
+        <form id="connectionForm">
+          <div class="connection-grid">
+            <div class="field-group">
+              <label class="query-label" for="providerSelect">Provider</label>
+              <select class="field-select" id="providerSelect" name="provider">
+                <option value="openai">OpenAI</option>
+                <option value="anthropic">Claude / Anthropic</option>
+                <option value="gemini">Google Gemini</option>
+                <option value="nvidia">NVIDIA API</option>
+              </select>
+            </div>
+            <div class="field-group">
+              <label class="query-label" for="providerModelInput">Model</label>
+              <input class="field-input" id="providerModelInput" name="model" type="text" placeholder="Model name" />
+            </div>
+            <div class="field-group field-span">
+              <label class="query-label" for="providerApiKeyInput">API Key</label>
+              <input class="field-input" id="providerApiKeyInput" name="apiKey" type="password" placeholder="Enter API key" autocomplete="off" />
+            </div>
+            <div class="field-group field-span">
+              <label class="query-label" for="providerEndpointInput">Endpoint</label>
+              <input class="field-input" id="providerEndpointInput" name="endpoint" type="text" placeholder="Optional custom endpoint" />
+            </div>
+            <div class="field-group field-span">
+              <label class="query-label" for="providerNotes">Provider Notes</label>
+              <textarea class="field-textarea" id="providerNotes" readonly></textarea>
+            </div>
+          </div>
+          <div class="inline-alert" id="connectionFormMessage">PulseBoard will validate this provider through the local relay before saving the session.</div>
+          <div class="modal-actions">
+            <button class="secondary-button" type="button" id="closeConnectionButton">Back Home</button>
+            <button class="cta-button" type="submit" id="saveConnectionButton">Save API Key</button>
+          </div>
+        </form>
+        <div class="inline-alert" id="connectionStateMessage" style="margin-top:16px;">No active provider session yet. Save a provider key to unlock monitoring and CSV analysis.</div>
+      </section>
+
+      <section class="query-panel" id="queryPage" aria-labelledby="queryHeading" hidden>
+        <div class="section-intro">
+          <div>
+            <h2 class="section-title" id="queryHeading">Start a fresh monitoring run</h2>
+            <p class="section-subtitle">Choose a topic, bias the monitoring mode, and let all five agents fire at once.</p>
+          </div>
+          <span class="badge" id="runCounterBadge">Runs: 0</span>
+        </div>
+        <div class="inline-alert warning" id="queryConnectionPrompt" hidden>Connect a provider on the Add API Key page before launching a monitoring run. <button class="ghost-button" type="button" id="queryConnectButton" style="margin-left:10px;">Go to Add API Key</button></div>
+
+        <form class="query-form" id="queryForm">
+          <div class="field-group">
+            <label class="query-label" for="topicInput">Topic</label>
+            <input class="query-input" id="topicInput" name="topic" type="text" autocomplete="off" placeholder='Type anything to monitor... e.g. "Uber", "pharma industry", "AI startups"' required />
+          </div>
+          <div class="query-form-row">
+            <div class="field-group">
+              <label class="query-label" for="modeSelect">Monitoring mode</label>
+              <select class="mode-select" id="modeSelect" name="mode">
+                <option value="general">General</option>
+                <option value="company">Company Intel</option>
+                <option value="jobmarket">Job Market</option>
+                <option value="esg">ESG Focus</option>
+                <option value="industry">Industry Trends</option>
+              </select>
+            </div>
+            <button class="cta-button" id="runButton" type="submit">Run PulseBoard →</button>
+          </div>
+          <div class="utility-row">
+            <div>
+              <div class="query-label">Demo topics</div>
+              <div class="chip-row" id="chipRow"></div>
+            </div>
+            <div class="inline-alert" id="statusMessage">Choose a supported provider and then launch a monitoring run.</div>
+          </div>
+        </form>
+      </section>
+
+      <section class="query-panel" id="csvPage" aria-labelledby="csvHeading" hidden>
+        <div class="section-intro">
+          <div>
+            <h2 class="section-title" id="csvHeading">CSV Analyst</h2>
+            <p class="section-subtitle">Upload one CSV for a temporary standalone analysis with your connected provider.</p>
+          </div>
+          <span class="badge">Temporary Upload</span>
+        </div>
+        <div class="inline-alert warning" id="csvConnectionPrompt" hidden>Connect a provider on the Add API Key page before running CSV analysis. <button class="ghost-button" type="button" id="csvConnectButton" style="margin-left:10px;">Go to Add API Key</button></div>
+
+        <div class="mode-toggle" role="tablist" aria-label="CSV analysis mode">
+          <button class="mode-toggle-button active" id="csvModeSingle" type="button" aria-pressed="true">Single File Analysis</button>
+          <button class="mode-toggle-button" id="csvModeCompare" type="button" aria-pressed="false">Compare Two Files</button>
+        </div>
+
+        <form class="query-form" id="csvForm">
+          <div class="csv-upload-grid" id="singleCsvSection">
+            <div class="csv-dropzone">
+              <div class="field-group">
+                <label class="query-label" for="csvFileInput">CSV File</label>
+                <input class="field-input" id="csvFileInput" name="csvFile" type="file" accept=".csv" />
+              </div>
+              <p class="csv-helper-text" id="csvInputHelper">Upload a real dataset or use the built-in sample CSV for a fast judge-friendly demo.</p>
+            </div>
+            <aside class="csv-demo-card">
+              <div>
+                <p class="badge">Demo Ready</p>
+                <h3 class="csv-demo-title" style="margin-top:10px;">Instant sample dataset</h3>
+                <p class="csv-helper-text">Load a built-in SaaS revenue health CSV to test the full CSV Analyst flow in seconds.</p>
+              </div>
+              <ol class="csv-demo-list">
+                <li>12 rows across revenue, churn, pipeline, and NPS.</li>
+                <li>Good for OpenAI, NVIDIA, Anthropic, and Gemini smoke demos.</li>
+                <li>Nothing is stored after analysis completes.</li>
+              </ol>
+              <button class="secondary-button" id="useSampleCsvButton" type="button">Use Sample CSV</button>
+            </aside>
+          </div>
+          <div class="compare-upload-grid" id="compareCsvSection" hidden>
+            <section class="compare-file-card file-a">
+              <div class="field-group">
+                <label class="query-label" for="compareFileAInput">File A</label>
+                <input class="field-input" id="compareFileAInput" name="compareFileA" type="file" accept=".csv" />
+              </div>
+              <div class="field-group">
+                <label class="query-label" for="compareLabelAInput">Label for File A</label>
+                <input class="field-input" id="compareLabelAInput" name="compareLabelA" type="text" placeholder="File A" />
+              </div>
+              <p class="csv-helper-text">Use File A as the baseline dataset for comparison.</p>
+            </section>
+            <section class="compare-file-card file-b">
+              <div class="field-group">
+                <label class="query-label" for="compareFileBInput">File B</label>
+                <input class="field-input" id="compareFileBInput" name="compareFileB" type="file" accept=".csv" />
+              </div>
+              <div class="field-group">
+                <label class="query-label" for="compareLabelBInput">Label for File B</label>
+                <input class="field-input" id="compareLabelBInput" name="compareLabelB" type="text" placeholder="File B" />
+              </div>
+              <p class="csv-helper-text">Use File B as the newer or comparison dataset.</p>
+            </section>
+          </div>
+          <div class="field-group">
+            <label class="query-label" for="csvGoalInput">Analysis Goal</label>
+            <textarea class="field-textarea" id="csvGoalInput" name="analysisGoal" placeholder="Optional: what should the analyst focus on?"></textarea>
+          </div>
+          <div class="utility-row">
+            <button class="cta-button" id="runCsvButton" type="submit" style="max-width:320px;">Run Analysis →</button>
+          </div>
+          <div class="inline-alert" id="csvStatusMessage" hidden></div>
+        </form>
+      </section>
+
+      <section class="dashboard" id="dashboard" hidden aria-labelledby="dashboardHeading">
+        <div class="dashboard-header">
+          <div>
+            <h2 class="section-title" id="dashboardHeading">Agent Dashboard</h2>
+            <p class="section-subtitle" id="dashboardSubtitle">Monitoring: —</p>
+          </div>
+          <span class="badge" id="dashboardModePill">Mode: General</span>
+        </div>
+        <div class="muted" id="progressLabel">Progress: 0/5 agents complete</div>
+        <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+        <div class="muted" style="margin-top: 8px;" id="progressDetail">Waiting to start</div>
+        <div class="aggregator-banner" id="aggregatorBanner"><span class="spinner" aria-hidden="true"></span><span>⚡ Aggregator synthesizing the intelligence brief...</span></div>
+        <div class="agent-grid" id="agentGrid"></div>
+      </section>
+
+      <section class="brief-section" id="briefSection" hidden aria-labelledby="briefHeading"></section>
+      <section class="brief-section" id="csvResultSection" hidden aria-labelledby="csvResultHeading"></section>
+    </main>
+
+    <p class="footnote muted">Session-only connection settings. No credentials are persisted across refreshes.</p>
+  </div>
+
+  <script>
+    const SAMPLE_CSV_TEXT = `month,region,revenue,active_customers,churn_rate,pipeline_value,nps
+2026-01,North America,182000,1480,0.041,235000,49
+2026-01,Europe,126500,1015,0.038,168000,52
+2026-01,APAC,98500,870,0.054,142000,44
+2026-02,North America,194500,1535,0.039,248500,51
+2026-02,Europe,131000,1048,0.036,174000,54
+2026-02,APAC,103000,905,0.05,151500,46
+2026-03,North America,205000,1598,0.034,261000,56
+2026-03,Europe,137500,1092,0.033,181500,57
+2026-03,APAC,111500,948,0.047,160000,48
+2026-04,North America,214000,1644,0.031,273000,58
+2026-04,Europe,143000,1125,0.032,188500,59
+2026-04,APAC,118500,990,0.043,169500,50`;
+
+    const DEMO_TOPICS = [
+      { label: "Uber", mode: "company" },
+      { label: "UBS", mode: "company" },
+      { label: "L'Oréal", mode: "esg" },
+      { label: "Sikich", mode: "company" },
+      { label: "GEICO", mode: "company" },
+      { label: "pharma industry", mode: "industry" },
+      { label: "AI startups", mode: "industry" },
+      { label: "ZS Associates", mode: "company" }
+    ];
+
+    const MODE_LABELS = {
+      general: "General",
+      company: "Company Intel",
+      jobmarket: "Job Market",
+      esg: "ESG Focus",
+      industry: "Industry Trends"
+    };
+
+    const ROUTES = {
+      home: "/",
+      query: "/query",
+      csv: "/csv",
+      apiKey: "/api-key"
+    };
+
+    const MODE_MODIFIERS = {
+      general: "Provide balanced coverage across all signal types.",
+      company: "Focus heavily on company health, culture, hiring signals, and competitive position.",
+      jobmarket: "Prioritize hiring trends, role demand, salary signals, and workforce movement.",
+      esg: "Weight ESG performance, sustainability commitments, and regulatory compliance heavily.",
+      industry: "Scan industry-wide trends, not just a single company. Look for sector patterns and macro movement."
+    };
+
+    // supportsWebSearch true false provider metadata retained for relay/native capability distinction.
+    const PROVIDER_PRESETS = {
+      openai: {
+        label: "OpenAI",
+        defaultModel: "gpt-4o",
+        defaultEndpoint: "https://api.openai.com/v1",
+        supportsWebSearch: true,
+        supportsPulseboard: true,
+        notes: "OpenAI runs through the local relay and uses the shared backend search pipeline for PulseBoard agents."
+      },
+      anthropic: {
+        label: "Claude / Anthropic",
+        defaultModel: "claude-3-7-sonnet-latest",
+        defaultEndpoint: "https://api.anthropic.com/v1/messages",
+        supportsWebSearch: false,
+        supportsPulseboard: true,
+        notes: "Claude runs through the local relay. Shared backend search gathers evidence before the Anthropic model is invoked."
+      },
+      gemini: {
+        label: "Google Gemini",
+        defaultModel: "gemini-1.5-pro",
+        defaultEndpoint: "https://generativelanguage.googleapis.com/v1beta/models",
+        supportsWebSearch: false,
+        supportsPulseboard: true,
+        notes: "Gemini runs through the local relay. Shared backend search gathers evidence before Gemini generates JSON."
+      },
+      nvidia: {
+        label: "NVIDIA API",
+        defaultModel: "openai/gpt-oss-20b",
+        defaultEndpoint: "https://integrate.api.nvidia.com/v1",
+        supportsWebSearch: false,
+        supportsPulseboard: true,
+        notes: "NVIDIA runs through the local relay using an OpenAI-compatible base URL and shared backend search evidence."
+      }
+    };
+
+    const AGENT_CONFIGS = [
+      {
+        key: "news",
+        name: "News Watcher",
+        icon: "📰",
+        focus: "Recent developments, activity level, and time-sensitive headlines.",
+        fullSpan: false,
+        useWebSearch: true,
+        systemPrompt: `You are an intelligence analyst monitoring news. Search for recent news about the topic. Return ONLY valid JSON with this exact shape:
+{"headlines":[{"title":"string","summary":"string","sentiment":"positive|negative|neutral","recency":"string"}],"overallSentiment":"positive|negative|mixed|neutral","biggestStory":"string","signalStrength":0,"urgencyFlag":true}`
+      },
+      {
+        key: "jobs",
+        name: "Job Signal Tracker",
+        icon: "💼",
+        focus: "Hiring momentum, strategic role demand, and warning signs.",
+        fullSpan: false,
+        useWebSearch: true,
+        systemPrompt: `You are a talent market analyst monitoring hiring signals. Return ONLY valid JSON with this exact shape:
+{"hiringVelocity":"accelerating|stable|slowing|freezing","velocityScore":0,"hotRoles":["string","string","string"],"hiringSignal":"string","redFlags":["string"],"opportunitySignal":"string"}`
+      },
+      {
+        key: "sentiment",
+        name: "Sentiment Analyzer",
+        icon: "💬",
+        focus: "Reputation, public perception, and stakeholder mood.",
+        fullSpan: false,
+        useWebSearch: true,
+        systemPrompt: `You are a brand intelligence analyst monitoring public perception. Return ONLY valid JSON with this exact shape:
+{"sentimentScore":0,"sentimentLabel":"string","whatPeopleAreSaying":[{"theme":"string","sentiment":"pos|neg|neutral","detail":"string"}],"audienceBreakdown":{"employees":"string","customers":"string","investors":"string"},"reputationRisk":"low|medium|high","reputationInsight":"string"}`
+      },
+      {
+        key: "regulatory",
+        name: "Regulatory & ESG Scanner",
+        icon: "🏛️",
+        focus: "Compliance pressure, ESG standing, and watchlist events.",
+        fullSpan: false,
+        useWebSearch: true,
+        systemPrompt: `You are a regulatory and ESG analyst. Return ONLY valid JSON with this exact shape:
+{"regulatoryRisk":"low|medium|high|critical","recentRegActions":[{"action":"string","impact":"low|medium|high","detail":"string"}],"esgScore":0,"esgLabel":"string","esgHighlights":["string","string"],"watchlist":["string","string"],"complianceInsight":"string"}`
+      },
+      {
+        key: "competitor",
+        name: "Competitor Tracker",
+        icon: "🎯",
+        focus: "Competitive threats, differentiators, and market motion.",
+        fullSpan: true,
+        useWebSearch: true,
+        systemPrompt: `You are a competitive intelligence analyst. Return ONLY valid JSON with this exact shape:
+{"topCompetitors":[{"name":"string","threat":"low|medium|high","recentMove":"string"}],"competitiveLandscape":"consolidating|stable|disrupted|emerging","marketPosition":"string","biggestThreat":"string","opportunity":"string","differentiator":"string"}`
+      }
+    ];
+
+    const AGGREGATOR_PROMPT = `You are a senior intelligence analyst synthesizing 5 agent reports. Return ONLY valid JSON with this exact shape:
+{"subjectSummary":"string","overallRiskScore":0,"overallOpportunityScore":0,"urgent":[{"finding":"string","source":"string","action":"string"}],"notable":[{"finding":"string","source":"string","whyItMatters":"string"}],"fyi":[{"finding":"string","context":"string"}],"oneLineSummary":"string","recommendedActions":["string","string","string"],"monitoringFrequency":"string"}`;
+
+    /**
+     * Normalized provider shape:
+     * provider: "openai" | "anthropic" | "gemini" | "nvidia"
+     */
+    const state = {
+      route: "home",
+      connection: null,
+      topic: "",
+      mode: "general",
+      csvMode: "single",
+      csvResult: null,
+      csvComparison: null,
+      csvChartPayload: null,
+      csvSourceLabel: "",
+      runCount: 0,
+      activeRunId: 0,
+      dashboardVisible: false,
+      briefVisible: false,
+      csvResultVisible: false,
+      agentStatus: createInitialStatuses(),
+      agentResults: createInitialResults()
+    };
+
+    const elements = {};
+    const chartInstances = {};
+
+    document.addEventListener("DOMContentLoaded", () => {
+      cacheElements();
+      renderDemoChips();
+      renderAgentCards();
+      bindEvents();
+      syncProviderForm();
+      renderCsvMode();
+      state.route = getRouteFromLocation();
+      applyRouteState();
+      renderConnectionSummary();
+      setStatusMessage("Configure a provider session to begin.", "warning");
+    });
+
+    function cacheElements() {
+      const ids = [
+        "topbarMonitoringLabel", "providerStatusBadge", "apiKeyButton", "newQueryButton", "brandHomeButton",
+        "homePage", "apiKeyPage", "connectionProviderChips", "connectionStateMessage",
+        "openCsvButton", "queryPage", "csvPage", "queryConnectionPrompt", "csvConnectionPrompt", "queryConnectButton", "csvConnectButton", "topicInput",
+        "modeSelect", "queryForm", "runButton", "statusMessage", "runCounterBadge", "chipRow",
+        "dashboard", "dashboardSubtitle", "dashboardModePill", "progressLabel", "progressFill",
+        "progressDetail", "aggregatorBanner", "agentGrid", "briefSection", "csvResultSection",
+        "connectionForm", "providerSelect", "providerModelInput", "providerApiKeyInput",
+        "providerEndpointInput", "providerNotes", "connectionFormMessage", "closeConnectionButton",
+        "saveConnectionButton", "csvForm", "csvFileInput", "csvGoalInput",
+        "runCsvButton", "csvStatusMessage", "useSampleCsvButton", "csvInputHelper",
+        "csvModeSingle", "csvModeCompare", "singleCsvSection", "compareCsvSection",
+        "compareFileAInput", "compareFileBInput", "compareLabelAInput", "compareLabelBInput"
+      ];
+      for (const id of ids) elements[id] = document.getElementById(id);
+    }
+
+    function bindEvents() {
+      window.addEventListener("popstate", handlePopState);
+      elements.brandHomeButton.addEventListener("click", () => navigateTo("home"));
+      elements.apiKeyButton.addEventListener("click", openConnectionModal);
+      if (elements.closeConnectionButton) elements.closeConnectionButton.addEventListener("click", closeConnectionModal);
+      elements.newQueryButton.addEventListener("click", handleNewQueryClick);
+      elements.openCsvButton.addEventListener("click", handleCsvEntryClick);
+      elements.queryConnectButton.addEventListener("click", () => navigateTo("apiKey"));
+      elements.csvConnectButton.addEventListener("click", () => navigateTo("apiKey"));
+      elements.useSampleCsvButton.addEventListener("click", applySampleCsv);
+      elements.csvModeSingle.addEventListener("click", () => setCsvMode("single"));
+      elements.csvModeCompare.addEventListener("click", () => setCsvMode("compare"));
+      elements.providerSelect.addEventListener("change", syncProviderForm);
+      elements.connectionForm.addEventListener("submit", saveConnectionFromForm);
+      elements.queryForm.addEventListener("submit", handleRunSubmit);
+      elements.csvForm.addEventListener("submit", handleCsvSubmit);
+    }
+
+    function createInitialStatuses() {
+      return { news: "waiting", jobs: "waiting", sentiment: "waiting", regulatory: "waiting", competitor: "waiting", aggregator: "waiting" };
+    }
+
+    function createInitialResults() {
+      return { news: null, jobs: null, sentiment: null, regulatory: null, competitor: null, aggregator: null };
+    }
+
+    function renderDemoChips() {
+      elements.chipRow.innerHTML = "";
+      for (const demo of DEMO_TOPICS) {
+        const chip = document.createElement("button");
+        chip.type = "button";
+        chip.className = "chip";
+        chip.textContent = demo.label;
+        chip.addEventListener("click", () => {
+          elements.topicInput.value = demo.label;
+          elements.modeSelect.value = demo.mode;
+        });
+        elements.chipRow.appendChild(chip);
+      }
+    }
+
+    function renderAgentCards() {
+      elements.agentGrid.innerHTML = "";
+      for (const agent of AGENT_CONFIGS) {
+        const card = document.createElement("article");
+        card.className = `agent-card${agent.fullSpan ? " full-span" : ""}`;
+        card.id = `agent-card-${agent.key}`;
+        card.innerHTML = `
+          <div class="section-intro" style="margin-bottom:0;">
+            <div class="card-header">
+              <div class="brand-mark" aria-hidden="true" style="width:44px;height:44px;border-radius:16px;">${agent.icon}</div>
+              <div><h3 style="margin:0;font-size:15px;">${agent.name}</h3><p class="section-subtitle" style="margin-top:4px;">${agent.focus}</p></div>
+            </div>
+            <div class="status-badge waiting" id="status-${agent.key}"><span class="dot"></span><span>Waiting</span></div>
+          </div>
+          <div id="body-${agent.key}" class="summary-stack">
+            <p class="muted">${agent.focus}</p>
+            <div class="placeholder-stack"><div class="skeleton-line"></div><div class="skeleton-line"></div><div class="skeleton-line"></div></div>
+          </div>
+        `;
+        elements.agentGrid.appendChild(card);
+      }
+    }
+
+    function syncProviderForm() {
+      const provider = elements.providerSelect.value;
+      const preset = PROVIDER_PRESETS[provider];
+      if (!elements.providerModelInput.value || elements.providerModelInput.dataset.autofill === "true") {
+        elements.providerModelInput.value = preset.defaultModel;
+        elements.providerModelInput.dataset.autofill = "true";
+      }
+      if (!elements.providerEndpointInput.value || elements.providerEndpointInput.dataset.autofill === "true") {
+        elements.providerEndpointInput.value = preset.defaultEndpoint;
+        elements.providerEndpointInput.dataset.autofill = "true";
+      }
+      elements.providerNotes.value = preset.notes;
+      const message = `${preset.label} will be validated through the local relay. Shared backend search is used for full Phase 1 monitoring runs across providers.`;
+      setConnectionFormMessage(message, "success");
+    }
+
+    function getRouteFromLocation() {
+      const pathname = window.location.pathname.replace(/\/+$/, "") || "/";
+      if (pathname === "/query") return "query";
+      if (pathname === "/csv") return "csv";
+      if (pathname === "/api-key") return "apiKey";
+      return "home";
+    }
+
+    function navigateTo(route, options = {}) {
+      const path = ROUTES[route] || ROUTES.home;
+      const method = options.replace ? "replaceState" : "pushState";
+      if (window.location.pathname !== path || options.replace) {
+        window.history[method]({ route }, "", path);
+      }
+      state.route = route;
+      applyRouteState();
+    }
+
+    function handlePopState() {
+      state.route = getRouteFromLocation();
+      applyRouteState();
+    }
+
+    function openConnectionModal() {
+      if (state.connection) {
+        const { provider, model, endpoint, apiKey } = state.connection;
+        elements.providerSelect.value = provider;
+        elements.providerModelInput.value = model;
+        elements.providerModelInput.dataset.autofill = "false";
+        elements.providerEndpointInput.value = endpoint;
+        elements.providerEndpointInput.dataset.autofill = "false";
+        elements.providerApiKeyInput.value = apiKey;
+      }
+      syncProviderForm();
+      navigateTo("apiKey");
+    }
+
+    function closeConnectionModal() {
+      navigateTo(state.connection ? "query" : "home");
+    }
+
+    async function saveConnectionFromForm(event) {
+      event.preventDefault();
+      const provider = elements.providerSelect.value;
+      const model = elements.providerModelInput.value.trim() || PROVIDER_PRESETS[provider].defaultModel;
+      const endpoint = elements.providerEndpointInput.value.trim() || PROVIDER_PRESETS[provider].defaultEndpoint;
+      const apiKey = elements.providerApiKeyInput.value.trim();
+
+      if (!apiKey) {
+        setConnectionFormMessage("An API key is required for the active provider.", "error");
+        return;
+      }
+
+      if (!looksLikeUrl(endpoint)) {
+        setConnectionFormMessage("Endpoint must start with http:// or https://.", "error");
+        return;
+      }
+
+      setConnectionFormMessage("Validating provider connection through the relay...", "warning");
+      const validation = await validateConnectionViaRelay({ provider, apiKey, model, endpoint });
+      if (!validation.ok) {
+        setConnectionFormMessage(validation.message || "Provider validation failed.", "error");
+        return;
+      }
+
+      state.connection = {
+        provider,
+        apiKey,
+        model,
+        endpoint,
+        supportsWebSearch: PROVIDER_PRESETS[provider].supportsWebSearch,
+        supportsPulseboard: PROVIDER_PRESETS[provider].supportsPulseboard
+      };
+
+      renderConnectionSummary();
+      navigateTo("query");
+      setStatusMessage(validation.message || `${PROVIDER_PRESETS[provider].label} connected for this session.`, "complete");
+    }
+
+    function renderConnectionSummary() {
+      if (!state.connection) {
+        elements.providerStatusBadge.textContent = "Not connected";
+        elements.connectionProviderChips.innerHTML = '<span class="provider-chip">No provider configured</span>';
+        elements.connectionStateMessage.textContent = "No active provider session yet. Save a provider key to unlock monitoring and CSV analysis.";
+        return;
+      }
+
+      const preset = PROVIDER_PRESETS[state.connection.provider];
+      elements.providerStatusBadge.textContent = `Connected: ${preset.label} · ${state.connection.model}`;
+      elements.connectionProviderChips.innerHTML = `
+        <span class="provider-chip">${preset.label}</span>
+        <span class="provider-chip">${state.connection.model}</span>
+        <span class="provider-chip">${state.connection.supportsPulseboard ? "PulseBoard ready" : "Unsupported"}</span>
+      `;
+      elements.connectionStateMessage.textContent = `${preset.label} is ready for a full Phase 1 monitoring run in this tab via the local relay.`;
+    }
+
+    function handleNewQueryClick() {
+      if (!state.connection) {
+        navigateTo("query");
+      } else {
+        state.activeRunId += 1;
+        state.topic = "";
+        state.mode = "general";
+        elements.topicInput.value = "";
+        elements.modeSelect.value = "general";
+        resetRunState();
+        setStatusMessage("Ready for a fresh query.", "ready");
+        elements.topicInput.focus();
+      }
+      navigateTo("query");
+    }
+
+    function handleCsvEntryClick() {
+      destroyAllCharts();
+      state.activeRunId += 1;
+      state.csvResult = null;
+      state.csvComparison = null;
+      state.csvChartPayload = null;
+      state.csvSourceLabel = "";
+      state.csvResultVisible = false;
+      elements.csvResultSection.innerHTML = "";
+      elements.csvInputHelper.textContent = "Upload a real dataset or use the built-in sample CSV for a fast judge-friendly demo.";
+      renderCsvMode();
+      setCsvStatusMessage("", "ready");
+      navigateTo("csv");
+    }
+
+    function applySampleCsv() {
+      state.csvSourceLabel = "Built-in SaaS revenue sample";
+      elements.csvFileInput.value = "";
+      elements.csvGoalInput.value = "Summarize performance trends, flag risks, and identify growth opportunities for leadership.";
+      elements.csvInputHelper.textContent = "Sample CSV loaded in memory. Click Analyze CSV to generate the brief without uploading a local file.";
+      setCsvStatusMessage("Sample CSV is ready. Run the analyst to generate a polished demo brief.", "complete");
+    }
+
+    function setCsvMode(mode) {
+      state.csvMode = mode === "compare" ? "compare" : "single";
+      renderCsvMode();
+      setCsvStatusMessage("", "ready");
+    }
+
+    function renderCsvMode() {
+      const single = state.csvMode === "single";
+      elements.singleCsvSection.hidden = !single;
+      elements.compareCsvSection.hidden = single;
+      elements.csvModeSingle.classList.toggle("active", single);
+      elements.csvModeCompare.classList.toggle("active", !single);
+      elements.csvModeSingle.setAttribute("aria-pressed", String(single));
+      elements.csvModeCompare.setAttribute("aria-pressed", String(!single));
+      elements.runCsvButton.textContent = state.csvMode === "compare" ? "Run Analysis →" : "Run Analysis →";
+    }
+
+    function applyRouteState() {
+      const showHome = state.route === "home";
+      const showQuery = state.route === "query";
+      const showCsv = state.route === "csv";
+      const showApiKey = state.route === "apiKey";
+      elements.homePage.hidden = !showHome;
+      elements.apiKeyPage.hidden = !showApiKey;
+      elements.queryPage.hidden = !showQuery;
+      elements.csvPage.hidden = !showCsv;
+      elements.dashboard.hidden = !(showQuery && state.dashboardVisible);
+      elements.briefSection.hidden = !(showQuery && state.briefVisible);
+      elements.csvResultSection.hidden = !(showCsv && state.csvResultVisible);
+      elements.queryConnectionPrompt.hidden = !showQuery || Boolean(state.connection);
+      elements.csvConnectionPrompt.hidden = !showCsv || Boolean(state.connection);
+      updateTopbarLabel();
+    }
+
+    function updateTopbarLabel() {
+      if (state.route === "csv") {
+        elements.topbarMonitoringLabel.textContent = "CSV Analyst";
+        return;
+      }
+      if (state.route === "apiKey") {
+        elements.topbarMonitoringLabel.textContent = "Add API Key";
+        return;
+      }
+      if (state.route === "query" && state.dashboardVisible && state.topic) {
+        elements.topbarMonitoringLabel.textContent = `Monitoring: ${state.topic}`;
+        return;
+      }
+      elements.topbarMonitoringLabel.textContent = "Real-time multi-agent intelligence monitor";
+    }
+
+    async function handleRunSubmit(event) {
+      event.preventDefault();
+      const topic = elements.topicInput.value.trim();
+      const mode = elements.modeSelect.value;
+
+      if (!state.connection) {
+        navigateTo("apiKey");
+        setStatusMessage("Configure a provider before running PulseBoard.", "warning");
+        return;
+      }
+
+      if (!topic) {
+        setStatusMessage("Enter a topic before launching the agents.", "warning");
+        elements.topicInput.focus();
+        return;
+      }
+
+      state.topic = topic;
+      state.mode = mode;
+      state.runCount += 1;
+      state.activeRunId += 1;
+      const runId = state.activeRunId;
+
+      resetRunState();
+      state.dashboardVisible = true;
+      state.briefVisible = false;
+      navigateTo("query");
+      elements.runCounterBadge.textContent = `Runs: ${state.runCount}`;
+      elements.dashboardSubtitle.textContent = `Monitoring: "${topic}"`;
+      elements.dashboardModePill.textContent = `Mode: ${MODE_LABELS[mode]}`;
+      elements.runButton.disabled = true;
+      elements.runButton.textContent = "Agents running...";
+      setStatusMessage(`Launching five live monitoring agents for ${topic}.`, "analyzing");
+
+      for (const agent of AGENT_CONFIGS) {
+        updateAgentStatus(agent.key, "analyzing");
+      }
+
+      try {
+        await runPulseBoardViaRelay({ connection: state.connection, topic, mode, runId });
+      } catch (error) {
+        renderBriefFailure(countSuccessfulMonitoringAgents(), error.message);
+        setStatusMessage(error.message || "Run failed unexpectedly.", "error");
+      } finally {
+        if (runId === state.activeRunId) {
+          elements.runButton.disabled = false;
+          elements.runButton.textContent = "Run PulseBoard →";
+          elements.aggregatorBanner.classList.remove("visible");
+        }
+      }
+    }
+
+    function resetRunState() {
+      state.agentStatus = createInitialStatuses();
+      state.agentResults = createInitialResults();
+      state.dashboardVisible = false;
+      state.briefVisible = false;
+      elements.briefSection.hidden = true;
+      elements.briefSection.innerHTML = "";
+      elements.aggregatorBanner.classList.remove("visible");
+      for (const agent of AGENT_CONFIGS) updateAgentStatus(agent.key, "waiting");
+      renderProgress();
+    }
+
+    async function handleCsvSubmit(event) {
+      event.preventDefault();
+      if (!state.connection) {
+        navigateTo("apiKey");
+        return;
+      }
+
+      if (state.csvMode === "compare") {
+        return handleCsvComparisonSubmit();
+      }
+
+      const file = elements.csvFileInput.files && elements.csvFileInput.files[0];
+      const csvText = file ? await file.text() : (state.csvSourceLabel ? SAMPLE_CSV_TEXT : "");
+      const sourceLabel = file ? file.name : state.csvSourceLabel;
+      if (!csvText.trim()) {
+        setCsvStatusMessage("Choose a CSV file or use the sample dataset before starting analysis.", "error");
+        return;
+      }
+
+      if (!csvText.trim()) {
+        setCsvStatusMessage("The selected CSV file is empty.", "error");
+        return;
+      }
+
+      elements.runCsvButton.disabled = true;
+      elements.runCsvButton.textContent = "Analyzing...";
+      setCsvStatusMessage(`Analyzing ${sourceLabel || "CSV dataset"} through the relay...`, "warning");
+      const parsedCsv = parseCsvText(csvText);
+      state.csvChartPayload = { mode: "single", parsedCsv, sourceLabel: sourceLabel || "Uploaded CSV" };
+      renderChartSkeletons("single");
+      try {
+        const result = await runCsvAnalysisViaRelay({
+          connection: state.connection,
+          csvText,
+          analysisGoal: elements.csvGoalInput.value.trim()
+        });
+        state.csvResult = result;
+        renderCsvAnalysisResult(result, sourceLabel || "Uploaded CSV");
+        setCsvStatusMessage(`CSV analysis complete for ${sourceLabel || "your dataset"}.`, "complete");
+      } catch (error) {
+        setCsvStatusMessage(error.message || "CSV analysis failed.", "error");
+      } finally {
+        elements.runCsvButton.disabled = false;
+        elements.runCsvButton.textContent = "Run Analysis →";
+      }
+    }
+
+    async function handleCsvComparisonSubmit() {
+      const fileA = elements.compareFileAInput.files && elements.compareFileAInput.files[0];
+      const fileB = elements.compareFileBInput.files && elements.compareFileBInput.files[0];
+      if (!fileA) {
+        setCsvStatusMessage("Choose a CSV for File A before running comparison.", "error");
+        return;
+      }
+      if (!fileB) {
+        setCsvStatusMessage("Choose a CSV for File B before running comparison.", "error");
+        return;
+      }
+
+      const csvTextA = await fileA.text();
+      const csvTextB = await fileB.text();
+      if (!csvTextA.trim()) {
+        setCsvStatusMessage("File A is empty. Upload a populated CSV to continue.", "error");
+        return;
+      }
+      if (!csvTextB.trim()) {
+        setCsvStatusMessage("File B is empty. Upload a populated CSV to continue.", "error");
+        return;
+      }
+
+      const labelA = elements.compareLabelAInput.value.trim() || "File A";
+      const labelB = elements.compareLabelBInput.value.trim() || "File B";
+
+      elements.runCsvButton.disabled = true;
+      elements.runCsvButton.textContent = "Analyzing...";
+      setCsvStatusMessage(`Comparing ${labelA} and ${labelB} through the relay...`, "warning");
+      const parsedA = parseCsvText(csvTextA);
+      const parsedB = parseCsvText(csvTextB);
+      state.csvChartPayload = {
+        mode: "compare",
+        parsedA,
+        parsedB,
+        labelA,
+        labelB,
+        fileNameA: fileA.name,
+        fileNameB: fileB.name
+      };
+      renderChartSkeletons("compare");
+      try {
+        const result = await runCsvComparisonViaRelay({
+          connection: state.connection,
+          csvTextA,
+          csvTextB,
+          labelA,
+          labelB,
+          analysisGoal: elements.csvGoalInput.value.trim()
+        });
+        state.csvComparison = result;
+        renderCsvComparisonResult(result, { labelA, labelB, fileNameA: fileA.name, fileNameB: fileB.name });
+        setCsvStatusMessage(`Comparison complete for ${labelA} and ${labelB}.`, "complete");
+      } catch (error) {
+        setCsvStatusMessage(error.message || "CSV comparison failed.", "error");
+      } finally {
+        elements.runCsvButton.disabled = false;
+        elements.runCsvButton.textContent = "Run Analysis →";
+      }
+    }
+
+    async function runPulseBoardViaRelay({ connection, topic, mode, runId }) {
+      let response;
+      try {
+        response = await fetch("/api/pulseboard/run", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ connection, topic, mode })
+        });
+      } catch (error) {
+        throw new Error("The local PulseBoard relay could not be reached. Start the Node server and open the app over http://localhost:3000.");
+      }
+
+      if (!response.ok || !response.body) {
+        const payload = await response.json().catch(() => ({}));
+        throw new Error((payload.error && payload.error.message) || "PulseBoard relay returned an unexpected response.");
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          handleRelayEvent(JSON.parse(line), runId);
+        }
+      }
+      if (buffer.trim()) {
+        handleRelayEvent(JSON.parse(buffer), runId);
+      }
+    }
+
+    async function runCsvAnalysisViaRelay({ connection, csvText, analysisGoal }) {
+      let response;
+      try {
+        response = await fetch("/api/pulseboard/analyze-csv", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ connection, csvText, analysisGoal })
+        });
+      } catch (error) {
+        throw new Error("The local PulseBoard relay could not be reached for CSV analysis. Start the Node server and open the app over http://localhost:3000.");
+      }
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error((payload.error && payload.error.message) || payload.message || "CSV analysis failed.");
+      }
+      return payload.result || payload;
+    }
+
+    async function runCsvComparisonViaRelay({ connection, csvTextA, csvTextB, labelA, labelB, analysisGoal }) {
+      let response;
+      try {
+        response = await fetch("/api/pulseboard/compare-csv", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ connection, csvTextA, csvTextB, labelA, labelB, analysisGoal })
+        });
+      } catch (error) {
+        throw new Error("The local PulseBoard relay could not be reached for CSV comparison. Start the Node server and open the app over http://localhost:3000.");
+      }
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error((payload.error && payload.error.message) || payload.message || "CSV comparison failed.");
+      }
+      return payload.result || payload;
+    }
+
+    async function runProviderRequest(options) {
+      return runPulseBoardViaRelay(options);
+    }
+
+    async function validateConnectionViaRelay(connection) {
+      let response;
+      try {
+        response = await fetch("/api/pulseboard/validate-connection", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ connection })
+        });
+      } catch (error) {
+        return {
+          ok: false,
+          message: "The local PulseBoard relay could not be reached for validation. Start the Node server and open the app over http://localhost:3000."
+        };
+      }
+
+      const payload = await response.json().catch(() => ({}));
+      return {
+        ok: response.ok && Boolean(payload.ok),
+        message: payload.message || (payload.error && payload.error.message) || "Connection validation failed."
+      };
+    }
+
+    function handleRelayEvent(event, runId) {
+      if (runId !== state.activeRunId) return;
+      switch (event.type) {
+        case "agent_result":
+          state.agentResults[event.agent] = event.result;
+          updateAgentStatus(event.agent, "complete");
+          renderAgentOutput(event.agent, event.result);
+          break;
+        case "agent_error":
+          state.agentResults[event.agent] = { error: true, message: event.error || "Agent failed." };
+          updateAgentStatus(event.agent, "error");
+          renderAgentError(event.agent, event.error || "Agent failed.");
+          break;
+        case "aggregator_started":
+          elements.aggregatorBanner.classList.add("visible");
+          break;
+        case "brief":
+          state.agentResults.aggregator = event.result;
+          renderBrief(event.result);
+          setStatusMessage(`PulseBoard brief complete for ${state.topic}.`, "complete");
+          break;
+        case "brief_error":
+          renderBriefFailure(event.successCount || countSuccessfulMonitoringAgents(), event.error);
+          setStatusMessage(event.error || "PulseBoard could not synthesize the brief.", "warning");
+          break;
+        case "done":
+          elements.aggregatorBanner.classList.remove("visible");
+          break;
+        default:
+          break;
+      }
+    }
+
+    function buildProviderRequest(providerConfig, systemPrompt, userContent, useWebSearch) {
+      if (useWebSearch && !providerConfig.supportsWebSearch) {
+        throw new Error(`${PROVIDER_PRESETS[providerConfig.provider].label} is configured, but this PulseBoard build does not support web-search monitoring for that provider.`);
+      }
+
+      switch (providerConfig.provider) {
+        case "openai":
+          return {
+            endpoint: providerConfig.endpoint,
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${providerConfig.apiKey}`
+            },
+            body: {
+              model: providerConfig.model,
+              instructions: systemPrompt,
+              input: userContent,
+              text: { format: { type: "json_object" } },
+              ...(useWebSearch ? {
+                tools: [{
+                  type: "web_search",
+                  user_location: {
+                    type: "approximate",
+                    country: "US",
+                    city: "Chicago",
+                    region: "Illinois",
+                    timezone: "America/Chicago"
+                  }
+                }],
+                tool_choice: "auto"
+              } : {})
+            }
+          };
+        case "anthropic":
+          return {
+            endpoint: providerConfig.endpoint,
+            headers: {
+              "Content-Type": "application/json",
+              "x-api-key": providerConfig.apiKey,
+              "anthropic-version": "2023-06-01"
+            },
+            body: {
+              model: providerConfig.model,
+              max_tokens: 1400,
+              system: systemPrompt,
+              messages: [{ role: "user", content: userContent }]
+            }
+          };
+        case "gemini":
+          return {
+            endpoint: buildGeminiEndpoint(providerConfig),
+            headers: { "Content-Type": "application/json" },
+            body: {
+              systemInstruction: { parts: [{ text: systemPrompt }] },
+              contents: [{ role: "user", parts: [{ text: userContent }] }],
+              generationConfig: { temperature: 0.2, maxOutputTokens: 2048 }
+            }
+          };
+        case "nvidia":
+          return {
+            endpoint: providerConfig.endpoint,
+            headers: {
+              "Authorization": `Bearer ${providerConfig.apiKey}`,
+              "Accept": "application/json",
+              "Content-Type": "application/json"
+            },
+            body: {
+              model: providerConfig.model,
+              messages: [
+                { role: "system", content: systemPrompt },
+                { role: "user", content: userContent }
+              ],
+              temperature: 0.2,
+              top_p: 1,
+              frequency_penalty: 0,
+              presence_penalty: 0,
+              max_tokens: 4096,
+              stream: false,
+              reasoning_effort: "medium"
+            }
+          };
+        default:
+          throw new Error("Unsupported provider selected.");
+      }
+    }
+
+    function parseProviderResponse(providerConfig, payload) {
+      switch (providerConfig.provider) {
+        case "openai":
+          if (typeof payload.output_text === "string" && payload.output_text.trim()) return payload.output_text.trim();
+          return (payload.output || [])
+            .flatMap((item) => item.type === "message" && Array.isArray(item.content) ? item.content : [])
+            .filter((item) => item.type === "output_text" && item.text)
+            .map((item) => item.text)
+            .join("\n")
+            .trim();
+        case "anthropic":
+          return (payload.content || [])
+            .filter((item) => item.type === "text" && item.text)
+            .map((item) => item.text)
+            .join("\n")
+            .trim();
+        case "gemini":
+          return (((payload.candidates || [])[0] || {}).content || {}).parts?.map((part) => part.text || "").join("\n").trim() || "";
+        case "nvidia":
+          return (((payload.choices || [])[0] || {}).message || {}).content || "";
+        default:
+          return "";
+      }
+    }
+
+    function buildGeminiEndpoint(providerConfig) {
+      if (providerConfig.endpoint.includes(":generateContent")) {
+        return providerConfig.endpoint;
+      }
+      return `${providerConfig.endpoint}/${providerConfig.model}:generateContent?key=${encodeURIComponent(providerConfig.apiKey)}`;
+    }
+
+    function explainProviderFailure(providerConfig) {
+      const label = PROVIDER_PRESETS[providerConfig.provider].label;
+      if (providerConfig.provider === "openai" && window.location.protocol === "file:") {
+        return `${label} requests cannot be made directly from a file:// page because the browser origin is null. Host the page over http(s) or proxy the request through your own relay.`;
+      }
+      return `${label} request failed before a response was received. Check the endpoint, key, and any browser/network restrictions.`;
+    }
+
+    function buildUserContent() {
+      return [
+        `Topic to monitor: "${state.topic}"`,
+        `Monitoring mode: ${MODE_LABELS[state.mode]}`,
+        `Focus instruction: ${MODE_MODIFIERS[state.mode]}`,
+        "Return JSON only."
+      ].join("\n");
+    }
+
+    function countSuccessfulMonitoringAgents() {
+      return AGENT_CONFIGS.reduce((count, agent) => {
+        const result = state.agentResults[agent.key];
+        return result && !result.error ? count + 1 : count;
+      }, 0);
+    }
+
+    function updateAgentStatus(agentKey, status) {
+      state.agentStatus[agentKey] = status;
+      const badge = document.getElementById(`status-${agentKey}`);
+      if (!badge) return;
+      const iconMarkup = status === "analyzing" ? '<span class="spinner"></span>' : '<span class="dot"></span>';
+      badge.className = `status-badge ${status}`;
+      badge.innerHTML = `${iconMarkup}<span>${capitalize(status)}</span>`;
+      renderProgress();
+      if (status === "analyzing") {
+        const body = document.getElementById(`body-${agentKey}`);
+        if (body) {
+          body.innerHTML = `
+            <p class="muted">Scanning live web signals for <strong>${escapeHtml(state.topic)}</strong> in ${escapeHtml(MODE_LABELS[state.mode])} mode.</p>
+            <div class="placeholder-stack"><div class="skeleton-line"></div><div class="skeleton-line"></div><div class="skeleton-line"></div></div>
+          `;
+        }
+      }
+    }
+
+    function renderProgress() {
+      const completeCount = AGENT_CONFIGS.filter((agent) => state.agentStatus[agent.key] === "complete").length;
+      const analyzingCount = AGENT_CONFIGS.filter((agent) => state.agentStatus[agent.key] === "analyzing").length;
+      const errorCount = AGENT_CONFIGS.filter((agent) => state.agentStatus[agent.key] === "error").length;
+      elements.progressFill.style.width = `${(completeCount / AGENT_CONFIGS.length) * 100}%`;
+      elements.progressLabel.textContent = `Progress: ${completeCount}/5 agents complete`;
+      elements.progressDetail.textContent = analyzingCount > 0
+        ? `${analyzingCount} analyzing${errorCount ? ` · ${errorCount} error` : ""}`
+        : completeCount === AGENT_CONFIGS.length
+          ? "Monitoring sweep complete"
+          : errorCount
+            ? `${errorCount} agent error${errorCount > 1 ? "s" : ""}`
+            : "Waiting to start";
+    }
+
+    function renderAgentOutput(agentKey, result) {
+      const body = document.getElementById(`body-${agentKey}`);
+      if (!body) return;
+      body.innerHTML = getAgentMarkup(agentKey, result);
+    }
+
+    function renderAgentError(agentKey, message) {
+      const body = document.getElementById(`body-${agentKey}`);
+      if (!body) return;
+      body.innerHTML = `<div class="inline-alert error">${escapeHtml(message)}</div>`;
+    }
+
+    function getAgentMarkup(agentKey, result) {
+      switch (agentKey) {
+        case "news": return renderNewsMarkup(result);
+        case "jobs": return renderJobsMarkup(result);
+        case "sentiment": return renderSentimentMarkup(result);
+        case "regulatory": return renderRegulatoryMarkup(result);
+        case "competitor": return renderCompetitorMarkup(result);
+        default: return `<pre>${escapeHtml(JSON.stringify(result, null, 2))}</pre>`;
+      }
+    }
+
+    function renderNewsMarkup(result) {
+      const headlines = Array.isArray(result.headlines) ? result.headlines : [];
+      return `
+        <div class="signal-grid" style="grid-template-columns:repeat(2,minmax(0,1fr));">
+          <div class="mini-panel"><strong>Signal strength</strong><div class="metric-big">${normalizeMetricValue(result.signalStrength)}/100</div>${renderMetricDirectionHint("higher")}</div>
+          <div class="mini-panel"><strong>Sentiment</strong><div class="badge-row">${renderSentimentPill(result.overallSentiment)}${result.urgencyFlag ? '<span class="pill danger">Urgent</span>' : '<span class="pill neutral">No alert</span>'}</div></div>
+        </div>
+        <div class="info-note"><strong>Biggest story</strong><p>${escapeHtml(result.biggestStory || "No major story summarized.")}</p></div>
+        <div class="list-stack">${headlines.map((headline) => `<div class="list-card"><div class="list-meta">${escapeHtml(headline.recency || "Recent")} · ${escapeHtml(headline.sentiment || "neutral")}</div><p><strong>${escapeHtml(headline.title || "Headline")}</strong></p><p>${escapeHtml(headline.summary || "")}</p></div>`).join("") || '<div class="info-note">No recent headlines returned.</div>'}</div>
+      `;
+    }
+
+    function renderJobsMarkup(result) {
+      const roles = Array.isArray(result.hotRoles) ? result.hotRoles : [];
+      const flags = Array.isArray(result.redFlags) ? result.redFlags : [];
+      return `
+        <div class="signal-grid" style="grid-template-columns:repeat(2,minmax(0,1fr));">
+          <div class="mini-panel"><strong>Velocity</strong><div class="metric-big">${escapeHtml(result.hiringVelocity || "stable")}</div></div>
+          <div class="mini-panel"><strong>Score</strong><div class="metric-big">${normalizeMetricValue(result.velocityScore)}/100</div>${renderMetricDirectionHint("higher")}</div>
+        </div>
+        <div class="tag-row">${roles.map((role) => `<span class="tag neutral">${escapeHtml(role)}</span>`).join("") || '<span class="tag neutral">No hot roles returned</span>'}</div>
+        <div class="info-note"><strong>Hiring signal</strong><p>${escapeHtml(result.hiringSignal || "No hiring signal returned.")}</p></div>
+        <div class="info-note"><strong>Opportunity signal</strong><p>${escapeHtml(result.opportunitySignal || "No opportunity signal returned.")}</p></div>
+        <div class="list-card"><strong>Red flags</strong>${flags.length ? `<ul>${flags.map((flag) => `<li>${escapeHtml(flag)}</li>`).join("")}</ul>` : "<p>No major warning signs surfaced.</p>"}</div>
+      `;
+    }
+
+    function renderSentimentMarkup(result) {
+      const themes = Array.isArray(result.whatPeopleAreSaying) ? result.whatPeopleAreSaying : [];
+      const breakdown = result.audienceBreakdown || {};
+      return `
+        <div class="signal-grid" style="grid-template-columns:repeat(2,minmax(0,1fr));">
+          <div class="mini-panel"><strong>Score</strong><div class="metric-big">${normalizeMetricValue(result.sentimentScore)}/100</div>${renderMetricDirectionHint("higher")}</div>
+          <div class="mini-panel"><strong>Risk</strong><div class="badge-row">${renderRiskPill(result.reputationRisk)}<span class="pill neutral">${escapeHtml(result.sentimentLabel || "Mixed")}</span></div></div>
+        </div>
+        <div class="list-stack">${themes.map((theme) => `<div class="list-card"><div class="list-meta">${escapeHtml(theme.sentiment || "neutral")}</div><p><strong>${escapeHtml(theme.theme || "Theme")}</strong></p><p>${escapeHtml(theme.detail || "")}</p></div>`).join("")}</div>
+        <div class="list-card"><strong>Audience breakdown</strong><p><span class="meta-label">Employees</span> ${escapeHtml(breakdown.employees || "No employee signal.")}</p><p><span class="meta-label">Customers</span> ${escapeHtml(breakdown.customers || "No customer signal.")}</p><p><span class="meta-label">Investors</span> ${escapeHtml(breakdown.investors || "No investor signal.")}</p></div>
+        <div class="info-note"><strong>Reputation insight</strong><p>${escapeHtml(result.reputationInsight || "No reputation insight returned.")}</p></div>
+      `;
+    }
+
+    function renderRegulatoryMarkup(result) {
+      const actions = Array.isArray(result.recentRegActions) ? result.recentRegActions : [];
+      const highlights = Array.isArray(result.esgHighlights) ? result.esgHighlights : [];
+      const watchlist = Array.isArray(result.watchlist) ? result.watchlist : [];
+      return `
+        <div class="signal-grid" style="grid-template-columns:repeat(2,minmax(0,1fr));">
+          <div class="mini-panel"><strong>Risk</strong><div class="badge-row">${renderRiskPill(result.regulatoryRisk)}</div></div>
+          <div class="mini-panel"><strong>ESG</strong><div class="metric-big">${normalizeMetricValue(result.esgScore)}/100</div>${renderMetricDirectionHint("higher")}<div class="badge-row"><span class="pill neutral">${escapeHtml(result.esgLabel || "No label returned.")}</span></div></div>
+        </div>
+        <div class="list-stack">${actions.map((item) => `<div class="list-card"><div class="list-meta">${escapeHtml(item.impact || "impact unknown")} impact</div><p><strong>${escapeHtml(item.action || "Recent action")}</strong></p><p>${escapeHtml(item.detail || "")}</p></div>`).join("") || '<div class="info-note">No recent regulatory actions returned.</div>'}</div>
+        <div class="list-card"><strong>ESG highlights</strong>${highlights.length ? `<ul>${highlights.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>` : "<p>No ESG highlights returned.</p>"}</div>
+        <div class="list-card"><strong>Watchlist</strong>${watchlist.length ? `<ul>${watchlist.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>` : "<p>No watchlist items returned.</p>"}</div>
+      `;
+    }
+
+    function renderCompetitorMarkup(result) {
+      const competitors = Array.isArray(result.topCompetitors) ? result.topCompetitors : [];
+      return `
+        <div class="signal-grid" style="grid-template-columns:repeat(2,minmax(0,1fr));">
+          <div class="mini-panel"><strong>Landscape</strong><div class="metric-big">${escapeHtml(result.competitiveLandscape || "stable")}</div></div>
+          <div class="mini-panel"><strong>Biggest threat</strong><p>${escapeHtml(result.biggestThreat || "No threat returned.")}</p></div>
+        </div>
+        <div class="list-stack">${competitors.map((item) => `<div class="list-card"><div class="tier-heading"><p><strong>${escapeHtml(item.name || "Competitor")}</strong></p>${renderThreatPill(item.threat)}</div><p>${escapeHtml(item.recentMove || "")}</p></div>`).join("") || '<div class="info-note">No competitor landscape returned.</div>'}</div>
+        <div class="info-note"><strong>Market position</strong><p>${escapeHtml(result.marketPosition || "No market position returned.")}</p></div>
+        <div class="signal-grid" style="grid-template-columns:repeat(2,minmax(0,1fr));"><div class="list-card"><strong>Opportunity</strong><p>${escapeHtml(result.opportunity || "No opportunity returned.")}</p></div><div class="list-card"><strong>Differentiator</strong><p>${escapeHtml(result.differentiator || "No differentiator returned.")}</p></div></div>
+      `;
+    }
+
+    function renderBrief(result) {
+      const urgent = Array.isArray(result.urgent) ? result.urgent : [];
+      const notable = Array.isArray(result.notable) ? result.notable : [];
+      const fyi = Array.isArray(result.fyi) ? result.fyi : [];
+      const actions = Array.isArray(result.recommendedActions) ? result.recommendedActions : [];
+      state.briefVisible = true;
+      elements.briefSection.hidden = false;
+      elements.briefSection.innerHTML = `
+        <div class="brief-header">
+          <div><span class="badge">Intelligence Brief</span><h2 class="section-title" id="briefHeading" style="font-size:32px;margin-top:10px;">${escapeHtml(state.topic)}</h2><p class="section-subtitle">${escapeHtml(result.subjectSummary || "PulseBoard synthesized the available signals into a single intelligence brief.")}</p></div>
+          <div class="brief-actions"><button class="secondary-button" type="button" id="copyBriefButton">Copy to Clipboard</button><button class="secondary-button" type="button" id="downloadBriefButton">Download Brief</button></div>
+        </div>
+        <div class="brief-summary">
+          <p class="one-line-summary">${escapeHtml(result.oneLineSummary || "No one-line summary returned.")}</p>
+          <div class="score-grid">
+            <div class="score-card"><div class="score-label">Risk score</div><div class="score-value">${normalizeMetricValue(result.overallRiskScore)}</div><div class="score-track"><div class="score-fill risk" style="width:${clampScore(result.overallRiskScore)}%"></div></div>${renderMetricDirectionHint("lower")}</div>
+            <div class="score-card"><div class="score-label">Opportunity score</div><div class="score-value">${normalizeMetricValue(result.overallOpportunityScore)}</div><div class="score-track"><div class="score-fill opportunity" style="width:${clampScore(result.overallOpportunityScore)}%"></div></div>${renderMetricDirectionHint("higher")}</div>
+          </div>
+        </div>
+        <div class="brief-columns">
+          ${renderTier("urgent", "🔴 Urgent", urgent, (item) => `<p><strong>${escapeHtml(item.finding || "Urgent finding")}</strong></p><p><span class="meta-label">Source</span> ${escapeHtml(item.source || "Unknown")}</p><p><span class="meta-label">Action</span> ${escapeHtml(item.action || "No action provided.")}</p>`)}
+          ${renderTier("notable", "🟡 Notable", notable, (item) => `<p><strong>${escapeHtml(item.finding || "Notable finding")}</strong></p><p><span class="meta-label">Source</span> ${escapeHtml(item.source || "Unknown")}</p><p>${escapeHtml(item.whyItMatters || "No context provided.")}</p>`)}
+          ${renderTier("fyi", "⚪ FYI", fyi, (item) => `<p><strong>${escapeHtml(item.finding || "Background note")}</strong></p><p>${escapeHtml(item.context || "No context provided.")}</p>`)}
+        </div>
+        <div class="list-card" style="margin-top:20px;"><strong>Recommended actions</strong>${actions.length ? `<ol>${actions.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ol>` : "<p>No recommended actions returned.</p>"}<p><span class="meta-label">Monitoring cadence</span> ${escapeHtml(result.monitoringFrequency || "No cadence recommendation returned.")}</p></div>
+      `;
+      document.getElementById("copyBriefButton").addEventListener("click", copyBriefToClipboard);
+      document.getElementById("downloadBriefButton").addEventListener("click", () => window.print());
+    }
+
+    function renderTier(kind, title, items, renderItem) {
+      const empty = kind === "urgent" ? "No immediate crisis signals surfaced in this run." : "No items were returned.";
+      return `<div class="tier-block ${kind}"><div class="tier-heading"><h3 style="margin:0;">${title}</h3><span class="meta-label">${items.length} item${items.length === 1 ? "" : "s"}</span></div><div class="tier-stack">${items.length ? items.map((item) => `<div class="tier-card">${renderItem(item)}</div>`).join("") : `<div class="tier-card"><p>${empty}</p></div>`}</div></div>`;
+    }
+
+    function renderBriefFailure(successCount, errorMessage) {
+      state.briefVisible = true;
+      elements.briefSection.hidden = false;
+      elements.briefSection.innerHTML = `<div class="brief-summary"><p class="one-line-summary">PulseBoard could not synthesize this run.</p><p class="section-subtitle">${successCount}/5 monitoring agents returned usable data.${errorMessage ? ` ${escapeHtml(errorMessage)}` : ""}</p></div>`;
+    }
+
+    async function copyBriefToClipboard() {
+      if (!state.agentResults.aggregator) {
+        setStatusMessage("There is no completed brief to copy yet.", "warning");
+        return;
+      }
+      const text = buildBriefText(state.agentResults.aggregator);
+      await navigator.clipboard.writeText(text);
+      setStatusMessage("Brief copied to clipboard.", "complete");
+    }
+
+    function downloadCsvResultPdf() {
+      window.print();
+    }
+
+    function buildBriefText(brief) {
+      const urgent = Array.isArray(brief.urgent) ? brief.urgent : [];
+      const notable = Array.isArray(brief.notable) ? brief.notable : [];
+      const fyi = Array.isArray(brief.fyi) ? brief.fyi : [];
+      const actions = Array.isArray(brief.recommendedActions) ? brief.recommendedActions : [];
+      return [
+        "PulseBoard Intelligence Brief",
+        `Topic: ${state.topic}`,
+        `Mode: ${MODE_LABELS[state.mode]}`,
+        "",
+        brief.oneLineSummary || "",
+        "",
+        `Risk Score: ${coerceNumber(brief.overallRiskScore)}/100`,
+        `Opportunity Score: ${coerceNumber(brief.overallOpportunityScore)}/100`,
+        "",
+        "URGENT",
+        urgent.length ? urgent.map((item, index) => `${index + 1}. ${item.finding} [${item.source}] Action: ${item.action}`).join("\n") : "None",
+        "",
+        "NOTABLE",
+        notable.length ? notable.map((item, index) => `${index + 1}. ${item.finding} [${item.source}] ${item.whyItMatters}`).join("\n") : "None",
+        "",
+        "FYI",
+        fyi.length ? fyi.map((item, index) => `${index + 1}. ${item.finding} ${item.context}`).join("\n") : "None",
+        "",
+        "Recommended Actions",
+        actions.length ? actions.map((item, index) => `${index + 1}. ${item}`).join("\n") : "None"
+      ].join("\n");
+    }
+
+    function setStatusMessage(message, tone) {
+      const toneClass = tone === "error" ? "error" : tone === "warning" ? "warning" : tone === "complete" ? "success" : "";
+      elements.statusMessage.className = `inline-alert${toneClass ? ` ${toneClass}` : ""}`;
+      elements.statusMessage.textContent = message;
+    }
+
+    function setCsvStatusMessage(message, tone) {
+      const toneClass = tone === "error" ? "error" : tone === "warning" ? "warning" : tone === "complete" ? "success" : "";
+      elements.csvStatusMessage.hidden = !message || tone === "ready";
+      elements.csvStatusMessage.className = `inline-alert${toneClass ? ` ${toneClass}` : ""}`;
+      elements.csvStatusMessage.textContent = message;
+    }
+
+    function setConnectionFormMessage(message, tone) {
+      const toneClass = tone === "error" ? "error" : tone === "warning" ? "warning" : tone === "success" ? "success" : "";
+      elements.connectionFormMessage.className = `inline-alert${toneClass ? ` ${toneClass}` : ""}`;
+      elements.connectionFormMessage.textContent = message;
+    }
+
+    function renderCsvInsightList(items, emptyMessage) {
+      if (!items.length) {
+        return `<div class="csv-empty-state"><strong>No items returned</strong><span>${escapeHtml(emptyMessage)}</span></div>`;
+      }
+      return `<div class="csv-insight-list">${items.map((item) => `<div class="csv-insight-item">${escapeHtml(item)}</div>`).join("")}</div>`;
+    }
+
+    function renderActionList(items) {
+      if (!items.length) {
+        return '<div class="csv-empty-state" style="margin-top:14px;"><strong>No actions returned</strong><span>The provider finished analysis but did not include recommended next steps.</span></div>';
+      }
+      return `<ol>${items.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ol>`;
+    }
+
+    function renderChartsSectionMarkup(recommendations, mode) {
+      const items = Array.isArray(recommendations) ? recommendations : [];
+      return `
+        <section class="charts-section" id="chartsSection">
+          <div class="tier-heading">
+            <h3 class="charts-heading">Auto-Generated Charts</h3>
+            <span class="meta-label">${items.length} chart${items.length === 1 ? "" : "s"}</span>
+          </div>
+          ${items.length ? items.map((item, index) => `
+            <article class="chart-card" id="chartCard-${mode}-${index}">
+              <div class="chart-card-header">
+                <div>
+                  <h4 class="chart-title">${escapeHtml(item.title || `Chart ${index + 1}`)}</h4>
+                  <p class="chart-reason">${escapeHtml(item.reason || "Recommended by the analyst based on this dataset.")}</p>
+                </div>
+                <span class="chart-reason-icon" title="${escapeHtml(item.reason || "Recommended by the analyst based on this dataset.")}">ℹ</span>
+              </div>
+              <div class="chart-body" id="chartBody-${mode}-${index}">
+                <div class="chart-canvas-wrap">
+                  <canvas id="chartCanvas-${mode}-${index}"></canvas>
+                </div>
+              </div>
+            </article>
+          `).join("") : `<div class="chart-card"><div class="chart-empty">No chart recommendations were returned for this analysis.</div></div>`}
+        </section>
+      `;
+    }
+
+    function renderChartSkeletons(mode) {
+      destroyAllCharts();
+      const count = mode === "compare" ? 2 : 3;
+      state.csvResultVisible = true;
+      elements.csvResultSection.hidden = false;
+      elements.csvResultSection.innerHTML = `
+        <section class="charts-section" id="chartsSection">
+          <div class="tier-heading">
+            <h3 class="charts-heading">Auto-Generated Charts</h3>
+            <span class="meta-label">Generating</span>
+          </div>
+          ${Array.from({ length: count }, (_, index) => `
+            <article class="chart-card">
+              <div class="chart-card-header">
+                <div>
+                  <h4 class="chart-title">Preparing chart ${index + 1}</h4>
+                  <p class="chart-reason">The analyst is selecting the most useful chart for this dataset.</p>
+                </div>
+                <span class="chart-reason-icon">ℹ</span>
+              </div>
+              <div class="chart-skeleton"></div>
+            </article>
+          `).join("")}
+        </section>
+      `;
+    }
+
+    function destroyAllCharts() {
+      Object.keys(chartInstances).forEach((key) => {
+        if (chartInstances[key] && typeof chartInstances[key].destroy === "function") {
+          chartInstances[key].destroy();
+        }
+        delete chartInstances[key];
+      });
+    }
+
+    function renderCharts(data, recommendations, mode) {
+      destroyAllCharts();
+      if (!window.Chart) return;
+      configureChartDefaults();
+      const items = Array.isArray(recommendations) ? recommendations : [];
+      items.forEach((recommendation, index) => {
+        const chartBody = document.getElementById(`chartBody-${mode}-${index}`);
+        const canvas = document.getElementById(`chartCanvas-${mode}-${index}`);
+        if (!chartBody || !canvas) return;
+        const prepared = mode === "compare"
+          ? buildComparisonChartData(data, recommendation)
+          : buildSingleChartData(data, recommendation);
+        if (!prepared || prepared.skip) {
+          chartBody.innerHTML = `<div class="chart-empty">${escapeHtml((prepared && prepared.reason) || "No data to chart")}</div>`;
+          return;
+        }
+        const context = canvas.getContext("2d");
+        if (!context) {
+          chartBody.innerHTML = `<div class="chart-empty">Unable to initialize this chart.</div>`;
+          return;
+        }
+        chartInstances[`chart-${mode}-${index}`] = new Chart(context, prepared.config);
+      });
+    }
+
+    function configureChartDefaults() {
+      if (!window.Chart || window.Chart.__pulseboardDefaultsApplied) return;
+      Chart.defaults.font.family = "'DM Sans', sans-serif";
+      Chart.defaults.font.size = 11;
+      Chart.defaults.color = "rgba(26,26,46,0.55)";
+      Chart.defaults.plugins.legend.display = false;
+      Chart.defaults.plugins.tooltip.backgroundColor = "#1a1a2e";
+      Chart.defaults.plugins.tooltip.titleColor = "#f5f2ee";
+      Chart.defaults.plugins.tooltip.bodyColor = "rgba(240,232,216,0.8)";
+      Chart.defaults.plugins.tooltip.padding = 10;
+      Chart.defaults.plugins.tooltip.cornerRadius = 6;
+      Chart.__pulseboardDefaultsApplied = true;
+    }
+
+    function parseCsvText(csvText) {
+      const lines = String(csvText || "").replace(/\r\n/g, "\n").replace(/\r/g, "\n").split("\n").filter((line) => line.trim().length > 0);
+      if (lines.length < 2) {
+        throw new Error("CSV must include a header row and at least one data row.");
+      }
+      const rows = lines.map(parseCsvLine);
+      const headers = rows[0].map((header, index) => header || `column_${index + 1}`);
+      const records = rows.slice(1).map((row) => {
+        const record = {};
+        headers.forEach((header, index) => {
+          record[header] = row[index] ?? "";
+        });
+        return record;
+      });
+      return { headers, records };
+    }
+
+    function parseCsvLine(line) {
+      const values = [];
+      let current = "";
+      let inQuotes = false;
+      for (let i = 0; i < line.length; i += 1) {
+        const char = line[i];
+        const next = line[i + 1];
+        if (char === '"' && inQuotes && next === '"') {
+          current += '"';
+          i += 1;
+          continue;
+        }
+        if (char === '"') {
+          inQuotes = !inQuotes;
+          continue;
+        }
+        if (char === "," && !inQuotes) {
+          values.push(current.trim());
+          current = "";
+          continue;
+        }
+        current += char;
+      }
+      values.push(current.trim());
+      return values;
+    }
+
+    function buildSingleChartData(data, recommendation) {
+      if (!data || !data.parsedCsv || !Array.isArray(data.parsedCsv.records) || !data.parsedCsv.records.length) {
+        return { skip: true, reason: "No data to chart." };
+      }
+      const parsedCsv = data.parsedCsv;
+      const chartType = String(recommendation.chartType || "").toLowerCase();
+      const headers = parsedCsv.headers || [];
+      if (chartType === "scatter") return buildScatterChart(parsedCsv, recommendation, headers);
+      if (chartType === "line") return buildLineChart(parsedCsv, recommendation, headers);
+      if (chartType === "histogram") return buildHistogramChart(parsedCsv, recommendation, headers);
+      if (chartType === "pie") return buildCategoryChart(parsedCsv, recommendation, headers, "pie");
+      return buildCategoryChart(parsedCsv, recommendation, headers, "bar");
+    }
+
+    function buildComparisonChartData(data, recommendation) {
+      if (!data || !data.parsedA || !data.parsedB || !data.parsedA.records.length || !data.parsedB.records.length) {
+        return { skip: true, reason: "No data to chart." };
+      }
+      const chartType = String(recommendation.chartType || "").toLowerCase();
+      if (chartType === "line_comparison") {
+        return buildComparisonLineChart(data, recommendation);
+      }
+      return buildComparisonBarChart(data, recommendation);
+    }
+
+    function buildCategoryChart(parsedCsv, recommendation, headers, fallbackType) {
+      const groupColumn = recommendation.groupBy || recommendation.xAxis;
+      const valueColumn = recommendation.yAxis;
+      if (!headers.includes(groupColumn) || (recommendation.aggregation !== "count" && !headers.includes(valueColumn))) {
+        return { skip: true, reason: "This chart was skipped because the recommended columns were not present." };
+      }
+      const aggregated = aggregateByCategory(parsedCsv.records, groupColumn, valueColumn, recommendation.aggregation || "sum");
+      let entries = aggregated.filter((item) => item.label && Number.isFinite(item.value));
+      if (entries.length <= 1) {
+        return { skip: true, reason: "This chart was skipped because the grouped result only produced one category." };
+      }
+      entries = sortChartEntries(entries, recommendation.sortBy || "none");
+      const maxCategories = Number(recommendation.maxCategories || (fallbackType === "pie" ? 6 : 8));
+      if (fallbackType === "pie" && entries.length > maxCategories) {
+        const keepCount = Math.max(1, maxCategories - 1);
+        const kept = entries.slice(0, keepCount);
+        const other = entries.slice(keepCount).reduce((sum, item) => sum + item.value, 0);
+        entries = other ? kept.concat({ label: "Other", value: other }) : kept;
+      } else {
+        entries = entries.slice(0, maxCategories);
+      }
+      const labels = entries.map((item) => item.label);
+      const values = entries.map((item) => item.value);
+      if (!values.some((value) => Number.isFinite(value) && value !== 0)) {
+        return { skip: true, reason: "This chart was skipped because the selected metric had no usable values." };
+      }
+      const colors = generateSingleChartColors(recommendation.colorScheme, labels.length);
+      const axisKey = valueColumn || groupColumn;
+      return {
+        config: {
+          type: fallbackType === "pie" ? "pie" : "bar",
+          data: {
+            labels,
+            datasets: [{
+              data: values,
+              backgroundColor: colors.backgroundColor,
+              borderColor: colors.borderColor,
+              borderWidth: 1,
+              borderRadius: fallbackType === "pie" ? 0 : 4,
+              borderSkipped: false
+            }]
+          },
+          options: fallbackType === "pie"
+            ? {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                  legend: {
+                    display: true,
+                    position: "right",
+                    labels: { boxWidth: 12, padding: 16 }
+                  }
+                }
+              }
+            : {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                  x: {
+                    grid: { display: false },
+                    ticks: { maxRotation: 35 }
+                  },
+                  y: {
+                    grid: { color: "rgba(26,26,46,0.06)" },
+                    beginAtZero: true,
+                    ticks: { callback: (val) => formatAxisValue(val, axisKey) }
+                  }
+                }
+              }
+        }
+      };
+    }
+
+    function buildLineChart(parsedCsv, recommendation, headers) {
+      const xAxis = recommendation.xAxis;
+      const yAxis = recommendation.yAxis;
+      if (!headers.includes(xAxis) || !headers.includes(yAxis)) {
+        return { skip: true, reason: "This chart was skipped because the recommended columns were not present." };
+      }
+      const grouped = aggregateLineSeries(parsedCsv.records, xAxis, yAxis, recommendation.aggregation || "sum");
+      if (grouped.length <= 1) {
+        return { skip: true, reason: "This chart was skipped because there were not enough chronological points." };
+      }
+      const sorted = sortSeriesByXAxis(grouped, xAxis);
+      const seriesColors = generateSeriesColors(recommendation.colorScheme);
+      return {
+        config: {
+          type: "line",
+          data: {
+            labels: sorted.map((item) => item.label),
+            datasets: [{
+              data: sorted.map((item) => item.value),
+              borderColor: seriesColors.borderColor,
+              backgroundColor: seriesColors.backgroundColor,
+              fill: false
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+              x: { grid: { display: false } },
+              y: {
+                grid: { color: "rgba(26,26,46,0.06)" },
+                beginAtZero: false,
+                ticks: { callback: (val) => formatAxisValue(val, yAxis) }
+              }
+            },
+            elements: {
+              line: { tension: 0.3, borderWidth: 2 },
+              point: { radius: 3, hoverRadius: 5 }
+            }
+          }
+        }
+      };
+    }
+
+    function buildScatterChart(parsedCsv, recommendation, headers) {
+      const xAxis = recommendation.xAxis;
+      const yAxis = recommendation.yAxis;
+      if (!headers.includes(xAxis) || !headers.includes(yAxis)) {
+        return { skip: true, reason: "This chart was skipped because the recommended columns were not present." };
+      }
+      const points = parsedCsv.records
+        .map((row) => ({ x: parseNumericValue(row[xAxis]), y: parseNumericValue(row[yAxis]) }))
+        .filter((point) => Number.isFinite(point.x) && Number.isFinite(point.y));
+      if (!points.length) {
+        return { skip: true, reason: "This chart was skipped because the selected numeric fields were empty." };
+      }
+      const sampled = points.length > 200 ? sampleEveryNth(points, 200) : points;
+      const seriesColors = generateSeriesColors(recommendation.colorScheme);
+      return {
+        config: {
+          type: "scatter",
+          data: {
+            datasets: [{
+              data: sampled,
+              backgroundColor: seriesColors.pointBackgroundColor,
+              borderColor: seriesColors.borderColor
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+              x: {
+                title: { display: true, text: xAxis },
+                grid: { color: "rgba(26,26,46,0.06)" },
+                ticks: { callback: (val) => formatAxisValue(val, xAxis) }
+              },
+              y: {
+                title: { display: true, text: yAxis },
+                grid: { color: "rgba(26,26,46,0.06)" },
+                ticks: { callback: (val) => formatAxisValue(val, yAxis) }
+              }
+            },
+            elements: { point: { radius: 4, hoverRadius: 6 } }
+          }
+        }
+      };
+    }
+
+    function buildHistogramChart(parsedCsv, recommendation, headers) {
+      const sourceColumn = recommendation.xAxis || recommendation.yAxis;
+      if (!headers.includes(sourceColumn)) {
+        return { skip: true, reason: "This chart was skipped because the recommended column was not present." };
+      }
+      const values = parsedCsv.records.map((row) => parseNumericValue(row[sourceColumn])).filter((value) => Number.isFinite(value));
+      if (!values.length) {
+        return { skip: true, reason: "This chart was skipped because the selected numeric field was empty." };
+      }
+      const binCount = Math.max(5, Math.min(Number(recommendation.maxCategories || 8), 10));
+      const min = Math.min(...values);
+      const max = Math.max(...values);
+      if (min === max) {
+        return { skip: true, reason: "This chart was skipped because all numeric values were identical." };
+      }
+      const width = (max - min) / binCount;
+      const bins = Array.from({ length: binCount }, (_, index) => ({
+        label: `${formatAxisValue(min + (width * index), sourceColumn)}–${formatAxisValue(min + (width * (index + 1)), sourceColumn)}`,
+        value: 0
+      }));
+      values.forEach((value) => {
+        const index = Math.min(binCount - 1, Math.floor((value - min) / width));
+        bins[index].value += 1;
+      });
+      const colors = generateSingleChartColors(recommendation.colorScheme, bins.length);
+      return {
+        config: {
+          type: "bar",
+          data: {
+            labels: bins.map((item) => item.label),
+            datasets: [{
+              data: bins.map((item) => item.value),
+              backgroundColor: colors.backgroundColor,
+              borderColor: colors.borderColor,
+              borderWidth: 1,
+              borderRadius: 4,
+              borderSkipped: false
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+              x: {
+                grid: { display: false },
+                ticks: { maxRotation: 35 }
+              },
+              y: {
+                grid: { color: "rgba(26,26,46,0.06)" },
+                beginAtZero: true,
+                ticks: { callback: (val) => formatAxisValue(val, "count") }
+              }
+            }
+          }
+        }
+      };
+    }
+
+    function buildComparisonBarChart(data, recommendation) {
+      const metric = recommendation.metric;
+      const groupBy = recommendation.groupBy;
+      const headersA = data.parsedA.headers || [];
+      const headersB = data.parsedB.headers || [];
+      if (!headersA.includes(metric) || !headersB.includes(metric) || !headersA.includes(groupBy) || !headersB.includes(groupBy)) {
+        return { skip: true, reason: "This comparison chart was skipped because the recommended columns were not present in both files." };
+      }
+      const mapA = aggregateByCategory(data.parsedA.records, groupBy, metric, "sum");
+      const mapB = aggregateByCategory(data.parsedB.records, groupBy, metric, "sum");
+      const merged = new Map();
+      mapA.forEach((item) => merged.set(item.label, { label: item.label, a: item.value, b: 0 }));
+      mapB.forEach((item) => {
+        const existing = merged.get(item.label) || { label: item.label, a: 0, b: 0 };
+        existing.b = item.value;
+        merged.set(item.label, existing);
+      });
+      let entries = Array.from(merged.values()).filter((item) => item.label);
+      entries.sort((left, right) => (right.a + right.b) - (left.a + left.b));
+      entries = entries.slice(0, Number(recommendation.maxCategories || 8));
+      if (entries.length <= 1) {
+        return { skip: true, reason: "This comparison chart was skipped because there were not enough shared categories." };
+      }
+      return {
+        config: {
+          type: "bar",
+          data: {
+            labels: entries.map((item) => item.label),
+            datasets: [
+              {
+                label: data.labelA || "File A",
+                data: entries.map((item) => item.a),
+                backgroundColor: "rgba(26,26,46,0.70)",
+                borderColor: "rgba(26,26,46,1)",
+                borderWidth: 1,
+                borderRadius: 4,
+                borderSkipped: false
+              },
+              {
+                label: data.labelB || "File B",
+                data: entries.map((item) => item.b),
+                backgroundColor: "rgba(59,109,17,0.65)",
+                borderColor: "rgba(59,109,17,1)",
+                borderWidth: 1,
+                borderRadius: 4,
+                borderSkipped: false
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: true } },
+            scales: {
+              x: {
+                grid: { display: false },
+                ticks: { maxRotation: 35 }
+              },
+              y: {
+                grid: { color: "rgba(26,26,46,0.06)" },
+                beginAtZero: true,
+                ticks: { callback: (val) => formatAxisValue(val, metric) }
+              }
+            }
+          }
+        }
+      };
+    }
+
+    function buildComparisonLineChart(data, recommendation) {
+      const metric = recommendation.metric;
+      const xAxis = recommendation.groupBy;
+      const headersA = data.parsedA.headers || [];
+      const headersB = data.parsedB.headers || [];
+      if (!headersA.includes(metric) || !headersB.includes(metric) || !headersA.includes(xAxis) || !headersB.includes(xAxis)) {
+        return { skip: true, reason: "This comparison chart was skipped because the recommended date or metric field was not present in both files." };
+      }
+      const seriesA = sortSeriesByXAxis(aggregateLineSeries(data.parsedA.records, xAxis, metric, "sum"), xAxis);
+      const seriesB = sortSeriesByXAxis(aggregateLineSeries(data.parsedB.records, xAxis, metric, "sum"), xAxis);
+      const labelMapA = new Map(seriesA.map((item) => [item.label, item.value]));
+      const labelMapB = new Map(seriesB.map((item) => [item.label, item.value]));
+      const labels = Array.from(new Set([...labelMapA.keys(), ...labelMapB.keys()]));
+      const sortedLabels = sortLabels(labels, xAxis);
+      if (sortedLabels.length <= 1) {
+        return { skip: true, reason: "This comparison chart was skipped because there were not enough shared time periods." };
+      }
+      return {
+        config: {
+          type: "line",
+          data: {
+            labels: sortedLabels,
+            datasets: [
+              {
+                label: data.labelA || "File A",
+                data: sortedLabels.map((label) => labelMapA.get(label) ?? null),
+                borderColor: "rgba(26,26,46,1)",
+                backgroundColor: "rgba(26,26,46,0.2)",
+                fill: false
+              },
+              {
+                label: data.labelB || "File B",
+                data: sortedLabels.map((label) => labelMapB.get(label) ?? null),
+                borderColor: "rgba(59,109,17,1)",
+                backgroundColor: "rgba(59,109,17,0.18)",
+                fill: false
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: true } },
+            scales: {
+              x: { grid: { display: false } },
+              y: {
+                grid: { color: "rgba(26,26,46,0.06)" },
+                beginAtZero: false,
+                ticks: { callback: (val) => formatAxisValue(val, metric) }
+              }
+            },
+            elements: {
+              line: { tension: 0.3, borderWidth: 2 },
+              point: { radius: 3, hoverRadius: 5 }
+            }
+          }
+        }
+      };
+    }
+
+    function aggregateByCategory(records, groupBy, valueColumn, aggregation) {
+      const buckets = new Map();
+      records.forEach((row) => {
+        const label = String(row[groupBy] ?? "").trim();
+        if (!label) return;
+        const bucket = buckets.get(label) || { sum: 0, count: 0 };
+        if (aggregation === "count") {
+          bucket.count += 1;
+        } else {
+          const value = parseNumericValue(row[valueColumn]);
+          if (!Number.isFinite(value)) return;
+          bucket.sum += value;
+          bucket.count += 1;
+        }
+        buckets.set(label, bucket);
+      });
+      return Array.from(buckets.entries()).map(([label, bucket]) => ({
+        label,
+        value: aggregation === "average"
+          ? (bucket.count ? bucket.sum / bucket.count : NaN)
+          : aggregation === "count"
+            ? bucket.count
+            : bucket.sum
+      }));
+    }
+
+    function aggregateLineSeries(records, xAxis, yAxis, aggregation) {
+      const buckets = new Map();
+      records.forEach((row) => {
+        const label = String(row[xAxis] ?? "").trim();
+        if (!label) return;
+        const bucket = buckets.get(label) || { sum: 0, count: 0 };
+        const value = aggregation === "count" ? 1 : parseNumericValue(row[yAxis]);
+        if (!Number.isFinite(value)) return;
+        bucket.sum += value;
+        bucket.count += 1;
+        buckets.set(label, bucket);
+      });
+      return Array.from(buckets.entries()).map(([label, bucket]) => ({
+        label,
+        value: aggregation === "average" ? bucket.sum / bucket.count : bucket.sum
+      }));
+    }
+
+    function sortChartEntries(entries, sortBy) {
+      const items = entries.slice();
+      if (sortBy === "value_desc") items.sort((left, right) => right.value - left.value);
+      else if (sortBy === "value_asc") items.sort((left, right) => left.value - right.value);
+      else if (sortBy === "label_asc") items.sort((left, right) => left.label.localeCompare(right.label));
+      return items;
+    }
+
+    function sortSeriesByXAxis(entries, axisName) {
+      return entries.slice().sort((left, right) => compareLabels(left.label, right.label, axisName));
+    }
+
+    function sortLabels(labels, axisName) {
+      return labels.slice().sort((left, right) => compareLabels(left, right, axisName));
+    }
+
+    function compareLabels(left, right, axisName) {
+      const leftDate = parseDateValue(left);
+      const rightDate = parseDateValue(right);
+      if (leftDate && rightDate) return leftDate - rightDate;
+      const leftNumeric = parseNumericValue(left);
+      const rightNumeric = parseNumericValue(right);
+      if (Number.isFinite(leftNumeric) && Number.isFinite(rightNumeric) && !looksFinancial(axisName)) {
+        return leftNumeric - rightNumeric;
+      }
+      return String(left).localeCompare(String(right));
+    }
+
+    function generateSingleChartColors(colorScheme, count) {
+      const scheme = String(colorScheme || "ink").toLowerCase();
+      if (scheme === "growth") {
+        return {
+          backgroundColor: Array.from({ length: count }, (_, index) => {
+            const alpha = 0.7 - ((Math.min(index, Math.max(count - 1, 1)) / Math.max(count - 1, 1)) * 0.45);
+            return `rgba(59,109,17,${alpha.toFixed(2)})`;
+          }),
+          borderColor: "rgba(59,109,17,0.90)"
+        };
+      }
+      if (scheme === "mixed") {
+        return {
+          backgroundColor: Array.from({ length: count }, (_, index) => index % 2 === 0 ? "rgba(26,26,46,0.65)" : "rgba(26,26,46,0.35)"),
+          borderColor: "rgba(26,26,46,0.90)"
+        };
+      }
+      return {
+        backgroundColor: Array.from({ length: count }, (_, index) => {
+          const alpha = 0.75 - ((Math.min(index, Math.max(count - 1, 1)) / Math.max(count - 1, 1)) * 0.5);
+          return `rgba(26,26,46,${alpha.toFixed(2)})`;
+        }),
+        borderColor: "rgba(26,26,46,0.90)"
+      };
+    }
+
+    function generateSeriesColors(colorScheme) {
+      const scheme = String(colorScheme || "ink").toLowerCase();
+      if (scheme === "growth") {
+        return {
+          borderColor: "rgba(59,109,17,0.90)",
+          backgroundColor: "rgba(59,109,17,0.18)",
+          pointBackgroundColor: "rgba(59,109,17,0.45)"
+        };
+      }
+      if (scheme === "mixed") {
+        return {
+          borderColor: "rgba(26,26,46,0.75)",
+          backgroundColor: "rgba(26,26,46,0.16)",
+          pointBackgroundColor: "rgba(26,26,46,0.35)"
+        };
+      }
+      return {
+        borderColor: "rgba(26,26,46,0.90)",
+        backgroundColor: "rgba(26,26,46,0.18)",
+        pointBackgroundColor: "rgba(26,26,46,0.45)"
+      };
+    }
+
+    function sampleEveryNth(items, maxItems) {
+      const step = Math.max(1, Math.ceil(items.length / maxItems));
+      return items.filter((_, index) => index % step === 0).slice(0, maxItems);
+    }
+
+    function parseNumericValue(value) {
+      if (typeof value === "number" && Number.isFinite(value)) return value;
+      const normalized = String(value ?? "").replace(/[$,%\s]/g, "").replace(/,/g, "");
+      const number = Number(normalized);
+      return Number.isFinite(number) ? number : NaN;
+    }
+
+    function parseDateValue(value) {
+      const text = String(value ?? "").trim();
+      if (!text) return null;
+      if (/^\d{4}-\d{2}$/.test(text)) {
+        const time = Date.parse(`${text}-01T00:00:00Z`);
+        return Number.isFinite(time) ? time : null;
+      }
+      const time = Date.parse(text);
+      return Number.isFinite(time) ? time : null;
+    }
+
+    function looksFinancial(columnName) {
+      return /revenue|sales|price|amount|value|cost|profit|arr|mrr|net/i.test(String(columnName || ""));
+    }
+
+    function formatAxisValue(val, columnName) {
+      const numeric = Number(val);
+      if (!Number.isFinite(numeric)) return String(val ?? "");
+      const plain = /satisfaction|score|rating|pct|percent/i.test(String(columnName || ""));
+      const prefix = plain ? "" : looksFinancial(columnName) ? "$" : "";
+      if (Math.abs(numeric) >= 1000000) return `${prefix}${(numeric / 1000000).toFixed(1)}M`;
+      if (Math.abs(numeric) >= 1000) return `${prefix}${(numeric / 1000).toFixed(0)}k`;
+      if (Math.abs(numeric) > 0 && Math.abs(numeric) < 10) return `${prefix}${numeric.toFixed(1)}`;
+      return `${prefix}${numeric.toLocaleString()}`;
+    }
+
+    function renderCsvAnalysisResult(result, sourceLabel) {
+      const datasetSummary = result.datasetSummary || {};
+      const findings = Array.isArray(result.keyFindings) ? result.keyFindings : [];
+      const risks = Array.isArray(result.risks) ? result.risks : [];
+      const opportunities = Array.isArray(result.opportunities) ? result.opportunities : [];
+      const actions = Array.isArray(result.recommendedActions) ? result.recommendedActions : [];
+      const chartRecommendations = Array.isArray(result.chartRecommendations) ? result.chartRecommendations : [];
+      const columns = Array.isArray(datasetSummary.columns) ? datasetSummary.columns : [];
+      state.csvResultVisible = true;
+      elements.csvResultSection.hidden = false;
+      elements.csvResultSection.innerHTML = `
+        <div class="brief-header">
+          <div>
+            <h2 class="section-title" id="csvResultHeading" style="font-size:32px;">Standalone CSV Analyst Brief</h2>
+          </div>
+          <div class="brief-actions"><button class="secondary-button" type="button" id="downloadCsvPdfButton">Download PDF</button></div>
+        </div>
+        <div class="brief-summary csv-summary-callout">
+          <p class="one-line-summary">${escapeHtml(result.oneLineSummary || "No one-line summary returned.")}</p>
+          <div class="csv-metric-grid">
+            <div class="csv-metric-card"><div class="score-label">Rows</div><div class="csv-metric-value">${escapeHtml(datasetSummary.rowCount || 0)}</div></div>
+            <div class="csv-metric-card"><div class="score-label">Columns</div><div class="csv-metric-value">${escapeHtml(datasetSummary.columnCount || 0)}</div></div>
+            <div class="csv-metric-card"><div class="score-label">Insight Items</div><div class="csv-metric-value">${escapeHtml(findings.length + risks.length + opportunities.length)}</div></div>
+          </div>
+        </div>
+        ${renderChartsSectionMarkup(chartRecommendations, "single")}
+        <div class="csv-columns-card">
+          <div class="tier-heading">
+            <h3 class="csv-section-title">Dataset Summary</h3>
+            <span class="meta-label">${columns.length} columns</span>
+          </div>
+          <div class="csv-columns-list">
+            ${columns.length ? columns.map((column) => `<span class="provider-chip">${escapeHtml(column)}</span>`).join("") : '<span class="provider-chip">No columns returned</span>'}
+          </div>
+        </div>
+        <div class="csv-insight-grid">
+          <section class="csv-insight-card findings">
+            <div class="tier-heading"><h3 class="csv-section-title">Key Findings</h3><span class="meta-label">${findings.length}</span></div>
+            ${renderCsvInsightList(findings, "The analyst did not surface any notable findings for this dataset.")}
+          </section>
+          <section class="csv-insight-card risks">
+            <div class="tier-heading"><h3 class="csv-section-title">Risks</h3><span class="meta-label">${risks.length}</span></div>
+            ${renderCsvInsightList(risks, "No material risks were identified from the uploaded CSV.")}
+          </section>
+          <section class="csv-insight-card opportunities">
+            <div class="tier-heading"><h3 class="csv-section-title">Opportunities</h3><span class="meta-label">${opportunities.length}</span></div>
+            ${renderCsvInsightList(opportunities, "No explicit upside opportunities were returned for this dataset.")}
+          </section>
+        </div>
+        <div class="csv-actions-card">
+          <div class="tier-heading">
+            <h3 class="csv-section-title">Recommended Actions</h3>
+            <span class="meta-label">${actions.length} ACTION${actions.length === 1 ? "" : "S"}</span>
+          </div>
+          ${renderActionList(actions)}
+        </div>
+      `;
+      document.getElementById("downloadCsvPdfButton").addEventListener("click", downloadCsvResultPdf);
+      renderCharts(state.csvChartPayload, chartRecommendations, "single");
+    }
+
+    function renderCsvComparisonResult(result, meta) {
+      const fileA = result.fileA || {};
+      const fileB = result.fileB || {};
+      const sharedColumns = Array.isArray(result.sharedColumns) ? result.sharedColumns : [];
+      const onlyInA = Array.isArray(result.onlyInA) ? result.onlyInA : [];
+      const onlyInB = Array.isArray(result.onlyInB) ? result.onlyInB : [];
+      const growthColumns = Array.isArray(result.growthColumns) ? result.growthColumns : [];
+      const declineColumns = Array.isArray(result.declineColumns) ? result.declineColumns : [];
+      const segmentInsights = Array.isArray(result.segmentInsights) ? result.segmentInsights : [];
+      const newPatterns = Array.isArray(result.newPatterns) ? result.newPatterns : [];
+      const disappearedPatterns = Array.isArray(result.disappearedPatterns) ? result.disappearedPatterns : [];
+      const anomalies = Array.isArray(result.anomalies) ? result.anomalies : [];
+      const metricComparisons = (Array.isArray(result.metricComparisons) ? result.metricComparisons : [])
+        .slice()
+        .sort((a, b) => significanceRank(b.significance) - significanceRank(a.significance));
+      const chartRecommendations = Array.isArray(result.chartRecommendations) ? result.chartRecommendations : [];
+      const schemaMatch = Boolean(result.schemaMatch);
+      const fewerRowsInB = Number(fileB.rowCount || 0) < Number(fileA.rowCount || 0);
+
+      state.csvResultVisible = true;
+      elements.csvResultSection.hidden = false;
+      elements.csvResultSection.innerHTML = `
+        <div class="brief-header">
+          <div>
+            <h2 class="section-title" id="csvResultHeading" style="font-size:32px;">CSV Comparison Brief</h2>
+          </div>
+          <div class="brief-actions"><button class="secondary-button" type="button" id="downloadCsvComparisonPdfButton">Download PDF</button></div>
+        </div>
+        ${!sharedColumns.length ? '<div class="compare-banner warning">These files appear to be unrelated datasets — comparison may not be meaningful.</div>' : ''}
+        ${fewerRowsInB ? `<div class="compare-banner alert">${escapeHtml(meta.labelB)} has fewer rows than ${escapeHtml(meta.labelA)}, which may indicate incomplete or filtered data.</div>` : ''}
+        <div class="file-overview-grid">
+          ${renderFileOverviewCard("A", meta.labelA, meta.fileNameA, fileA, schemaMatch, "file-a")}
+          ${renderFileOverviewCard("B", meta.labelB, meta.fileNameB, fileB, schemaMatch, "file-b")}
+        </div>
+        <div class="csv-columns-card">
+          <div class="tier-heading">
+            <h3 class="csv-section-title">Schema Comparison</h3>
+            <span class="meta-label">${schemaMatch ? "Structure match" : "Structure differs"}</span>
+          </div>
+          ${schemaMatch ? '<div class="schema-banner">Identical structure</div>' : ''}
+          ${schemaMatch ? '' : `
+            <div class="schema-grid">
+              <section class="schema-column">
+                <h4 class="csv-section-title">Only in A</h4>
+                <div class="schema-tags">${renderSchemaTags(onlyInA, "only-a", "No unique columns in File A")}</div>
+              </section>
+              <section class="schema-column">
+                <h4 class="csv-section-title">In Both</h4>
+                <div class="schema-tags">${renderSchemaTags(sharedColumns, "shared", "No shared columns found")}</div>
+              </section>
+              <section class="schema-column">
+                <h4 class="csv-section-title">Only in B</h4>
+                <div class="schema-tags">${renderSchemaTags(onlyInB, "only-b", "No unique columns in File B")}</div>
+              </section>
+            </div>
+          `}
+        </div>
+        <div class="table-wrap">
+          <table class="comparison-table">
+            <thead>
+              <tr>
+                <th>Metric</th>
+                <th>${escapeHtml(meta.labelA)}</th>
+                <th>${escapeHtml(meta.labelB)}</th>
+                <th>Change</th>
+                <th>Significance</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${metricComparisons.length ? metricComparisons.map((item) => `
+                <tr>
+                  <td><strong>${escapeHtml(item.metric || "Metric")}</strong></td>
+                  <td>${escapeHtml(item.valueA || "—")}</td>
+                  <td>${escapeHtml(item.valueB || "—")}</td>
+                  <td><span class="change-pill ${escapeHtml(changeDirectionClass(item.direction))}">${escapeHtml(item.change || "No change")}</span></td>
+                  <td><span class="pill significance-pill ${escapeHtml(significanceClass(item.significance))}">${escapeHtml(item.significance || "low")}</span></td>
+                </tr>
+              `).join("") : '<tr><td colspan="5">No metric comparisons were returned.</td></tr>'}
+            </tbody>
+          </table>
+        </div>
+        <div class="csv-columns-card" style="margin-top:20px;">
+          <div class="tier-heading">
+            <h3 class="csv-section-title">Segment Insights</h3>
+            <span class="meta-label">${segmentInsights.length} movers</span>
+          </div>
+          <div class="pattern-grid" style="margin-top:16px;">
+            ${segmentInsights.length ? segmentInsights.map((item) => `
+              <article class="pattern-card neutral">
+                <div class="tier-heading">
+                  <h3 class="csv-section-title">${escapeHtml(item.segment || "Segment")}</h3>
+                  <span class="pill significance-pill ${escapeHtml(changeDirectionClass(item.direction))}">${escapeHtml(item.direction || "same")}</span>
+                </div>
+                <p><strong>Dimension:</strong> ${escapeHtml(item.dimension || "segment")}</p>
+                <p><strong>${escapeHtml(meta.labelA)}:</strong> ${escapeHtml(item.valueA || "—")}</p>
+                <p><strong>${escapeHtml(meta.labelB)}:</strong> ${escapeHtml(item.valueB || "—")}</p>
+                <p><strong>Change:</strong> ${escapeHtml(item.change || "No change")}</p>
+              </article>
+            `).join("") : '<div class="csv-empty-state"><strong>No segment movers returned</strong><span>The comparison agent did not return product, region, or channel-level changes for these files.</span></div>'}
+          </div>
+        </div>
+        <div class="change-columns-grid" style="margin-top:20px;">
+          <div class="csv-columns-card" style="margin-top:0;">
+            <div class="tier-heading"><h3 class="csv-section-title">Growth Areas</h3><span class="meta-label">${growthColumns.length}</span></div>
+            <div class="chip-cluster">${renderChangeChips(growthColumns, "positive", "No growth areas detected")}</div>
+          </div>
+          <div class="csv-columns-card" style="margin-top:0;">
+            <div class="tier-heading"><h3 class="csv-section-title">Decline Areas</h3><span class="meta-label">${declineColumns.length}</span></div>
+            <div class="chip-cluster">${renderChangeChips(declineColumns, "negative", "No decline areas detected")}</div>
+          </div>
+        </div>
+        <div class="pattern-grid" style="margin-top:20px;">
+          <section class="pattern-card new">
+            <div class="tier-heading"><h3 class="csv-section-title">New in ${escapeHtml(meta.labelB)}</h3><span class="meta-label">${newPatterns.length}</span></div>
+            ${renderPatternList(newPatterns, "No new patterns were highlighted in File B.")}
+          </section>
+          <section class="pattern-card gone">
+            <div class="tier-heading"><h3 class="csv-section-title">Gone from ${escapeHtml(meta.labelB)}</h3><span class="meta-label">${disappearedPatterns.length}</span></div>
+            ${renderPatternList(disappearedPatterns, "No disappeared patterns were highlighted from File A.")}
+          </section>
+        </div>
+        ${renderChartsSectionMarkup(chartRecommendations, "compare")}
+        <div class="anomaly-grid">
+          ${anomalies.length ? anomalies.map((item) => `
+            <article class="anomaly-card">
+              <div class="tier-heading">
+                <h3 class="csv-section-title">Anomaly</h3>
+                <span class="pill significance-pill ${escapeHtml(significanceClass(item.severity))}">${escapeHtml((item.file || "").toUpperCase() || "A")} · ${escapeHtml(item.severity || "low")}</span>
+              </div>
+              <p>${escapeHtml(item.description || "No anomaly description provided.")}</p>
+            </article>
+          `).join("") : '<div class="csv-empty-state"><strong>No anomalies returned</strong><span>The comparison agent did not flag any unusual shifts between these files.</span></div>'}
+        </div>
+        <div class="insight-callout">
+          <div class="query-label">Key Insight</div>
+          <p class="one-line-summary">${escapeHtml(result.keyInsight || "No key insight returned.")}</p>
+          <p class="section-subtitle" style="margin-top:14px;">${escapeHtml(result.recommendation || "No recommendation returned.")}</p>
+        </div>
+        <div class="data-story-card">
+          ${escapeHtml(result.storyNarrative || "No comparison narrative returned.")}
+        </div>
+      `;
+      document.getElementById("downloadCsvComparisonPdfButton").addEventListener("click", downloadCsvResultPdf);
+      renderCharts(state.csvChartPayload, chartRecommendations, "compare");
+    }
+
+    function renderFileOverviewCard(fileKey, label, fileName, fileResult, schemaMatch, accentClass) {
+      return `
+        <article class="file-overview-card ${accentClass}">
+          <div class="tier-heading">
+            <div>
+              <div class="query-label">${escapeHtml(fileKey === "A" ? "File A" : "File B")}</div>
+              <h3 class="csv-section-title" style="margin-top:6px;">${escapeHtml(label || (fileKey === "A" ? "File A" : "File B"))}</h3>
+            </div>
+            <span class="pill ${schemaMatch ? "positive" : "warning"}">${schemaMatch ? "Structure match" : "Structure differs"}</span>
+          </div>
+          <p class="section-subtitle" style="margin-top:8px;">${escapeHtml(fileName || label || `File ${fileKey}`)}</p>
+          <div class="overview-stats">
+            <div class="overview-stat"><div class="metric-label">Rows</div><div class="metric-big">${escapeHtml(fileResult.rowCount || 0)}</div></div>
+            <div class="overview-stat"><div class="metric-label">Columns</div><div class="metric-big">${escapeHtml(fileResult.columnCount || 0)}</div></div>
+          </div>
+          <p style="margin-top:14px;">${escapeHtml(fileResult.summary || "No summary returned for this file.")}</p>
+        </article>
+      `;
+    }
+
+    function renderSchemaTags(items, className, emptyMessage) {
+      if (!items.length) return `<span class="schema-tag shared">${escapeHtml(emptyMessage)}</span>`;
+      return items.map((item) => `<span class="schema-tag ${className}">${escapeHtml(item)}</span>`).join("");
+    }
+
+    function renderChangeChips(items, className, emptyMessage) {
+      if (!items.length) return `<span class="chip">${escapeHtml(emptyMessage)}</span>`;
+      return items.map((item) => `<span class="chip ${className}">${escapeHtml(item)}</span>`).join("");
+    }
+
+    function renderPatternList(items, emptyMessage) {
+      if (!items.length) return `<div class="csv-empty-state"><strong>No shift detected</strong><span>${escapeHtml(emptyMessage)}</span></div>`;
+      return `<div class="summary-stack" style="margin-top:14px;">${items.map((item) => `<div class="list-card"><p>${escapeHtml(item)}</p></div>`).join("")}</div>`;
+    }
+
+    function renderSentimentPill(value) {
+      const normalized = String(value || "neutral").toLowerCase();
+      if (normalized.includes("positive")) return '<span class="pill positive">Positive</span>';
+      if (normalized.includes("negative")) return '<span class="pill danger">Negative</span>';
+      if (normalized.includes("mixed")) return '<span class="pill warning">Mixed</span>';
+      return '<span class="pill neutral">Neutral</span>';
+    }
+
+    function renderRiskPill(value) {
+      const normalized = String(value || "medium").toLowerCase();
+      if (normalized === "low") return '<span class="pill positive">Low risk</span>';
+      if (normalized === "critical" || normalized === "high") return `<span class="pill danger">${escapeHtml(normalized)} risk</span>`;
+      if (normalized === "medium") return '<span class="pill warning">Medium risk</span>';
+      return `<span class="pill neutral">${escapeHtml(normalized)} risk</span>`;
+    }
+
+    function renderThreatPill(value) {
+      const normalized = String(value || "medium").toLowerCase();
+      if (normalized === "low") return '<span class="pill positive">Low threat</span>';
+      if (normalized === "high") return '<span class="pill danger">High threat</span>';
+      return '<span class="pill warning">Medium threat</span>';
+    }
+
+    function looksLikeUrl(value) {
+      return /^https?:\/\//i.test(String(value || "").trim());
+    }
+
+    function coerceNumber(value) {
+      const numeric = Number(value);
+      return Number.isFinite(numeric) ? Math.max(0, Math.min(100, Math.round(numeric))) : 0;
+    }
+
+    function normalizeMetricValue(value) {
+      if (typeof value === "number" && Number.isFinite(value)) {
+        return coerceNumber(value);
+      }
+      const text = String(value ?? "").trim();
+      if (!text) return 0;
+      const direct = Number(text);
+      if (Number.isFinite(direct)) {
+        return coerceNumber(direct);
+      }
+      const match = text.match(/-?\d+(\.\d+)?/);
+      return match ? coerceNumber(Number(match[0])) : 0;
+    }
+
+    function renderMetricDirectionHint(direction) {
+      if (direction === "lower") return '<div class="metric-direction">Lower is better</div>';
+      if (direction === "higher") return '<div class="metric-direction">Higher is better</div>';
+      return '<div class="metric-direction">Reference only</div>';
+    }
+
+    function significanceRank(value) {
+      const normalized = String(value || "").toLowerCase();
+      if (normalized === "high") return 3;
+      if (normalized === "medium") return 2;
+      return 1;
+    }
+
+    function significanceClass(value) {
+      const normalized = String(value || "").toLowerCase();
+      if (normalized === "high") return "high";
+      if (normalized === "medium") return "medium";
+      return "low";
+    }
+
+    function changeDirectionClass(value) {
+      const normalized = String(value || "").toLowerCase();
+      if (normalized === "up") return "up";
+      if (normalized === "down") return "down";
+      return "same";
+    }
+
+    function clampScore(value) {
+      return normalizeMetricValue(value);
+    }
+
+    function capitalize(value) {
+      const text = String(value || "");
+      return text.charAt(0).toUpperCase() + text.slice(1);
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+  </script>
+</body>
+</html>
