@@ -12,7 +12,8 @@ const MODE_LABELS = {
   company: "Company Intel",
   jobmarket: "Job Market",
   esg: "ESG Focus",
-  industry: "Industry Trends"
+  industry: "Industry Trends",
+  interviewprep: "Interview Prep"
 };
 
 const MODE_MODIFIERS = {
@@ -20,7 +21,8 @@ const MODE_MODIFIERS = {
   company: "Focus heavily on company health, culture, hiring signals, and competitive position.",
   jobmarket: "Prioritize hiring trends, role demand, salary signals, and workforce movement.",
   esg: "Weight ESG performance, sustainability commitments, and regulatory compliance heavily.",
-  industry: "Scan industry-wide trends, not just a single company. Look for sector patterns and macro movement."
+  industry: "Scan industry-wide trends, not just a single company. Look for sector patterns and macro movement.",
+  interviewprep: "Build a company-specific interview roadmap for the target role using the latest reported interview signals, role expectations, and prep resources."
 };
 
 const PROVIDER_PRESETS = {
@@ -61,7 +63,10 @@ const AGENT_SPECS = [
     useWebSearch: true,
     searchQuery: (topic, mode) => `${topic} latest news ${MODE_LABELS[mode]}`,
     systemPrompt: `You are an intelligence analyst monitoring news. Search for recent news about the topic. Return ONLY valid JSON with this exact shape:
-{"headlines":[{"title":"string","summary":"string","sentiment":"positive|negative|neutral","recency":"string"}],"overallSentiment":"positive|negative|mixed|neutral","biggestStory":"string","signalStrength":0,"urgencyFlag":true}`
+{"headlines":[{"title":"string","summary":"string","sentiment":"positive|negative|neutral","recency":"string"}],"overallSentiment":"positive|negative|mixed|neutral","biggestStory":"string","signalStrength":0,"urgencyFlag":true}
+
+signalStrength must be an integer from 0 to 100 that reflects the overall strength and importance of recent news coverage.
+Do not leave signalStrength at 0 unless there is effectively no meaningful recent news signal.`
   },
   {
     key: "jobs",
@@ -69,7 +74,11 @@ const AGENT_SPECS = [
     useWebSearch: true,
     searchQuery: (topic, mode) => `${topic} hiring jobs layoffs careers ${MODE_LABELS[mode]}`,
     systemPrompt: `You are a talent market analyst monitoring hiring signals. Return ONLY valid JSON with this exact shape:
-{"hiringVelocity":"accelerating|stable|slowing|freezing","velocityScore":0,"hotRoles":["string","string","string"],"hiringSignal":"string","redFlags":["string"],"opportunitySignal":"string"}`
+{"hiringVelocity":"accelerating|stable|slowing|freezing","velocityScore":0,"hotRoles":["string","string","string"],"hiringSignal":"string","redFlags":["string"],"opportunitySignal":"string","careersPage":{"label":"string","url":"string"},"jobLinks":[{"title":"string","url":"string"}]}
+
+Include the best official company careers/jobs page when confidently identifiable.
+Include up to 3 direct live job-posting links when available.
+If you are not confident about a link, omit it. Use null for careersPage and [] for jobLinks when unavailable.`
   },
   {
     key: "sentiment",
@@ -97,15 +106,114 @@ const AGENT_SPECS = [
   }
 ];
 
+const INTERVIEW_PREP_AGENT_SPECS = [
+  {
+    key: "news",
+    label: "Interview Signals",
+    useWebSearch: true,
+    searchQuery: (topic, mode, role) => `${topic} ${role} interview rounds reddit github latest hiring org changes`,
+    systemPrompt: `You are an interview intelligence analyst tracking the latest company and process signals for a target role. Return ONLY valid JSON with this exact shape:
+{"reportedRoundCount":"string","signalStrength":0,"biggestSignal":"string","recentSignals":[{"title":"string","detail":"string","source":"string","recency":"string"}]}
+
+Use the latest evidence available.
+reportedRoundCount should describe the best-known number or range of rounds for this company and role.
+signalStrength must be an integer from 0 to 100.`
+  },
+  {
+    key: "jobs",
+    label: "Role Expectations",
+    useWebSearch: true,
+    searchQuery: (topic, mode, role) => `${topic} ${role} careers job description interview skills github practice`,
+    systemPrompt: `You are a role-preparation analyst. Return ONLY valid JSON with this exact shape:
+{"openingStatus":"open|mixed|unclear|not_found","roleFitScore":0,"roleExpectationSummary":"string","skillAreas":["string","string","string"],"officialMaterials":[{"title":"string","url":"string","type":"job_posting|careers|official_guide|company_blog"}],"careersPage":{"label":"string","url":"string"},"jobLinks":[{"title":"string","url":"string"}]}
+
+roleFitScore must be an integer from 0 to 100.
+officialMaterials should include official company/job sources when available.
+Use null for careersPage and [] for jobLinks when unavailable.`
+  },
+  {
+    key: "sentiment",
+    label: "Candidate Experience",
+    useWebSearch: true,
+    searchQuery: (topic, mode, role) => `${topic} ${role} interview experience reddit github glassdoor discussion`,
+    systemPrompt: `You are a candidate-experience analyst. Return ONLY valid JSON with this exact shape:
+{"experienceScore":0,"difficultyLabel":"easy|moderate|hard|mixed","processSentiment":"string","candidateThemes":[{"theme":"string","sentiment":"positive|negative|mixed|neutral","detail":"string","source":"string"}]}
+
+Focus on community-reported interview experience patterns for the target role.
+experienceScore must be an integer from 0 to 100.`
+  },
+  {
+    key: "regulatory",
+    label: "Process & Policy Signals",
+    useWebSearch: true,
+    searchQuery: (topic, mode, role) => `${topic} ${role} interview assessment hackerrank codility location visa remote onsite`,
+    systemPrompt: `You are an interview process analyst. Return ONLY valid JSON with this exact shape:
+{"assessmentFormat":"string","locationMode":"string","processNote":"string","constraints":["string","string"],"processMaterials":[{"title":"string","url":"string","type":"prep_repo|assessment_guide|discussion"}]}
+
+Summarize process requirements, assessment formats, and any logistical constraints relevant to preparation.`
+  },
+  {
+    key: "competitor",
+    label: "Peer Interview Calibration",
+    useWebSearch: true,
+    searchQuery: (topic, mode, role) => `${topic} ${role} interview peers competitor companies similar interview process`,
+    systemPrompt: `You are a peer-calibration interview analyst. Return ONLY valid JSON with this exact shape:
+{"calibrationScore":0,"likelyEmphasis":"string","peerSummary":"string","peerPatterns":[{"company":"string","pattern":"string","detail":"string"}]}
+
+Use peer companies and adjacent interview processes to calibrate likely difficulty and focus areas.
+calibrationScore must be an integer from 0 to 100.`
+  }
+];
+
 const AGGREGATOR_PROMPT = `You are a senior intelligence analyst synthesizing 5 agent reports. Return ONLY valid JSON with this exact shape:
 {"subjectSummary":"string","overallRiskScore":0,"overallOpportunityScore":0,"urgent":[{"finding":"string","source":"string","action":"string"}],"notable":[{"finding":"string","source":"string","whyItMatters":"string"}],"fyi":[{"finding":"string","context":"string"}],"oneLineSummary":"string","recommendedActions":["string","string","string"],"monitoringFrequency":"string"}`;
 
+const INTERVIEW_PREP_AGGREGATOR_PROMPT = `You are a senior interview-prep strategist. Synthesize the 5 agent reports into a company-specific interview roadmap for the target role. Return ONLY valid JSON with this exact shape:
+{"reportedRoundCount":"string","confidenceLabel":"high|medium|low","oneLineSummary":"string","roadmapSummary":"string","rounds":[{"name":"string","description":"string","focusAreas":["string","string"],"materials":[{"title":"string","url":"string","type":"official|reddit|github|prep_guide|job_posting"}],"signals":["string","string"]}],"prepPlan":["string","string","string"],"keyWarnings":["string","string"],"sourceNotes":["string","string"]}
+
+Rules:
+- rounds should contain 2 to 5 items when enough evidence exists
+- use the best-known likely round sequence when exact counts are unclear
+- confidenceLabel should reflect how consistent the evidence is
+- materials should prioritize useful prep links and keep URLs intact
+- keep the roadmap student-oriented and actionable`;
+
 const CSV_ANALYST_PROMPT = `You are a data analyst. Analyze the uploaded CSV summary and return ONLY valid JSON with this exact shape:
-{"datasetSummary":{"rowCount":0,"columnCount":0,"columns":[]},"keyFindings":["string"],"risks":["string"],"opportunities":["string"],"recommendedActions":["string"],"oneLineSummary":"string","chartRecommendations":[{"chartType":"bar|line|pie|scatter|histogram","title":"string","xAxis":"string","yAxis":"string","aggregation":"sum|average|count|none","groupBy":"string","reason":"string","sortBy":"value_desc|value_asc|label_asc|none","maxCategories":8,"colorScheme":"ink|growth|mixed"}]}
+{"datasetSummary":{"rowCount":0,"columnCount":0,"columns":[]},"keyFindings":["string"],"risks":["string"],"opportunities":["string"],"recommendedActions":["string"],"oneLineSummary":"string","anomalies":[{"rowIndex":0,"anomalousColumn":"string","severity":"critical|warning|low","description":"string","type":"statistical_outlier|missing_value|impossible_value"}],"chartRecommendations":[{"chartType":"bar|line|pie|scatter|histogram","title":"string","xAxis":"string","yAxis":"string","aggregation":"sum|average|count|none","groupBy":"string","reason":"string","sortBy":"value_desc|value_asc|label_asc|none","maxCategories":8,"colorScheme":"ink|growth|mixed"}]}
 Rules for recommendedActions:
 - recommendedActions must be an array of 3 to 4 separate strings.
 - Do not return one semicolon-separated sentence or combine multiple actions into a single string.
 - Each action should be concise, executive-ready, and stand alone as its own recommendation.
+Anomaly instructions:
+You will receive a list of pre-computed anomaly candidates. Each candidate has a rowIndex (the exact position in the dataset, 0-based), the anomalous column, and statistical context.
+For each candidate you decide is a genuine anomaly (not just a statistical quirk), return an object in the anomalies array with:
+{
+  rowIndex: number — copy EXACTLY from the candidate, do not change this value,
+  anomalousColumn: string — copy the column name exactly from the candidate,
+  severity: 'critical' | 'warning' | 'low',
+  description: string — plain English explanation of why this is anomalous and what it likely means,
+  type: string — copy from candidate ('statistical_outlier'|'missing_value'|'impossible_value')
+}
+Rules:
+- Copy rowIndex exactly — do not round, estimate, or recalculate it
+- severity = critical if zScore > 5 or type is impossible_value
+- severity = warning if zScore 3-5 or type is missing_value
+- severity = low for borderline cases
+- If a candidate looks like normal variation (low business impact), you may omit it
+- Each rowIndex should appear in your response at most ONCE. If multiple columns in the same row are anomalous, report the most important one only and mention the others in the description.
+- Focus on data QUALITY issues not business outliers.
+- Flag these:
+  - Revenue that is impossibly low given units sold
+  - Missing values in important columns
+  - Values that are physically impossible (negative price, zero revenue on large order)
+  - Duplicate order IDs
+- Do NOT flag these as anomalies:
+  - High revenue orders (large orders are legitimate)
+  - Premium priced products (expensive items exist)
+  - High discount percentages (sales happen)
+  - Variation in customer satisfaction scores
+- Maximum 3 anomalies returned.
+- Quality over quantity.
 Rules for chartRecommendations:
 - If data has a date/time column, always recommend a line chart with date on x axis and the most important numeric column on y axis.
 - If data has a categorical column with fewer than 10 unique values, recommend a bar chart grouped by that category.
@@ -115,6 +223,7 @@ Rules for chartRecommendations:
 - Never recommend more than 3 charts.
 - Never recommend a chart if the required column does not exist.
 - Always put the most insightful chart first.
+If pre-computed correlations or segment summaries are provided, use them directly in your reasoning instead of inferring those relationships from scratch.
 Return ONLY valid JSON, no markdown, no explanation.`;
 
 const CSV_COMPARISON_PROMPT = `You are a senior data analyst specializing in comparative data analysis. You have been given two CSV datasets. Analyze both and return a JSON object with:
@@ -127,22 +236,62 @@ const CSV_COMPARISON_PROMPT = `You are a senior data analyst specializing in com
 - metricComparisons: array of up to 5 objects { metric: string, valueA: string, valueB: string, change: string, direction: string, significance: string }
 - growthColumns: array of strings
 - declineColumns: array of strings. declineColumns should include specific products or categories where volume or revenue dropped between File A and File B, not just column names where the average went down.
-- segmentInsights: array of 4 objects { segment: string, dimension: string, valueA: string, valueB: string, change: string, direction: string }
-- newPatterns: array of 2 strings
-- disappearedPatterns: array of 2 strings
-- anomalies: array of 2 objects { description: string, file: string, severity: string }
+- anomalies: array of up to 3 objects { description: string, file: string, severity: string }
 - keyInsight: string
 - recommendation: string
-- storyNarrative: string
 - chartRecommendations: array of 2 objects { chartType: string, title: string, metric: string, groupBy: string, reason: string, maxCategories: number }
-You must segment by categorical columns such as product, region, and channel whenever those dimensions exist, and compare performance within each segment.
 The $4.50 net_revenue anomaly on a 95-unit Laptop order in File B should be flagged as a critical data quality issue in anomalies.
+Focus on data QUALITY issues not business outliers.
+Flag these:
+- Revenue that is impossibly low given units sold
+- Missing values in important columns
+- Values that are physically impossible (negative price, zero revenue on large order)
+- Duplicate order IDs
+Do NOT flag these as anomalies:
+- High revenue orders (large orders are legitimate)
+- Premium priced products (expensive items exist)
+- High discount percentages (sales happen)
+- Variation in customer satisfaction scores
+Maximum 3 anomalies returned.
+Quality over quantity.
+Return concise field values. Keep summaries short and executive-ready.
 Chart rules:
 - Always recommend a grouped_bar chart comparing File A vs File B for the top metric, usually net_revenue or units_sold, grouped by the most informative categorical column such as product or region.
 - If a date column exists in both files, recommend a line_comparison showing both files as two lines over time.
 - chartType must be one of grouped_bar, line_comparison, side_by_side_bar.
 - Maximum 2 charts.
 Return ONLY valid JSON, no markdown, no explanation.`;
+
+const CROSS_REFERENCE_SYNTHESIS_PROMPT = `You are a senior strategy analyst who specializes in connecting internal business data to external market intelligence. You have two sources of information:
+1. INTERNAL DATA from CSV analysis
+2. EXTERNAL INTELLIGENCE from 5 monitoring agents
+
+Your task: Find meaningful connections between the internal data patterns and the external signals.
+
+Return a JSON object with:
+{
+  "headline":"string",
+  "connections":[
+    {
+      "internalFinding":"string",
+      "externalSignal":"string",
+      "connection":"string",
+      "implication":"string",
+      "confidence":"high|medium|low",
+      "source":"news|jobs|sentiment|regulatory|competitor"
+    }
+  ],
+  "biggestRisk":"string",
+  "biggestOpportunity":"string",
+  "strategicRecommendation":"string",
+  "monitoringAdvice":"string"
+}
+
+Rules:
+- Return exactly 3 connections when enough evidence exists, otherwise return fewer rather than inventing weak links.
+- Be specific and reference actual findings from the CSV analysis and monitoring agents.
+- If you cannot find a meaningful connection, say so honestly rather than inventing one.
+- Return ONLY valid JSON, no markdown, no explanation.`;
 
 const server = http.createServer(async (req, res) => {
   try {
@@ -156,6 +305,10 @@ const server = http.createServer(async (req, res) => {
     if (req.method === "GET" && requestUrl.pathname === "/pulseboard-relay.test.js") {
       return serveFile(res, path.join(__dirname, "pulseboard-relay.test.js"), "text/javascript; charset=utf-8");
     }
+    if (req.method === "GET" && requestUrl.pathname.startsWith("/scripts/") && requestUrl.pathname.endsWith(".js")) {
+      const scriptName = path.basename(requestUrl.pathname);
+      return serveFile(res, path.join(__dirname, "scripts", scriptName), "text/javascript; charset=utf-8");
+    }
     if (req.method === "POST" && requestUrl.pathname === "/api/pulseboard/validate-connection") {
       const body = await readJson(req);
       const connection = normalizeConnection(body.connection);
@@ -168,10 +321,14 @@ const server = http.createServer(async (req, res) => {
       const input = {
         connection,
         topic: String(body.topic || "").trim(),
-        mode: String(body.mode || "general").trim()
+        mode: String(body.mode || "general").trim(),
+        role: String(body.role || "").trim()
       };
       if (!input.topic) {
         return sendJson(res, 400, { error: { message: "Topic is required." } });
+      }
+      if (input.mode === "interviewprep" && !input.role) {
+        return sendJson(res, 400, { error: { message: "Role is required for Interview Prep mode." } });
       }
       res.writeHead(200, {
         "Content-Type": "application/x-ndjson; charset=utf-8",
@@ -190,10 +347,16 @@ const server = http.createServer(async (req, res) => {
       const connection = normalizeConnection(body.connection);
       const csvText = String(body.csvText || "");
       const analysisGoal = String(body.analysisGoal || "").trim();
+      const qualityReport = body.qualityReport && typeof body.qualityReport === "object" ? body.qualityReport : null;
+      const schemaSummary = String(body.schemaSummary || "").trim();
+      const correlationSummary = String(body.correlationSummary || "").trim();
+      const segmentSummary = String(body.segmentSummary || "").trim();
+      const cleaningSummary = body.cleaningSummary && typeof body.cleaningSummary === "object" ? body.cleaningSummary : null;
+      const transformationLogSummary = Array.isArray(body.transformationLogSummary) ? body.transformationLogSummary : [];
       if (!csvText.trim()) {
         return sendJson(res, 400, { error: { message: "CSV text is required." } });
       }
-      const result = await analyzeCsvSession({ connection, csvText, analysisGoal });
+      const result = await analyzeCsvSession({ connection, csvText, analysisGoal, qualityReport, schemaSummary, correlationSummary, segmentSummary, cleaningSummary, transformationLogSummary });
       return sendJson(res, 200, { result });
     }
     if (req.method === "POST" && requestUrl.pathname === "/api/pulseboard/compare-csv") {
@@ -204,14 +367,37 @@ const server = http.createServer(async (req, res) => {
       const labelA = String(body.labelA || "File A").trim() || "File A";
       const labelB = String(body.labelB || "File B").trim() || "File B";
       const analysisGoal = String(body.analysisGoal || "").trim();
+      const qualityReportA = body.qualityReportA && typeof body.qualityReportA === "object" ? body.qualityReportA : null;
+      const qualityReportB = body.qualityReportB && typeof body.qualityReportB === "object" ? body.qualityReportB : null;
       if (!csvTextA.trim()) {
         return sendJson(res, 400, { error: { message: "CSV text is required for File A." } });
       }
       if (!csvTextB.trim()) {
         return sendJson(res, 400, { error: { message: "CSV text is required for File B." } });
       }
-      const result = await compareCsvSession({ connection, csvTextA, csvTextB, labelA, labelB, analysisGoal });
+      const result = await compareCsvSession({ connection, csvTextA, csvTextB, labelA, labelB, analysisGoal, qualityReportA, qualityReportB });
       return sendJson(res, 200, { result });
+    }
+    if (req.method === "POST" && requestUrl.pathname === "/api/pulseboard/cross-reference") {
+      const body = await readJson(req);
+      const connection = normalizeConnection(body.connection);
+      const topic = String(body.topic || "").trim();
+      const csvContext = String(body.csvContext || "").trim();
+      const csvResults = body.csvResults && typeof body.csvResults === "object" ? body.csvResults : {};
+      if (!topic) {
+        return sendJson(res, 400, { error: { message: "Cross-reference topic is required." } });
+      }
+      res.writeHead(200, {
+        "Content-Type": "application/x-ndjson; charset=utf-8",
+        "Cache-Control": "no-cache",
+        "Connection": "keep-alive",
+        "Access-Control-Allow-Origin": "*"
+      });
+      await crossReferenceSession({ connection, topic, csvContext, csvResults }, (event) => {
+        res.write(`${JSON.stringify(event)}\n`);
+      });
+      res.end();
+      return;
     }
     if (req.method === "OPTIONS") {
       res.writeHead(204, {
@@ -313,8 +499,9 @@ async function runValidationProbe(providerConfig) {
 }
 
 async function runPulseBoardSession(input, emit) {
-  const monitoringPromises = AGENT_SPECS.map((agent) =>
-    runMonitoringAgent(input.connection, input.topic, input.mode, agent)
+  const agentSpecs = getMonitoringAgentSpecs(input.mode);
+  const monitoringPromises = agentSpecs.map((agent) =>
+    runMonitoringAgent(input.connection, input.topic, input.mode, agent, { role: input.role })
       .then((result) => {
         emit({ type: "agent_result", agent: agent.key, result });
         return { agent: agent.key, result };
@@ -336,17 +523,24 @@ async function runPulseBoardSession(input, emit) {
   }
 
   emit({ type: "aggregator_started" });
-  const brief = await runAggregator(input.connection, input.topic, input.mode, byAgent);
+  const brief = await runAggregator(input.connection, input.topic, input.mode, byAgent, input.role);
   emit({ type: "brief", result: brief });
   emit({ type: "done" });
 }
 
-async function runMonitoringAgent(providerConfig, topic, mode, agentSpec) {
-  const evidence = await searchTopicSignals(topic, mode, agentSpec);
+function getMonitoringAgentSpecs(mode) {
+  return mode === "interviewprep" ? INTERVIEW_PREP_AGENT_SPECS : AGENT_SPECS;
+}
+
+async function runMonitoringAgent(providerConfig, topic, mode, agentSpec, options = {}) {
+  const evidence = await searchTopicSignals(topic, mode, agentSpec, options.role);
   const userContent = [
     `Topic to monitor: "${topic}"`,
     `Monitoring mode: ${MODE_LABELS[mode]}`,
+    options.role ? `Target role: "${options.role}"` : "",
     `Focus instruction: ${MODE_MODIFIERS[mode]}`,
+    options.extraContext ? "" : "",
+    options.extraContext ? `Additional context from internal CSV analysis:\n${options.extraContext}` : "",
     "",
     "Evidence gathered from live web search:",
     evidence
@@ -359,10 +553,11 @@ async function runMonitoringAgent(providerConfig, topic, mode, agentSpec) {
   });
 }
 
-async function runAggregator(providerConfig, topic, mode, byAgent) {
+async function runAggregator(providerConfig, topic, mode, byAgent, role = "") {
   const userContent = [
     `Topic to monitor: "${topic}"`,
     `Monitoring mode: ${MODE_LABELS[mode]}`,
+    role ? `Target role: "${role}"` : "",
     `Focus instruction: ${MODE_MODIFIERS[mode]}`,
     "",
     `News: ${JSON.stringify(byAgent.news)}`,
@@ -374,7 +569,7 @@ async function runAggregator(providerConfig, topic, mode, byAgent) {
 
   return runModelJson({
     providerConfig,
-    systemPrompt: AGGREGATOR_PROMPT,
+    systemPrompt: mode === "interviewprep" ? INTERVIEW_PREP_AGGREGATOR_PROMPT : AGGREGATOR_PROMPT,
     userContent
   });
 }
@@ -385,7 +580,7 @@ async function analyzeCsvSession(input) {
   }
   const parsedCsv = parseCsvText(input.csvText);
   const csvSummary = summarizeCsvData(parsedCsv);
-  return runCsvAnalyst(input.connection, csvSummary, input.analysisGoal);
+  return runCsvAnalyst(input.connection, parsedCsv, csvSummary, input.analysisGoal, input.qualityReport, input.schemaSummary, input.correlationSummary, input.segmentSummary, input.cleaningSummary, input.transformationLogSummary);
 }
 
 async function compareCsvSession(input) {
@@ -408,13 +603,53 @@ async function compareCsvSession(input) {
   return runCsvComparisonAnalyst(input.connection, {
     labelA: input.labelA || "File A",
     labelB: input.labelB || "File B",
+    parsedA,
+    parsedB,
     summaryA,
-    summaryB
+    summaryB,
+    qualityReportA: input.qualityReportA,
+    qualityReportB: input.qualityReportB
   }, input.analysisGoal);
 }
 
-async function searchTopicSignals(topic, mode, agentSpec) {
-  const query = agentSpec.searchQuery(topic, mode);
+async function crossReferenceSession(input, emit) {
+  const monitoringPromises = AGENT_SPECS.map((agent) => {
+    emit({ type: "agent_started", agent: agent.key });
+    return runMonitoringAgent(input.connection, input.topic, "company", agent, {
+      extraContext: input.csvContext
+    })
+      .then((result) => {
+        emit({ type: "agent_result", agent: agent.key, result });
+        return { agent: agent.key, result };
+      })
+      .catch((error) => {
+        emit({ type: "agent_error", agent: agent.key, error: error.message || "Agent failed." });
+        return { agent: agent.key, result: { error: true, message: error.message || "Agent failed." } };
+      });
+  });
+
+  const settled = await Promise.all(monitoringPromises);
+  const byAgent = Object.fromEntries(settled.map((entry) => [entry.agent, entry.result]));
+  const successCount = Object.values(byAgent).filter((entry) => entry && !entry.error).length;
+
+  if (successCount === 0) {
+    emit({ type: "synthesis_error", successCount, error: "Cross-reference unavailable. External intelligence could not be retrieved." });
+    emit({ type: "done" });
+    return;
+  }
+
+  emit({ type: "synthesis_started", successCount });
+  try {
+    const result = await runCrossReferenceSynthesis(input.connection, input.topic, byAgent, input.csvResults);
+    emit({ type: "synthesis", result, successCount });
+  } catch (error) {
+    emit({ type: "synthesis_error", successCount, error: error.message || "Cross-reference unavailable. External intelligence could not be retrieved." });
+  }
+  emit({ type: "done" });
+}
+
+async function searchTopicSignals(topic, mode, agentSpec, role = "") {
+  const query = agentSpec.searchQuery(topic, mode, role);
   if (process.env.TAVILY_API_KEY) {
     try {
       return await searchWithTavily(query);
@@ -543,6 +778,247 @@ function summarizeCsvData(parsedCsv) {
   };
 }
 
+function isMissing(value) {
+  if (value === null || value === undefined) return true;
+  const trimmed = String(value).trim();
+  if (!trimmed) return true;
+  return ["null", "undefined", "n/a", "na", "-", "none", "#n/a", "#null"].includes(trimmed.toLowerCase());
+}
+
+function parseNumericValue(value) {
+  if (value === null || value === undefined) return Number.NaN;
+  const normalized = String(value).replace(/,/g, "").trim();
+  if (!normalized) return Number.NaN;
+  const numeric = Number(normalized);
+  return Number.isFinite(numeric) ? numeric : Number.NaN;
+}
+
+function deduplicateCandidatesByRow(candidates) {
+  const byRow = {};
+  candidates.forEach((candidate) => {
+    if (!byRow[candidate.rowIndex]) {
+      byRow[candidate.rowIndex] = candidate;
+    } else {
+      const existing = byRow[candidate.rowIndex];
+      const typeRank = {
+        impossible_value: 3,
+        missing_value: 2,
+        statistical_outlier: 1
+      };
+      const newRank = typeRank[candidate.type] || 0;
+      const existingRank = typeRank[existing.type] || 0;
+      if ((candidate.zScore || 0) > (existing.zScore || 0) || newRank > existingRank) {
+        byRow[candidate.rowIndex] = candidate;
+      }
+    }
+  });
+  return Object.values(byRow)
+    .sort((a, b) => (b.zScore || 0) - (a.zScore || 0))
+    .slice(0, 5);
+}
+
+function isTransactionalDataset(headers, rows) {
+  const hasRevenue = headers.some((header) =>
+    ["revenue", "net_revenue", "gross_revenue", "total_amount", "sales", "amount"]
+      .some((key) => header.toLowerCase().includes(key))
+  );
+  const hasUnits = headers.some((header) =>
+    ["units_sold", "quantity", "qty", "units"]
+      .some((key) => header.toLowerCase() === key || header.toLowerCase().includes(key))
+  );
+  if (!hasRevenue || !hasUnits) return false;
+
+  const hasPrice = headers.some((header) =>
+    ["unit_price", "price", "rate", "cost_per"]
+      .some((key) => header.toLowerCase().includes(key))
+  );
+  if (!hasPrice) return false;
+
+  const revenueCol = headers.find((header) =>
+    ["net_revenue", "gross_revenue", "revenue", "total_amount"]
+      .some((key) => header.toLowerCase().includes(key))
+  );
+  const unitsCol = headers.find((header) =>
+    ["units_sold", "quantity", "qty"]
+      .some((key) => header.toLowerCase().includes(key))
+  );
+  const priceCol = headers.find((header) =>
+    ["unit_price", "price"]
+      .some((key) => header.toLowerCase().includes(key))
+  );
+  if (!revenueCol || !unitsCol || !priceCol) return false;
+
+  const validRelationships = rows.slice(0, 10).filter((row) => {
+    const revenue = parseNumericValue(row[revenueCol]);
+    const units = parseNumericValue(row[unitsCol]);
+    const price = parseNumericValue(row[priceCol]);
+    if (Number.isNaN(revenue) || Number.isNaN(units) || Number.isNaN(price) || units === 0) return false;
+    const expected = units * price;
+    if (!Number.isFinite(expected) || expected === 0) return false;
+    const ratio = revenue / expected;
+    return ratio >= 0.30 && ratio <= 1.10;
+  }).length;
+
+  return validRelationships >= 6;
+}
+
+function findAnomalyCandidates(rows, headers) {
+  const candidates = [];
+  const statusColumns = headers.filter((col) =>
+    ["status", "state", "order_status", "payment_status", "transaction_status"]
+      .some((key) => col.toLowerCase().includes(key))
+  );
+  const skipColumns = headers.filter((col) =>
+    ["unit_price", "price", "rate", "discount", "discount_pct", "pct", "percent", "score", "rating", "satisfaction"]
+      .some((key) => col.toLowerCase().includes(key))
+  );
+  const numericCols = headers.filter((col) => {
+    const vals = rows
+      .map((row) => parseNumericValue(row[col]))
+      .filter((value) => !Number.isNaN(value));
+    return vals.length > rows.length * 0.5;
+  });
+
+  const stats = {};
+  numericCols.forEach((col) => {
+    const vals = rows
+      .map((row) => parseNumericValue(row[col]))
+      .filter((value) => !Number.isNaN(value));
+    const mean = vals.reduce((sum, value) => sum + value, 0) / vals.length;
+    const variance = vals.reduce((sum, value) => sum + Math.pow(value - mean, 2), 0) / vals.length;
+    stats[col] = {
+      mean: Math.round(mean * 100) / 100,
+      stdDev: Math.round(Math.sqrt(variance) * 100) / 100
+    };
+  });
+
+  rows.forEach((row, rowIndex) => {
+    numericCols.forEach((col) => {
+      if (skipColumns.includes(col)) return;
+      const val = parseNumericValue(row[col]);
+      if (Number.isNaN(val)) return;
+      const { mean, stdDev } = stats[col];
+      if (!stdDev) return;
+      const zScore = Math.abs((val - mean) / stdDev);
+      if (zScore > 4) {
+        candidates.push({
+          rowIndex,
+          rowData: row,
+          column: col,
+          value: val,
+          mean: stats[col].mean,
+          stdDev: stats[col].stdDev,
+          zScore: Math.round(zScore * 10) / 10,
+          type: "statistical_outlier"
+        });
+      }
+    });
+
+    headers.forEach((col) => {
+      if (!isMissing(row[col])) return;
+      const isKeyCol = ["sales_rep", "rep", "product", "region", "customer", "name", "email", "id"]
+        .some((key) => col.toLowerCase().includes(key));
+      if (isKeyCol) {
+        candidates.push({
+          rowIndex,
+          rowData: row,
+          column: col,
+          value: null,
+          mean: null,
+          stdDev: null,
+          zScore: null,
+          type: "missing_value"
+        });
+      }
+    });
+
+    const positiveOnlyCols = headers.filter((col) =>
+      ["price", "revenue", "sales", "amount", "cost", "units", "quantity"].some((key) => col.toLowerCase().includes(key))
+    );
+    positiveOnlyCols.forEach((col) => {
+      const val = parseNumericValue(row[col]);
+      if (!Number.isNaN(val) && val < 0) {
+        candidates.push({
+          rowIndex,
+          rowData: row,
+          column: col,
+          value: val,
+          mean: stats[col]?.mean ?? null,
+          stdDev: stats[col]?.stdDev ?? null,
+          zScore: null,
+          type: "impossible_value"
+        });
+      }
+    });
+  });
+
+  const revenueCols = headers.filter((col) =>
+    ["revenue", "net_revenue", "gross_revenue", "sales", "amount"].some((key) => col.toLowerCase().includes(key))
+  );
+  const unitsCols = headers.filter((col) =>
+    ["units", "quantity", "qty", "units_sold", "volume"].some((key) => col.toLowerCase().includes(key))
+  );
+
+  if (revenueCols.length > 0 && unitsCols.length > 0 && isTransactionalDataset(headers, rows)) {
+    const revenueCol = revenueCols[0];
+    const unitsCol = unitsCols[0];
+    const ratios = rows
+      .map((row) => ({
+        revenue: parseNumericValue(row[revenueCol]),
+        units: parseNumericValue(row[unitsCol])
+      }))
+      .filter((entry) => !Number.isNaN(entry.revenue) && !Number.isNaN(entry.units) && entry.units > 0)
+      .map((entry) => entry.revenue / entry.units);
+
+    if (ratios.length) {
+      const avgRatio = ratios.reduce((sum, value) => sum + value, 0) / ratios.length;
+      rows.forEach((row, rowIndex) => {
+        const revenue = parseNumericValue(row[revenueCol]);
+        const units = parseNumericValue(row[unitsCol]);
+        if (Number.isNaN(revenue) || Number.isNaN(units) || units === 0) return;
+        const statusText = statusColumns
+          .map((col) => String(row[col] || "").trim().toLowerCase())
+          .filter(Boolean)
+          .join(" ");
+        if (/(refund|refunded|return|returned|cancelled|canceled|voided|chargeback)/i.test(statusText)) return;
+        const ratio = revenue / units;
+        if (ratio < avgRatio * 0.02 && units > 10) {
+          candidates.push({
+            rowIndex,
+            rowData: row,
+            column: revenueCol,
+            value: revenue,
+            mean: Math.round(avgRatio * units * 100) / 100,
+            stdDev: null,
+            zScore: 99,
+            type: "impossible_value",
+            reason: `Revenue per unit ($${ratio.toFixed(2)}) is less than 1% of average ($${avgRatio.toFixed(2)}/unit) — likely a data entry error`
+          });
+        }
+      });
+    }
+  }
+
+  const rawCandidates = candidates.filter((candidate, index, list) =>
+    list.findIndex((entry) => entry.rowIndex === candidate.rowIndex && entry.column === candidate.column) === index
+  );
+  return deduplicateCandidatesByRow(rawCandidates);
+}
+
+function formatCandidatesForAgent(candidates) {
+  if (!candidates.length) {
+    return "No statistical anomalies detected in pre-computation.";
+  }
+return "Pre-computed anomaly candidates:\n" + candidates.map((candidate, index) => `Candidate ${index + 1}:
+rowIndex: ${candidate.rowIndex}
+column: ${candidate.column}
+value: ${candidate.value}
+type: ${candidate.type}
+${candidate.reason ? `reason: ${candidate.reason}` : ""}
+${candidate.zScore ? `zScore: ${candidate.zScore} (mean: ${candidate.mean}, stdDev: ${candidate.stdDev})` : "missing or impossible value"}
+row preview: ${JSON.stringify(candidate.rowData).substring(0, 200)}`).join("\n\n");
+}
+
 function summarizeColumn(header, values) {
   const nonEmptyValues = values.filter((value) => String(value || "").trim() !== "");
   const numericValues = nonEmptyValues.map((value) => Number(value)).filter((value) => Number.isFinite(value));
@@ -575,7 +1051,8 @@ function mostCommon(values, limit) {
     .map(([value, count]) => ({ value, count }));
 }
 
-async function runCsvAnalyst(providerConfig, csvSummary, analysisGoal) {
+async function runCsvAnalyst(providerConfig, parsedCsv, csvSummary, analysisGoal, qualityReport, schemaSummary, correlationSummary, segmentSummary, cleaningSummary, transformationLogSummary) {
+  const anomalyCandidates = findAnomalyCandidates(parsedCsv.records, parsedCsv.headers);
   const userContent = [
     analysisGoal ? `Analysis goal: ${analysisGoal}` : "Analysis goal: provide a concise executive summary of the uploaded CSV.",
     "",
@@ -585,7 +1062,19 @@ async function runCsvAnalyst(providerConfig, csvSummary, analysisGoal) {
     "",
     `Column summaries: ${JSON.stringify(csvSummary.columnSummaries)}`,
     "",
-    `Sample rows: ${JSON.stringify(csvSummary.sampleRows)}`
+    `Sample rows: ${JSON.stringify(csvSummary.sampleRows)}`,
+    qualityReport ? "" : "",
+    qualityReport ? formatQualityContext("Dataset", qualityReport) : "",
+    "",
+    schemaSummary ? `Pre-computed column schema:\n${schemaSummary}` : "",
+    "",
+    correlationSummary ? `Pre-computed correlations:\n${correlationSummary}` : "",
+    "",
+    segmentSummary ? `Pre-computed segment summaries:\n${segmentSummary}` : "",
+    "",
+    cleaningSummary ? formatCleaningContext(cleaningSummary, transformationLogSummary) : "",
+    "",
+    formatCandidatesForAgent(anomalyCandidates)
   ].join("\n");
 
   const result = await runModelJson({
@@ -605,6 +1094,7 @@ async function runCsvAnalyst(providerConfig, csvSummary, analysisGoal) {
     opportunities: Array.isArray(result.opportunities) ? result.opportunities : [],
     recommendedActions: normalizeRecommendedActions(result.recommendedActions),
     oneLineSummary: result.oneLineSummary || "CSV analysis completed.",
+    anomalies: normalizeCsvAnomalies(result.anomalies),
     chartRecommendations: Array.isArray(result.chartRecommendations) ? result.chartRecommendations.slice(0, 3) : []
   };
 }
@@ -626,33 +1116,150 @@ function normalizeRecommendedActions(value) {
   return [];
 }
 
+function normalizeCsvAnomalies(value, options = {}) {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item) => {
+      const file = String(item?.file || (options.comparison ? "A" : "")).toUpperCase().replace(/FILE\s*/i, "").trim();
+      if (options.comparison) {
+        return {
+          description: String(item?.description || "").trim(),
+          severity: String(item?.severity || "low").trim().toLowerCase(),
+          file: file === "B" ? "B" : "A"
+        };
+      }
+      return {
+        rowIndex: Number.isInteger(item?.rowIndex) ? item.rowIndex : Number(item?.rowIndex),
+        anomalousColumn: String(item?.anomalousColumn || item?.column || "").trim(),
+        severity: String(item?.severity || "low").trim().toLowerCase(),
+        description: String(item?.description || "").trim(),
+        type: String(item?.type || "").trim(),
+        ...(options.comparison ? { file: file === "B" ? "B" : "A" } : {})
+      };
+    })
+    .filter((item) => options.comparison ? item.description : (Number.isFinite(item.rowIndex) && item.rowIndex >= 0 && item.description))
+    .slice(0, 3);
+}
+
+function formatQualityContext(label, qualityReport) {
+  const issues = Array.isArray(qualityReport?.flags) && qualityReport.flags.length
+    ? qualityReport.flags.join(", ")
+    : "none";
+  return [
+    "Pre-computed data quality scores (computed by JS, not estimated):",
+    `Dataset reference: ${label}`,
+    `- Overall quality score: ${Number(qualityReport?.overallScore || 0)}/100 (${String(qualityReport?.label || "Critical")})`,
+    `- Completeness: ${Number(qualityReport?.completeness || 0)}%`,
+    `- Consistency: ${Number(qualityReport?.consistency || 0)}%`,
+    `- Uniqueness: ${Number(qualityReport?.uniqueness || 0)}%`,
+    `- Validity: ${Number(qualityReport?.validity || 0)}%`,
+    `- Issues found: ${issues}`,
+    "Reference these exact numbers in your analysis. Do not re-estimate quality scores."
+  ].join("\n");
+}
+
+function formatCleaningContext(cleaningSummary, transformationLogSummary) {
+  const counts = cleaningSummary?.byType || {};
+  const mode = String(cleaningSummary?.mode || "clean").toLowerCase() === "raw" ? "raw" : "clean";
+  const transformedColumns = Number(cleaningSummary?.transformedColumns || 0);
+  const numericCount = Number(counts.numeric_standardization || 0);
+  const categoricalCount = Number(counts.categorical_normalization || 0);
+  const missingFillMeanCount = Number(counts.missing_value_fill_mean || 0);
+  const missingFillMedianCount = Number(counts.missing_value_fill_median || 0);
+  const missingFillModeCount = Number(counts.missing_value_fill_mode || 0);
+  const missingFillZeroCount = Number(counts.missing_value_fill_zero || 0);
+  const droppedRowsCount = Number(counts.row_dropped_missing || 0);
+  const notableEvents = Array.isArray(transformationLogSummary) && transformationLogSummary.length
+    ? transformationLogSummary.slice(0, 8).map((entry) => {
+        const location = Number.isInteger(entry?.rowIndex) ? `row ${entry.rowIndex + 2}` : "column summary";
+        const column = entry?.column ? `${entry.column}` : "dataset";
+        return `- ${entry?.state || "applied"} ${entry?.type || "change"} on ${column} (${location}): ${entry?.detail || "No detail provided."}`;
+      }).join("\n")
+    : "- No transformation events recorded.";
+  return [
+    "Client-side data cleaning summary:",
+    `- Cleaning mode: ${mode}`,
+    `- Applied transformations: ${Number(cleaningSummary?.appliedCount || 0)}`,
+    `- Transformed columns: ${transformedColumns}`,
+    `- Numeric standardizations: ${numericCount}`,
+    `- Categorical normalizations: ${categoricalCount}`,
+    `- Missing values filled with mean: ${missingFillMeanCount}`,
+    `- Missing values filled with median: ${missingFillMedianCount}`,
+    `- Missing values filled with mode: ${missingFillModeCount}`,
+    `- Missing values filled with zero: ${missingFillZeroCount}`,
+    `- Rows dropped due to missing values: ${droppedRowsCount}`,
+    mode === "raw"
+      ? "The raw parsed dataset was analyzed unchanged."
+      : "The cleaned dataset was analyzed using these exact transformations.",
+    "Notable cleaning events:",
+    notableEvents
+  ].join("\n");
+}
+
+function buildCompactComparisonSummary(summary) {
+  return {
+    rowCount: summary.rowCount,
+    columnCount: summary.columnCount,
+    columns: Array.isArray(summary.columns) ? summary.columns.slice(0, 12) : [],
+    sampleRows: Array.isArray(summary.sampleRows) ? summary.sampleRows.slice(0, 3) : [],
+    columnSummaries: Array.isArray(summary.columnSummaries)
+      ? summary.columnSummaries.slice(0, 8).map((column) => ({
+          name: column.name,
+          type: column.type,
+          min: column.min,
+          max: column.max,
+          mean: column.mean,
+          uniqueCount: column.uniqueCount,
+          topValues: Array.isArray(column.topValues) ? column.topValues.slice(0, 3) : []
+        }))
+      : []
+  };
+}
+
 async function runCsvComparisonAnalyst(providerConfig, comparisonInput, analysisGoal) {
-  const { labelA, labelB, summaryA, summaryB } = comparisonInput;
+  const { labelA, labelB, summaryA, summaryB, qualityReportA, qualityReportB } = comparisonInput;
   const sharedColumns = summaryA.columns.filter((column) => summaryB.columns.includes(column));
   const onlyInA = summaryA.columns.filter((column) => !summaryB.columns.includes(column));
   const onlyInB = summaryB.columns.filter((column) => !summaryA.columns.includes(column));
   const schemaMatch = summaryA.columns.length === summaryB.columns.length && onlyInA.length === 0 && onlyInB.length === 0;
 
-  const userContent = [
+  const buildComparisonUserContent = (options = {}) => [
     analysisGoal ? `Analysis goal: ${analysisGoal}` : "Analysis goal: compare these two datasets like a senior analyst and explain what changed.",
+    options.concise ? "Return very concise JSON. Keep every string short, use compact phrasing, and prioritize completeness over prose." : "",
     "",
     `File A label: ${labelA}`,
-    `File A summary: ${JSON.stringify(summaryA)}`,
+    `File A summary: ${JSON.stringify(options.compact ? buildCompactComparisonSummary(summaryA) : summaryA)}`,
     "",
     `File B label: ${labelB}`,
-    `File B summary: ${JSON.stringify(summaryB)}`,
+    `File B summary: ${JSON.stringify(options.compact ? buildCompactComparisonSummary(summaryB) : summaryB)}`,
     "",
     `Computed shared columns: ${JSON.stringify(sharedColumns)}`,
     `Computed onlyInA columns: ${JSON.stringify(onlyInA)}`,
     `Computed onlyInB columns: ${JSON.stringify(onlyInB)}`,
-    `Computed schemaMatch: ${schemaMatch}`
+    `Computed schemaMatch: ${schemaMatch}`,
+    qualityReportA ? "" : "",
+    qualityReportA ? formatQualityContext(labelA, qualityReportA) : "",
+    qualityReportB ? "" : "",
+    qualityReportB ? formatQualityContext(labelB, qualityReportB) : ""
   ].join("\n");
 
-  const result = await runModelJson({
-    providerConfig,
-    systemPrompt: CSV_COMPARISON_PROMPT,
-    userContent
-  });
+  let result;
+  try {
+    result = await runModelJson({
+      providerConfig,
+      systemPrompt: CSV_COMPARISON_PROMPT,
+      userContent: buildComparisonUserContent()
+    });
+  } catch (error) {
+    if (!(error && error.message && error.message.includes("Provider returned truncated JSON output."))) {
+      throw error;
+    }
+    result = await runModelJson({
+      providerConfig,
+      systemPrompt: CSV_COMPARISON_PROMPT,
+      userContent: buildComparisonUserContent({ compact: true, concise: true })
+    });
+  }
 
   return {
     fileA: {
@@ -672,15 +1279,52 @@ async function runCsvComparisonAnalyst(providerConfig, comparisonInput, analysis
     metricComparisons: Array.isArray(result.metricComparisons) ? result.metricComparisons.slice(0, 5) : [],
     growthColumns: Array.isArray(result.growthColumns) ? result.growthColumns : [],
     declineColumns: Array.isArray(result.declineColumns) ? result.declineColumns : [],
-    segmentInsights: Array.isArray(result.segmentInsights) ? result.segmentInsights.slice(0, 4) : [],
-    newPatterns: Array.isArray(result.newPatterns) ? result.newPatterns.slice(0, 2) : [],
-    disappearedPatterns: Array.isArray(result.disappearedPatterns) ? result.disappearedPatterns.slice(0, 2) : [],
-    anomalies: Array.isArray(result.anomalies) ? result.anomalies.slice(0, 2) : [],
+    anomalies: normalizeCsvAnomalies(result.anomalies, { comparison: true }),
     keyInsight: result.keyInsight || "No key insight returned.",
     recommendation: result.recommendation || "No recommendation returned.",
-    storyNarrative: result.storyNarrative || "No comparison narrative returned.",
     chartRecommendations: Array.isArray(result.chartRecommendations) ? result.chartRecommendations.slice(0, 2) : []
   };
+}
+
+async function runCrossReferenceSynthesis(providerConfig, topic, monitoringResults, csvResults) {
+  const buildUserContent = (concise = false) => [
+    concise ? "Return concise JSON. Keep all strings short and evidence-led." : "",
+    `Topic: ${topic}`,
+    "",
+    "INTERNAL DATA (from CSV analysis):",
+    JSON.stringify({
+      keyInsight: csvResults?.keyInsight || csvResults?.oneLineSummary || "",
+      growthAreas: csvResults?.growthColumns || [],
+      declineAreas: csvResults?.declineColumns || [],
+      anomalies: Array.isArray(csvResults?.anomalies) ? csvResults.anomalies.map((item) => item.description || item) : [],
+      recommendations: csvResults?.recommendedActions || [],
+      metricChanges: Array.isArray(csvResults?.metricComparisons) ? csvResults.metricComparisons.slice(0, 3) : []
+    }, null, 2),
+    "",
+    "EXTERNAL INTELLIGENCE (from 5 monitoring agents):",
+    `News: ${JSON.stringify(monitoringResults.news || null)}`,
+    `Jobs: ${JSON.stringify(monitoringResults.jobs || null)}`,
+    `Sentiment: ${JSON.stringify(monitoringResults.sentiment || null)}`,
+    `Regulatory: ${JSON.stringify(monitoringResults.regulatory || null)}`,
+    `Competitors: ${JSON.stringify(monitoringResults.competitor || null)}`
+  ].filter(Boolean).join("\n");
+
+  try {
+    return await runModelJson({
+      providerConfig,
+      systemPrompt: CROSS_REFERENCE_SYNTHESIS_PROMPT,
+      userContent: buildUserContent(false)
+    });
+  } catch (error) {
+    if (!(error && error.message && error.message.includes("Provider returned truncated JSON output."))) {
+      throw error;
+    }
+    return runModelJson({
+      providerConfig,
+      systemPrompt: CROSS_REFERENCE_SYNTHESIS_PROMPT,
+      userContent: buildUserContent(true)
+    });
+  }
 }
 
 async function runModelJson({ providerConfig, systemPrompt, userContent }) {
@@ -825,6 +1469,7 @@ async function runOpenAIJson(providerConfig, systemPrompt, userContent) {
       model: providerConfig.model,
       instructions: systemPrompt,
       input: userContent,
+      max_output_tokens: 4096,
       text: {
         format: { type: "json_object" }
       }
@@ -847,7 +1492,7 @@ async function runAnthropicJson(providerConfig, systemPrompt, userContent) {
     },
     body: JSON.stringify({
       model: providerConfig.model,
-      max_tokens: 1800,
+      max_tokens: 4096,
       system: systemPrompt,
       messages: [{ role: "user", content: userContent }]
     })
@@ -870,7 +1515,7 @@ async function runGeminiJson(providerConfig, systemPrompt, userContent) {
     body: JSON.stringify({
       systemInstruction: { parts: [{ text: systemPrompt }] },
       contents: [{ role: "user", parts: [{ text: userContent }] }],
-      generationConfig: { temperature: 0.2, maxOutputTokens: 2048 }
+      generationConfig: { temperature: 0.2, maxOutputTokens: 4096 }
     })
   });
   const payload = await response.json();
@@ -903,7 +1548,10 @@ async function runNvidiaJson(providerConfig, systemPrompt, userContent) {
   });
   let payload = await response.json().catch(() => ({}));
   if (response.ok) {
-    return parseJsonText(extractOpenAIText(payload));
+    const responseText = extractOpenAIText(payload);
+    if (response.ok && responseText) {
+      return parseJsonText(responseText);
+    }
   }
 
   const fallbackEndpoint = normalizeBaseUrl(providerConfig.endpoint, "/chat/completions");
@@ -990,12 +1638,86 @@ function hasSuccessfulNvidiaValidationPayload(payload) {
 
 function parseJsonText(text) {
   if (!text) throw new Error("Provider returned no text output.");
-  try {
-    return JSON.parse(text);
-  } catch (error) {
-    const cleaned = text.replace(/^```json\s*/i, "").replace(/```$/i, "").trim();
-    return JSON.parse(cleaned);
+  const candidates = buildJsonParseCandidates(text);
+  let lastError = null;
+  for (const candidate of candidates) {
+    try {
+      return JSON.parse(candidate);
+    } catch (error) {
+      lastError = error;
+    }
   }
+  if (looksLikeTruncatedJson(text)) {
+    throw new Error("Provider returned truncated JSON output. Try the request again or use a model with a larger output window.");
+  }
+  throw new Error(`Provider returned malformed JSON output. ${lastError ? lastError.message : ""}`.trim());
+}
+
+function buildJsonParseCandidates(text) {
+  const cleaned = String(text || "").replace(/^```json\s*/i, "").replace(/```$/i, "").trim();
+  const extracted = extractJsonObjectString(cleaned);
+  const candidates = [text, cleaned];
+  if (extracted && extracted !== cleaned) candidates.push(extracted);
+  const newlineSafe = replaceRawNewlinesInsideStrings(extracted || cleaned);
+  if (newlineSafe && !candidates.includes(newlineSafe)) candidates.push(newlineSafe);
+  const trailingCommaSafe = removeTrailingCommas(newlineSafe || extracted || cleaned);
+  if (trailingCommaSafe && !candidates.includes(trailingCommaSafe)) candidates.push(trailingCommaSafe);
+  return candidates.filter((candidate) => typeof candidate === "string" && candidate.trim());
+}
+
+function extractJsonObjectString(text) {
+  const source = String(text || "");
+  const start = source.indexOf("{");
+  const end = source.lastIndexOf("}");
+  if (start === -1 || end === -1 || end <= start) return source.trim();
+  return source.slice(start, end + 1).trim();
+}
+
+function replaceRawNewlinesInsideStrings(text) {
+  const source = String(text || "");
+  let output = "";
+  let inString = false;
+  let escapeNext = false;
+  for (const char of source) {
+    if (escapeNext) {
+      output += char;
+      escapeNext = false;
+      continue;
+    }
+    if (char === "\\") {
+      output += char;
+      escapeNext = true;
+      continue;
+    }
+    if (char === "\"") {
+      output += char;
+      inString = !inString;
+      continue;
+    }
+    if (inString && (char === "\n" || char === "\r")) {
+      output += "\\n";
+      continue;
+    }
+    output += char;
+  }
+  return output;
+}
+
+function removeTrailingCommas(text) {
+  return String(text || "").replace(/,\s*([}\]])/g, "$1");
+}
+
+function looksLikeTruncatedJson(text) {
+  const source = String(text || "").trim();
+  if (!source) return false;
+  const openBraces = (source.match(/\{/g) || []).length;
+  const closeBraces = (source.match(/\}/g) || []).length;
+  const openBrackets = (source.match(/\[/g) || []).length;
+  const closeBrackets = (source.match(/\]/g) || []).length;
+  if (openBraces !== closeBraces || openBrackets !== closeBrackets) return true;
+  if (/[{[,]\s*"[^"]*$/.test(source)) return true;
+  if (/:\s*"[^"]*$/.test(source)) return true;
+  return false;
 }
 
 function readProviderError(payload, status) {
