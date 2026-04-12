@@ -12,7 +12,7 @@
 
   function createDefaultCleaningConfig() {
     return {
-      mode: "clean",
+      mode: "raw",
       numericMissingStrategy: "leave",
       categoricalMissingStrategy: "leave",
       dropRowsWithMissing: false

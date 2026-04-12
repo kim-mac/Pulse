@@ -10,6 +10,14 @@ function expect(pattern, description) {
 expect(/id="apiKeyPage"/, "expected a dedicated API key page");
 expect(/id="connectionForm"/, "expected a dedicated connection form");
 expect(/id="providerSelect"/, "expected a provider select field");
+expect(/NVIDIA API \(Recommended\)/, "expected NVIDIA to be labeled as recommended in the provider dropdown");
+expect(/<option value="nvidia" selected>NVIDIA API \(Recommended\)<\/option>/, "expected NVIDIA to be the default selected provider");
+expect(/id="providerHelpShortcut"/, "expected a shortcut link to the provider help section");
+expect(/API Key[\s\S]*\(No API keys\? Get here\)/i, "expected API key help shortcut copy inline with the API key label");
+expect(/function handleProviderHelpShortcutClick\(/, "expected smooth-scroll handler for provider help shortcut");
+expect(/id="providerAdvancedSettings"/, "expected advanced settings disclosure for provider model and endpoint");
+expect(/Advanced settings/i, "expected advanced settings toggle copy on the API key form");
+expect(/#connectionFormMessage\s*\{[\s\S]*margin-top:\s*8px/i, "expected spacing between provider notes and the connection message");
 expect(/id="homePage"/, "expected a dedicated home page section");
 expect(/id="homeExplanation"/, "expected a dedicated home explanation section");
 expect(/5 agents fire simultaneously/i, "expected home explainer content below the hero");

@@ -310,6 +310,7 @@
       border-radius: 20px;
       border: 1px solid rgba(26,26,46,0.08);
       background: rgba(26,26,46,0.03);
+      min-width: 0;
     }
 
     .section-intro {
@@ -331,7 +332,15 @@
       text-transform: uppercase;
     }
 
-    .metric-value, .metric-big, .score-value { font-size: 26px; font-weight: 700; color: var(--ink); line-height: 1.05; }
+    .metric-value, .metric-big, .score-value {
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--ink);
+      line-height: 1.05;
+      max-width: 100%;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
     .metric-direction {
       margin-top: 8px;
       color: var(--text-secondary);
@@ -365,6 +374,9 @@
     .score-grid > .score-card,
     .csv-metric-grid > .csv-metric-card,
     .csv-insight-grid > .csv-insight-card { align-self: stretch; }
+    .signal-grid > * {
+      min-width: 0;
+    }
     .query-panel, .dashboard, .brief-section, .connection-card { padding: 24px; margin-bottom: 28px; }
     .section-title { margin: 0; font-size: 22px; font-weight: 500; letter-spacing: -0.02em; }
     #queryPage .section-title,
@@ -412,6 +424,59 @@
     }
     #apiKeyPage #providerNotes {
       min-height: 64px;
+      margin-bottom: 10px;
+    }
+    .advanced-settings {
+      grid-column: 1 / -1;
+      border: 1px solid rgba(26,26,46,0.08);
+      border-radius: 18px;
+      background: rgba(26,26,46,0.03);
+      padding: 12px 14px;
+    }
+    .advanced-settings summary {
+      list-style: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #1a1a2e;
+    }
+    .advanced-settings summary::-webkit-details-marker {
+      display: none;
+    }
+    .advanced-settings summary::after {
+      content: "+";
+      font-size: 16px;
+      line-height: 1;
+      color: rgba(26,26,46,0.5);
+    }
+    .advanced-settings[open] summary::after {
+      content: "−";
+    }
+    .advanced-settings-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+      margin-top: 14px;
+    }
+    #connectionFormMessage {
+      margin-top: 8px;
+    }
+    .provider-help-shortcut {
+      display: inline-flex;
+      align-items: center;
+      font-size: 11px;
+      color: rgba(26,26,46,0.45);
+      text-decoration: none;
+      cursor: pointer;
+      margin-left: 4px;
+    }
+    .provider-help-shortcut:hover {
+      color: #1a1a2e;
+      text-decoration: underline;
     }
     .provider-help-section {
       margin-top: 16px;
@@ -559,6 +624,8 @@
       border-radius: 24px;
       border: 1px solid var(--border);
       background: var(--card);
+      min-width: 0;
+      overflow: hidden;
     }
     .agent-card.full-span { grid-column: 1 / -1; }
     .list-stack, .summary-stack, .tier-stack { display: grid; gap: 14px; }
@@ -1972,6 +2039,22 @@
     .cleaning-checkbox-label input {
       margin: 0;
     }
+    .cleaning-info-hint {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 0.5px solid rgba(26,26,46,0.18);
+      background: rgba(26,26,46,0.04);
+      color: rgba(26,26,46,0.5);
+      font-size: 9px;
+      font-weight: 700;
+      line-height: 1;
+      cursor: help;
+      flex-shrink: 0;
+    }
     .cleaning-strategy-note {
       font-size: 10px;
       color: rgba(26,26,46,0.4);
@@ -2810,25 +2893,30 @@
                 <option value="openai">OpenAI</option>
                 <option value="anthropic">Claude / Anthropic</option>
                 <option value="gemini">Google Gemini</option>
-                <option value="nvidia">NVIDIA API</option>
+                <option value="nvidia" selected>NVIDIA API (Recommended)</option>
               </select>
             </div>
             <div class="field-group">
-              <label class="query-label" for="providerModelInput">Model</label>
-              <input class="field-input" id="providerModelInput" name="model" type="text" placeholder="Model name" />
-            </div>
-            <div class="field-group">
-              <label class="query-label" for="providerApiKeyInput">API Key</label>
+              <label class="query-label" for="providerApiKeyInput">API Key <a class="provider-help-shortcut" id="providerHelpShortcut" href="#apiKeyHelpSection">(No API keys? Get here)</a></label>
               <input class="field-input" id="providerApiKeyInput" name="apiKey" type="password" placeholder="Enter API key" autocomplete="off" />
-            </div>
-            <div class="field-group">
-              <label class="query-label" for="providerEndpointInput">Endpoint</label>
-              <input class="field-input" id="providerEndpointInput" name="endpoint" type="text" placeholder="Optional custom endpoint" />
             </div>
             <div class="field-group field-span">
               <label class="query-label" for="providerNotes">Provider Notes</label>
               <textarea class="field-textarea" id="providerNotes" readonly></textarea>
             </div>
+            <details class="advanced-settings" id="providerAdvancedSettings">
+              <summary>Advanced settings</summary>
+              <div class="advanced-settings-grid">
+                <div class="field-group">
+                  <label class="query-label" for="providerModelInput">Model</label>
+                  <input class="field-input" id="providerModelInput" name="model" type="text" placeholder="Model name" />
+                </div>
+                <div class="field-group">
+                  <label class="query-label" for="providerEndpointInput">Endpoint</label>
+                  <input class="field-input" id="providerEndpointInput" name="endpoint" type="text" placeholder="Optional custom endpoint" />
+                </div>
+              </div>
+            </details>
           </div>
           <div class="inline-alert" id="connectionFormMessage">PulseBoard will validate this provider through the local relay before saving the session.</div>
           <div class="modal-actions">
@@ -2906,8 +2994,8 @@
             </div>
             <span class="provider-help-access">Build currently offers free inference access</span>
             <ol class="provider-help-steps">
-              <li><strong>Sign in</strong> to NVIDIA Build and open your account or API key setup area.</li>
-              <li><strong>Generate a key</strong> and copy the token that starts with <code>nvapi-</code>.</li>
+              <li><strong>Sign in</strong> to NVIDIA Build and open your account, then click <strong>More models</strong>.</li>
+              <li><strong>Search OpenAI</strong>, select any model such as <code>gpt-oss-120b</code>, click <strong>View Code</strong>, generate a key, and copy the token that starts with <code>nvapi-</code>.</li>
               <li><strong>Paste it here</strong> and leave the endpoint as <code>https://integrate.api.nvidia.com/v1</code> unless you have a custom route.</li>
             </ol>
           </article>
@@ -3315,7 +3403,7 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
         "modeSelect", "roleInput", "interviewRoleGroup", "queryForm", "runButton", "statusMessage", "runCounterBadge", "chipRow",
         "dashboard", "dashboardSubtitle", "dashboardModePill", "progressLabel", "progressFill",
         "progressDetail", "aggregatorBanner", "agentGrid", "briefSection", "csvResultSection",
-        "connectionForm", "providerSelect", "providerModelInput", "providerApiKeyInput",
+        "connectionForm", "providerSelect", "providerHelpShortcut", "providerModelInput", "providerApiKeyInput",
         "providerEndpointInput", "providerNotes", "connectionFormMessage", "closeConnectionButton",
         "saveConnectionButton", "csvForm", "csvFileInput", "csvGoalInput", "compareCsvGoalInput",
         "runCsvButton", "compareRunCsvButton", "csvStatusMessage", "useSampleCsvButton", "csvInputHelper", "csvFileName", "qualityPreviewContainer", "singleCsvActionRow",
@@ -3335,6 +3423,7 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
       elements.openCsvButton.addEventListener("click", handleCsvEntryClick);
       elements.queryConnectButton.addEventListener("click", () => navigateTo("apiKey"));
       elements.csvConnectButton.addEventListener("click", () => navigateTo("apiKey"));
+      elements.providerHelpShortcut?.addEventListener("click", handleProviderHelpShortcutClick);
       elements.useSampleCsvButton.addEventListener("click", applySampleCsv);
       elements.csvModeSingle.addEventListener("click", () => setCsvMode("single"));
       elements.csvModeCompare.addEventListener("click", () => setCsvMode("compare"));
@@ -3424,6 +3513,13 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
         ...currentConfig,
         ...partialConfig
       };
+      if (nextConfig.mode === "raw") {
+        nextConfig.dropRowsWithMissing = false;
+      }
+      if (nextConfig.mode === "raw" || nextConfig.dropRowsWithMissing) {
+        nextConfig.numericMissingStrategy = "leave";
+        nextConfig.categoricalMissingStrategy = "leave";
+      }
       const preview = buildSingleCsvPreviewState(
         state.csvIngestion.rawParsed,
         state.csvIngestion.fileName || state.csvSourceLabel || "Uploaded CSV",
@@ -3677,6 +3773,11 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
       elements.providerNotes.value = preset.notes;
       const message = `${preset.label} will be validated through the local relay. Shared backend search is used for full Phase 1 monitoring runs across providers.`;
       setConnectionFormMessage(message, "success");
+    }
+
+    function handleProviderHelpShortcutClick(event) {
+      event.preventDefault();
+      elements.apiKeyHelpSection?.scrollIntoView({ behavior: "smooth", block: "start" });
     }
 
     function getRouteFromLocation() {
@@ -7259,8 +7360,8 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
             <label class="cleaning-checkbox-label">
               <input type="checkbox" data-drop-missing-rows ${config.dropRowsWithMissing ? "checked" : ""} ${rawMode ? "disabled" : ""} />
               <span>Drop rows with missing values</span>
+              <span class="cleaning-info-hint" title="Row dropping overrides fill strategies">i</span>
             </label>
-            ${dropRowsActive ? `<span class="cleaning-strategy-note">Row dropping overrides fill strategies</span>` : ""}
             <button class="cleaning-log-toggle" type="button" data-cleaning-log-toggle>${logExpanded ? "Hide log" : "Show log"}</button>
           </div>
           <div class="cleaning-summary-row">
