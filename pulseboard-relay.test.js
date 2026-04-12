@@ -5,6 +5,9 @@ const html = fs.readFileSync("C:/Users/kim16/Videos/Pulseboard/index.html", "utf
 const server = fs.existsSync("C:/Users/kim16/Videos/Pulseboard/server.js")
   ? fs.readFileSync("C:/Users/kim16/Videos/Pulseboard/server.js", "utf8")
   : "";
+const vercelConfig = fs.existsSync("C:/Users/kim16/Videos/Pulseboard/vercel.json")
+  ? fs.readFileSync("C:/Users/kim16/Videos/Pulseboard/vercel.json", "utf8")
+  : "";
 
 function expectIn(text, pattern, description) {
   assert.match(text, pattern, description);
@@ -57,11 +60,22 @@ expectIn(server, /reportedRoundCount.*confidenceLabel.*roadmapSummary.*prepPlan.
 expectIn(server, /Target role: "\$\{options\.role\}"/, "expected per-agent user content to include target role context");
 expectIn(server, /Target role: "\$\{role\}"/, "expected aggregator user content to include target role context");
 expectIn(server, /agentSpec\.searchQuery\(topic, mode, role\)/, "expected role-aware search queries for interview prep");
+expectIn(server, /async function handlePulseBoardRequest\(/, "expected shared relay request handler for local server and Vercel routes");
+expectIn(server, /if \(require\.main === module\)/, "expected local server startup to be gated for module reuse");
+expectIn(server, /module\.exports = \{[\s\S]*handlePulseBoardRequest/, "expected relay exports for Vercel API wrappers");
 
 expectIn(html, /runPulseBoardViaRelay\(/, "expected frontend relay execution helper");
 expectIn(html, /fetch\(["'`]\/api\/pulseboard\/run["'`]/, "expected frontend to call relay run endpoint");
 expectIn(html, /fetch\(["'`]\/api\/pulseboard\/validate-connection["'`]/, "expected frontend to call relay validation endpoint");
 expectIn(html, /supportsWebSearch[\s\S]{0,120}true[\s\S]{0,120}false/, "expected provider metadata to remain present");
 expectIn(html, /body:\s*JSON\.stringify\(\{\s*connection,\s*topic,\s*mode,\s*role\s*\}\)/, "expected frontend to send role with monitoring runs");
+expectIn(vercelConfig, /"source": "\/query", "destination": "\/index\.html"/, "expected Vercel rewrite for query route");
+expectIn(vercelConfig, /"source": "\/csv", "destination": "\/index\.html"/, "expected Vercel rewrite for csv route");
+expectIn(vercelConfig, /"source": "\/api-key", "destination": "\/index\.html"/, "expected Vercel rewrite for api-key route");
+assert.ok(fs.existsSync("C:/Users/kim16/Videos/Pulseboard/api/pulseboard/run.js"), "expected Vercel API route for monitoring runs");
+assert.ok(fs.existsSync("C:/Users/kim16/Videos/Pulseboard/api/pulseboard/validate-connection.js"), "expected Vercel API route for provider validation");
+assert.ok(fs.existsSync("C:/Users/kim16/Videos/Pulseboard/api/pulseboard/analyze-csv.js"), "expected Vercel API route for CSV analysis");
+assert.ok(fs.existsSync("C:/Users/kim16/Videos/Pulseboard/api/pulseboard/compare-csv.js"), "expected Vercel API route for CSV comparison");
+assert.ok(fs.existsSync("C:/Users/kim16/Videos/Pulseboard/api/pulseboard/cross-reference.js"), "expected Vercel API route for cross-reference");
 
 console.log("PulseBoard relay assertions passed.");

@@ -293,9 +293,9 @@ Rules:
 - If you cannot find a meaningful connection, say so honestly rather than inventing one.
 - Return ONLY valid JSON, no markdown, no explanation.`;
 
-const server = http.createServer(async (req, res) => {
+async function handlePulseBoardRequest(req, res, options = {}) {
   try {
-    const requestUrl = new URL(req.url, `http://${req.headers.host || `${HOST}:${PORT}`}`);
+    const requestUrl = options.requestUrl || new URL(req.url, `http://${req.headers.host || `${HOST}:${PORT}`}`);
     if (req.method === "GET" && ["/", "/query", "/csv", "/api-key"].includes(requestUrl.pathname)) {
       return serveFile(res, INDEX_PATH, "text/html; charset=utf-8");
     }
@@ -413,11 +413,15 @@ const server = http.createServer(async (req, res) => {
     console.error(error);
     sendJson(res, 500, { error: { message: error.message || "Internal server error." } });
   }
-});
+}
 
-server.listen(PORT, HOST, () => {
-  console.log(`PulseBoard relay running at http://${HOST}:${PORT}`);
-});
+const server = http.createServer((req, res) => handlePulseBoardRequest(req, res));
+
+if (require.main === module) {
+  server.listen(PORT, HOST, () => {
+    console.log(`PulseBoard relay running at http://${HOST}:${PORT}`);
+  });
+}
 
 function serveFile(res, filePath, contentType) {
   const content = fs.readFileSync(filePath);
@@ -1743,3 +1747,14 @@ function decodeHtml(value) {
     .replace(/&lt;/g, "<")
     .replace(/&gt;/g, ">");
 }
+
+module.exports = {
+  server,
+  handlePulseBoardRequest,
+  runPulseBoardSession,
+  analyzeCsvSession,
+  compareCsvSession,
+  crossReferenceSession,
+  normalizeConnection,
+  validateConnection
+};

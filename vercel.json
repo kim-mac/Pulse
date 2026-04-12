@@ -1,0 +1,7 @@
+{
+  "rewrites": [
+    { "source": "/query", "destination": "/index.html" },
+    { "source": "/csv", "destination": "/index.html" },
+    { "source": "/api-key", "destination": "/index.html" }
+  ]
+}
