@@ -35,6 +35,18 @@ expectIn(server, /function runNvidiaValidationProbe\(/, "expected NVIDIA validat
 expectIn(server, /validated using the configured model/i, "expected provider-specific validation success messaging");
 expectIn(server, /returned no usable validation output/i, "expected validation to check for any usable provider output instead of an exact token");
 expectIn(server, /function hasSuccessfulNvidiaValidationPayload\(/, "expected NVIDIA-specific validation payload fallback");
+expectIn(server, /async function runGeminiValidationProbe[\s\S]*if \(!response\.ok\) throw buildProviderError\(providerConfig, payload, response\.status\);[\s\S]*return;/, "expected Gemini validation to treat successful HTTP responses as valid connectivity");
+expectIn(server, /function buildProviderError\(/, "expected centralized provider error normalization");
+expectIn(server, /function normalizeProviderError\(/, "expected provider error classifier");
+expectIn(server, /function normalizeOperationalError\(/, "expected monitoring\/validation error normalizer");
+expectIn(server, /function serializePulseBoardError\(/, "expected serialized relay error payload helper");
+expectIn(server, /kind:\s*"quota"|kind:\s*"auth"|kind:\s*"model_access"|kind:\s*"not_found"|kind:\s*"bad_request"/, "expected normalized provider error kinds");
+expectIn(server, /could not verify this API key|may not have access to the selected model/i, "expected OpenAI-specific validation messaging");
+expectIn(server, /Google Gemini quota exceeded|quota exceeded\. Monitoring may be incomplete/i, "expected friendly quota messaging");
+expectIn(server, /emit\(\{\s*type:\s*"agent_error"[\s\S]*serializePulseBoardError/s, "expected agent_error events to send normalized error objects");
+expectIn(server, /type:\s*"brief",[\s\S]*warning:/s, "expected brief events to support degraded warnings");
+expectIn(server, /function buildMonitoringDegradedWarning\(/, "expected run-level degraded warning helper");
+expectIn(server, /function buildInsufficientEvidenceError\(/, "expected friendly insufficient-evidence helper");
 expectIn(server, /function findAnomalyCandidates\(/, "expected anomaly candidate computation in relay");
 expectIn(server, /function isTransactionalDataset\(/, "expected transactional dataset guard for revenue-per-unit anomalies");
 expectIn(server, /function deduplicateCandidatesByRow\(/, "expected candidate deduplication in relay");

@@ -28,21 +28,21 @@ const MODE_MODIFIERS = {
 const PROVIDER_PRESETS = {
   openai: {
     label: "OpenAI",
-    defaultModel: "gpt-4o",
+    defaultModel: "gpt-5.4",
     defaultEndpoint: "https://api.openai.com/v1",
     supportsWebSearch: true,
     supportsPulseboard: true
   },
   anthropic: {
     label: "Claude / Anthropic",
-    defaultModel: "claude-3-7-sonnet-latest",
+    defaultModel: "claude-sonnet-4-20250514",
     defaultEndpoint: "https://api.anthropic.com/v1/messages",
     supportsWebSearch: false,
     supportsPulseboard: true
   },
   gemini: {
     label: "Google Gemini",
-    defaultModel: "gemini-1.5-pro",
+    defaultModel: "gemini-2.5-flash",
     defaultEndpoint: "https://generativelanguage.googleapis.com/v1beta/models",
     supportsWebSearch: false,
     supportsPulseboard: true
@@ -483,7 +483,16 @@ async function validateConnection(connection) {
       message: `${PROVIDER_PRESETS[connection.provider].label} validated using the configured model ${connection.model}.`
     };
   } catch (error) {
-    return { ok: false, message: error.message || "Provider validation failed." };
+    const normalizedError = normalizeOperationalError(error, {
+      providerConfig: connection,
+      phase: "validation"
+    });
+    logNormalizedError(normalizedError, "validation");
+    return {
+      ok: false,
+      message: normalizedError.message || "Provider validation failed.",
+      error: serializePulseBoardError(normalizedError)
+    };
   }
 }
 
@@ -511,24 +520,57 @@ async function runPulseBoardSession(input, emit) {
         return { agent: agent.key, result };
       })
       .catch((error) => {
-        emit({ type: "agent_error", agent: agent.key, error: error.message || "Agent failed." });
-        return { agent: agent.key, result: { error: true, message: error.message || "Agent failed." } };
+        const normalizedError = normalizeOperationalError(error, {
+          providerConfig: input.connection,
+          phase: "monitoring"
+        });
+        logNormalizedError(normalizedError, `agent:${agent.key}`);
+        emit({ type: "agent_error", agent: agent.key, error: serializePulseBoardError(normalizedError) });
+        return {
+          agent: agent.key,
+          result: {
+            error: true,
+            ...serializePulseBoardError(normalizedError)
+          }
+        };
       })
   );
 
   const settled = await Promise.all(monitoringPromises);
   const byAgent = Object.fromEntries(settled.map((entry) => [entry.agent, entry.result]));
   const successCount = Object.values(byAgent).filter((entry) => entry && !entry.error).length;
+  const degradedWarning = buildMonitoringDegradedWarning(byAgent, successCount);
 
   if (successCount < 3) {
-    emit({ type: "brief_error", successCount, error: "Fewer than three monitoring agents returned usable data." });
+    emit({
+      type: "brief_error",
+      successCount,
+      error: serializePulseBoardError(buildInsufficientEvidenceError(byAgent, successCount))
+    });
     emit({ type: "done" });
     return;
   }
 
   emit({ type: "aggregator_started" });
-  const brief = await runAggregator(input.connection, input.topic, input.mode, byAgent, input.role);
-  emit({ type: "brief", result: brief });
+  try {
+    const brief = await runAggregator(input.connection, input.topic, input.mode, byAgent, input.role);
+    emit({
+      type: "brief",
+      result: brief,
+      warning: degradedWarning ? serializePulseBoardError(degradedWarning) : null
+    });
+  } catch (error) {
+    const normalizedError = normalizeOperationalError(error, {
+      providerConfig: input.connection,
+      phase: "aggregation"
+    });
+    logNormalizedError(normalizedError, "aggregator");
+    emit({
+      type: "brief_error",
+      successCount,
+      error: serializePulseBoardError(normalizedError)
+    });
+  }
   emit({ type: "done" });
 }
 
@@ -1348,7 +1390,7 @@ async function runModelJson({ providerConfig, systemPrompt, userContent }) {
 
 async function runOpenAIValidationProbe(providerConfig) {
   const endpoint = normalizeBaseUrl(providerConfig.endpoint, "/responses");
-  const response = await fetch(endpoint, {
+  let response = await fetch(endpoint, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -1360,9 +1402,36 @@ async function runOpenAIValidationProbe(providerConfig) {
       max_output_tokens: 12
     })
   });
-  const payload = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(readProviderError(payload, response.status));
-  assertValidationText(extractOpenAIText(payload), PROVIDER_PRESETS[providerConfig.provider].label);
+  let payload = await response.json().catch(() => ({}));
+  if (response.ok) {
+    const text = extractOpenAIText(payload);
+    if (text.trim() || hasSuccessfulOpenAIValidationPayload(payload)) {
+      return;
+    }
+    assertValidationText(text, PROVIDER_PRESETS[providerConfig.provider].label);
+    return;
+  }
+
+  const fallbackEndpoint = normalizeBaseUrl(providerConfig.endpoint, "/chat/completions");
+  response = await fetch(fallbackEndpoint, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${providerConfig.apiKey}`,
+      "Accept": "application/json"
+    },
+    body: JSON.stringify({
+      model: providerConfig.model,
+      messages: [{ role: "user", content: "Reply with PONG only." }],
+      max_tokens: 12,
+      temperature: 0,
+      stream: false
+    })
+  });
+  payload = await response.json().catch(() => ({}));
+  if (!response.ok) throw buildProviderError(providerConfig, payload, response.status);
+  const fallbackText = extractChatCompletionText(payload);
+  assertValidationText(fallbackText, PROVIDER_PRESETS[providerConfig.provider].label);
 }
 
 async function runAnthropicValidationProbe(providerConfig) {
@@ -1382,7 +1451,7 @@ async function runAnthropicValidationProbe(providerConfig) {
     })
   });
   const payload = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(readProviderError(payload, response.status));
+  if (!response.ok) throw buildProviderError(providerConfig, payload, response.status);
   const text = (payload.content || [])
     .filter((item) => item.type === "text" && item.text)
     .map((item) => item.text)
@@ -1402,12 +1471,8 @@ async function runGeminiValidationProbe(providerConfig) {
     })
   });
   const payload = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(readProviderError(payload, response.status));
-  const text = ((((payload.candidates || [])[0] || {}).content || {}).parts || [])
-    .map((part) => part.text || "")
-    .join("\n")
-    .trim();
-  assertValidationText(text, PROVIDER_PRESETS[providerConfig.provider].label);
+  if (!response.ok) throw buildProviderError(providerConfig, payload, response.status);
+  return;
 }
 
 async function runNvidiaValidationProbe(providerConfig) {
@@ -1456,14 +1521,14 @@ async function runNvidiaValidationProbe(providerConfig) {
     })
   });
   payload = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(readProviderError(payload, response.status));
+  if (!response.ok) throw buildProviderError(providerConfig, payload, response.status);
   const text = (((payload.choices || [])[0] || {}).message || {}).content || "";
   assertValidationText(text, PROVIDER_PRESETS[providerConfig.provider].label);
 }
 
 async function runOpenAIJson(providerConfig, systemPrompt, userContent) {
   const endpoint = normalizeBaseUrl(providerConfig.endpoint, "/responses");
-  const response = await fetch(endpoint, {
+  let response = await fetch(endpoint, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -1479,10 +1544,37 @@ async function runOpenAIJson(providerConfig, systemPrompt, userContent) {
       }
     })
   });
-  const payload = await response.json();
-  if (!response.ok) throw new Error(readProviderError(payload, response.status));
-  const outputText = extractOpenAIText(payload);
-  return parseJsonText(outputText);
+  let payload = await response.json().catch(() => ({}));
+  if (response.ok) {
+    const outputText = extractOpenAIText(payload);
+    if (outputText.trim()) {
+      return parseJsonText(outputText);
+    }
+  }
+
+  const fallbackEndpoint = normalizeBaseUrl(providerConfig.endpoint, "/chat/completions");
+  response = await fetch(fallbackEndpoint, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${providerConfig.apiKey}`,
+      "Accept": "application/json"
+    },
+    body: JSON.stringify({
+      model: providerConfig.model,
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userContent }
+      ],
+      response_format: { type: "json_object" },
+      max_tokens: 4096,
+      temperature: 0,
+      stream: false
+    })
+  });
+  payload = await response.json().catch(() => ({}));
+  if (!response.ok) throw buildProviderError(providerConfig, payload, response.status);
+  return parseJsonText(extractChatCompletionText(payload));
 }
 
 async function runAnthropicJson(providerConfig, systemPrompt, userContent) {
@@ -1502,7 +1594,7 @@ async function runAnthropicJson(providerConfig, systemPrompt, userContent) {
     })
   });
   const payload = await response.json();
-  if (!response.ok) throw new Error(readProviderError(payload, response.status));
+  if (!response.ok) throw buildProviderError(providerConfig, payload, response.status);
   const text = (payload.content || [])
     .filter((item) => item.type === "text" && item.text)
     .map((item) => item.text)
@@ -1523,7 +1615,7 @@ async function runGeminiJson(providerConfig, systemPrompt, userContent) {
     })
   });
   const payload = await response.json();
-  if (!response.ok) throw new Error(readProviderError(payload, response.status));
+  if (!response.ok) throw buildProviderError(providerConfig, payload, response.status);
   const text = ((((payload.candidates || [])[0] || {}).content || {}).parts || [])
     .map((part) => part.text || "")
     .join("\n")
@@ -1581,7 +1673,7 @@ async function runNvidiaJson(providerConfig, systemPrompt, userContent) {
     })
   });
   payload = await response.json();
-  if (!response.ok) throw new Error(readProviderError(payload, response.status));
+  if (!response.ok) throw buildProviderError(providerConfig, payload, response.status);
   const text = (((payload.choices || [])[0] || {}).message || {}).content || "";
   return parseJsonText(text);
 }
@@ -1638,6 +1730,18 @@ function hasSuccessfulNvidiaValidationPayload(payload) {
   if (Array.isArray(payload.output) && payload.output.length > 0) return true;
   if (Array.isArray(payload.choices) && payload.choices.length > 0) return true;
   return false;
+}
+
+function hasSuccessfulOpenAIValidationPayload(payload) {
+  if (!payload || typeof payload !== "object") return false;
+  if (typeof payload.id === "string" && payload.id.trim()) return true;
+  if (typeof payload.object === "string" && payload.object.trim()) return true;
+  if (Array.isArray(payload.output) && payload.output.length > 0) return true;
+  return false;
+}
+
+function extractChatCompletionText(payload) {
+  return String(((((payload || {}).choices || [])[0] || {}).message || {}).content || "").trim();
 }
 
 function parseJsonText(text) {
@@ -1724,7 +1828,7 @@ function looksLikeTruncatedJson(text) {
   return false;
 }
 
-function readProviderError(payload, status) {
+function extractProviderErrorMessage(payload, status) {
   if (payload && payload.error && (payload.error.message || payload.error.status)) {
     return payload.error.message || payload.error.status;
   }
@@ -1732,6 +1836,213 @@ function readProviderError(payload, status) {
     return JSON.stringify(payload.promptFeedback);
   }
   return `Provider request failed with status ${status}.`;
+}
+
+function buildProviderError(providerConfig, payload, status) {
+  const rawMessage = extractProviderErrorMessage(payload, status);
+  const normalized = normalizeProviderError(providerConfig, status, rawMessage);
+  const error = new Error(normalized.message);
+  Object.assign(error, normalized, { rawMessage, status });
+  return error;
+}
+
+function normalizeProviderError(providerConfig, status, rawMessage) {
+  const providerLabel = PROVIDER_PRESETS[providerConfig.provider]?.label || "Provider";
+  const raw = String(rawMessage || "").trim();
+  const lower = raw.toLowerCase();
+  const retryAfterSeconds = extractRetryAfterSeconds(raw);
+
+  if (providerConfig.provider === "openai") {
+    if (status === 401 || /invalid api key|incorrect api key|authentication|unauthorized|api key not valid/i.test(raw)) {
+      return {
+        kind: "auth",
+        provider: providerConfig.provider,
+        message: `${providerLabel} could not verify this API key. Use an OpenAI Platform API key and try again.`,
+        retryAfterSeconds
+      };
+    }
+
+    if (status === 403 || /model.*access|does not have access|project.*not allowed|organization.*not allowed|permission denied|insufficient permissions/i.test(lower)) {
+      return {
+        kind: "model_access",
+        provider: providerConfig.provider,
+        message: `${providerLabel} accepted the key, but this account or project may not have access to the selected model. Try a model your account can use.`,
+        retryAfterSeconds
+      };
+    }
+
+    if (status === 429 || /quota exceeded|rate limit|billing|insufficient quota|usage limit/i.test(lower)) {
+      return {
+        kind: "quota",
+        provider: providerConfig.provider,
+        message: `${providerLabel} quota or billing limits were reached. Check usage or billing, then try again.`,
+        retryAfterSeconds
+      };
+    }
+
+    if (status === 404 || /not found|unknown model|does not exist|model .*not found/i.test(lower)) {
+      return {
+        kind: "not_found",
+        provider: providerConfig.provider,
+        message: `${providerLabel} could not find the configured model or endpoint. Check the model name and endpoint.`,
+        retryAfterSeconds
+      };
+    }
+
+    if (status === 400 || /bad request|unsupported|invalid value|invalid request|request too large|malformed/i.test(lower)) {
+      return {
+        kind: "bad_request",
+        provider: providerConfig.provider,
+        message: `${providerLabel} rejected this request for the selected model. Check the model, endpoint, or request format and try again.`,
+        retryAfterSeconds
+      };
+    }
+  }
+
+  if (status === 401 || status === 403 || /invalid api key|unauthorized|permission denied|api key not valid|authentication/i.test(raw)) {
+    return {
+      kind: "auth",
+      provider: providerConfig.provider,
+      message: `${providerLabel} rejected the saved credentials. Update the API key and try again.`,
+      retryAfterSeconds
+    };
+  }
+
+  if (status === 404 || /not found|model .*not found|unsupported for generatecontent|unknown model|does not exist/i.test(raw)) {
+    return {
+      kind: "not_found",
+      provider: providerConfig.provider,
+      message: `${providerLabel} could not find the configured model or endpoint. Check the model name and endpoint.`,
+      retryAfterSeconds
+    };
+  }
+
+  if (status === 429 || /quota exceeded|rate limit|too many requests|resource exhausted|retry in [\d.]+s|free_tier_requests/i.test(lower)) {
+    return {
+      kind: "quota",
+      provider: providerConfig.provider,
+      message: `${providerLabel} quota exceeded. Monitoring may be incomplete until your quota resets.`,
+      retryAfterSeconds
+    };
+  }
+
+  if (status === 400 || /invalid argument|bad request|malformed|unsupported|request too large|prompt blocked|malformed json/i.test(lower)) {
+    return {
+      kind: "bad_request",
+      provider: providerConfig.provider,
+      message: `${providerLabel} rejected the request for the configured model. Check the model, endpoint, or request size and try again.`,
+      retryAfterSeconds
+    };
+  }
+
+  return {
+    kind: "provider_unavailable",
+    provider: providerConfig.provider,
+    message: `${providerLabel} is temporarily unavailable. Try again in a moment.`,
+    retryAfterSeconds
+  };
+}
+
+function normalizeOperationalError(error, context = {}) {
+  if (error && typeof error === "object" && error.kind && error.message) {
+    return error;
+  }
+  const providerConfig = context.providerConfig || { provider: "unknown" };
+  const rawMessage = String(error?.rawMessage || error?.message || "Operation failed.").trim();
+  if (/duckduckgo search failed|tavily search failed|search failed/i.test(rawMessage.toLowerCase())) {
+    return {
+      kind: "search_unavailable",
+      provider: "search",
+      message: "Live web search is temporarily unavailable for this agent. Results may be incomplete.",
+      rawMessage
+    };
+  }
+  if (/provider returned truncated json output|provider returned malformed json output|provider returned no text output/i.test(rawMessage.toLowerCase())) {
+    return {
+      kind: "provider_unavailable",
+      provider: providerConfig.provider,
+      message: `${PROVIDER_PRESETS[providerConfig.provider]?.label || "Provider"} returned an incomplete response. Try the monitoring run again.`,
+      rawMessage
+    };
+  }
+  return {
+    kind: error?.kind || "provider_unavailable",
+    provider: error?.provider || providerConfig.provider,
+    message: error?.message || rawMessage || "Operation failed.",
+    rawMessage: error?.rawMessage || rawMessage,
+    retryAfterSeconds: error?.retryAfterSeconds
+  };
+}
+
+function extractRetryAfterSeconds(rawMessage) {
+  const match = String(rawMessage || "").match(/retry in ([\d.]+)s/i);
+  if (!match) return null;
+  const value = Number(match[1]);
+  return Number.isFinite(value) ? Math.max(1, Math.round(value)) : null;
+}
+
+function serializePulseBoardError(error) {
+  if (!error) return { kind: "unknown", provider: "unknown", message: "Operation failed." };
+  return {
+    kind: error.kind || "unknown",
+    provider: error.provider || "unknown",
+    message: error.message || "Operation failed.",
+    ...(Number.isFinite(error.retryAfterSeconds) ? { retryAfterSeconds: error.retryAfterSeconds } : {})
+  };
+}
+
+function logNormalizedError(error, scope) {
+  const rawDetail = error?.rawMessage ? ` raw="${error.rawMessage}"` : "";
+  console.warn(`[PulseBoard][${scope}] ${error?.provider || "unknown"} ${error?.kind || "unknown"}: ${error?.message || "Unknown error."}${rawDetail}`);
+}
+
+function buildMonitoringDegradedWarning(byAgent, successCount) {
+  const failures = Object.values(byAgent || {}).filter((entry) => entry && entry.error);
+  if (!failures.length || successCount < 3) return null;
+  const quotaFailures = failures.filter((entry) => entry.kind === "quota").length;
+  const searchFailures = failures.filter((entry) => entry.kind === "search_unavailable").length;
+  if (quotaFailures > 0) {
+    return {
+      kind: "quota",
+      provider: failures.find((entry) => entry.kind === "quota")?.provider || "unknown",
+      message: "Some monitoring agents hit provider limits, so this brief may be missing a few live signals."
+    };
+  }
+  if (searchFailures > 0) {
+    return {
+      kind: "search_unavailable",
+      provider: "search",
+      message: "Some live search lookups failed, so this brief may be based on partial evidence."
+    };
+  }
+  return null;
+}
+
+function buildInsufficientEvidenceError(byAgent, successCount) {
+  const failures = Object.values(byAgent || {}).filter((entry) => entry && entry.error);
+  const quotaFailure = failures.find((entry) => entry.kind === "quota");
+  if (quotaFailure) {
+    return {
+      kind: "quota",
+      provider: quotaFailure.provider,
+      message: "PulseBoard gathered too little evidence because several agents hit provider limits. Try again after your quota resets."
+    };
+  }
+  const searchFailure = failures.find((entry) => entry.kind === "search_unavailable");
+  if (searchFailure) {
+    return {
+      kind: "search_unavailable",
+      provider: "search",
+      message: "PulseBoard could not gather enough live search evidence to finish this monitoring run."
+    };
+  }
+  return {
+    kind: "insufficient_evidence",
+    provider: "pulseboard",
+    message: successCount > 0
+      ? "PulseBoard gathered too little usable evidence to synthesize a reliable brief."
+      : "PulseBoard could not gather usable monitoring evidence for this run."
+  };
 }
 
 function stripHtml(value) {

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -51,7 +51,62 @@
       font-family: "DM Sans", sans-serif;
       line-height: 1.6;
     }
-
+    body.query-route {
+      scrollbar-gutter: stable;
+    }
+    body.home-dark-mode {
+      background:
+        radial-gradient(circle at top left, rgba(96, 165, 250, 0.16), transparent 32%),
+        radial-gradient(circle at bottom right, rgba(15, 23, 42, 0.92), transparent 34%),
+        #0f172a;
+      color: #e5eefb;
+    }
+    body.home-dark-mode .topbar {
+      background: rgba(15, 23, 42, 0.82);
+      border-color: rgba(226, 232, 240, 0.14);
+      box-shadow: 0 10px 32px rgba(2, 6, 23, 0.34);
+    }
+    body.home-dark-mode .brand-mark,
+    body.home-dark-mode .ghost-button,
+    body.home-dark-mode #homePage .hero,
+    body.home-dark-mode #homePage .how-it-works-card,
+    body.home-dark-mode #homePage .two-sided-card,
+    body.home-dark-mode #homePage .hero-rail,
+    body.home-dark-mode #homePage .mini-panel {
+      background: rgba(15, 23, 42, 0.72);
+      border-color: rgba(226, 232, 240, 0.12);
+      color: #e5eefb;
+    }
+    body.home-dark-mode #homePage .hero {
+      background: linear-gradient(145deg, rgba(15, 23, 42, 0.9), rgba(30, 41, 59, 0.92)), rgba(15, 23, 42, 0.9);
+      box-shadow: 0 18px 48px rgba(2, 6, 23, 0.36);
+    }
+    body.home-dark-mode .brand-title,
+    body.home-dark-mode .hero-title,
+    body.home-dark-mode #homePage .explain-title,
+    body.home-dark-mode #homePage .value-column-title,
+    body.home-dark-mode #homePage .metric-value {
+      color: #f8fbff;
+    }
+    body.home-dark-mode .brand-meta,
+    body.home-dark-mode .muted,
+    body.home-dark-mode #homePage .hero-subtitle,
+    body.home-dark-mode #homePage .explain-copy,
+    body.home-dark-mode #homePage .value-text,
+    body.home-dark-mode #homePage .explain-label,
+    body.home-dark-mode #homePage .sponsor-copy {
+      color: rgba(226, 232, 240, 0.78);
+    }
+    body.home-dark-mode #homePage .value-divider {
+      background: rgba(226, 232, 240, 0.12);
+    }
+    body.home-dark-mode #homePage .value-dot {
+      background: #e5eefb;
+      opacity: 0.55;
+    }
+    body.home-dark-mode #homePage .eyebrow {
+      color: rgba(191, 219, 254, 0.82);
+    }
     button, input, select, textarea { font: inherit; color: inherit; }
     button { border: 0; background: none; cursor: pointer; }
     [hidden] { display: none !important; }
@@ -68,7 +123,7 @@
       margin: 12px 0 28px;
       padding: 18px 22px;
       border: 1px solid var(--border);
-      border-radius: 30px;
+      border-radius: 10px;
       background: rgba(234, 229, 221, 0.88);
       backdrop-filter: blur(14px);
       box-shadow: 0 10px 32px rgba(26, 26, 46, 0.04);
@@ -90,6 +145,65 @@
       place-items: center;
       background: var(--card);
       border: 1px solid var(--border);
+    }
+    .brand-mark svg {
+      width: 22px;
+      height: 22px;
+    }
+    .ui-icon {
+      width: 1em;
+      height: 1em;
+      display: inline-block;
+      vertical-align: -0.12em;
+      flex-shrink: 0;
+    }
+    .ui-icon.sm {
+      width: 14px;
+      height: 14px;
+    }
+    .ui-icon.md {
+      width: 18px;
+      height: 18px;
+    }
+    .ui-icon.lg {
+      width: 20px;
+      height: 20px;
+    }
+    .button-icon,
+    .tier-title,
+    .aggregator-copy {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .tier-dot {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      display: inline-block;
+      flex-shrink: 0;
+      position: relative;
+      box-shadow: inset 0 -2px 5px rgba(26, 26, 46, 0.1), 0 1px 2px rgba(26, 26, 46, 0.08);
+    }
+    .tier-dot::after {
+      content: "";
+      position: absolute;
+      top: 3px;
+      left: 4px;
+      width: 9px;
+      height: 7px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.55);
+      filter: blur(0.2px);
+    }
+    .tier-dot.urgent {
+      background: radial-gradient(circle at 32% 28%, #ff9cab 0%, #e34f68 38%, #ca2747 72%, #b11737 100%);
+    }
+    .tier-dot.notable {
+      background: radial-gradient(circle at 32% 28%, #ffe8a6 0%, #f6c94f 36%, #e0a830 70%, #cb8616 100%);
+    }
+    .tier-dot.fyi {
+      background: radial-gradient(circle at 32% 28%, #f1e9ff 0%, #d9c5fb 34%, #bb9ae8 68%, #a87fd8 100%);
     }
 
     .brand-title, .hero-title, .connection-title {
@@ -171,6 +285,7 @@
       padding: clamp(28px, 5vw, 52px);
       margin-bottom: 28px;
       overflow: hidden;
+      border-radius: 10px;
       background: linear-gradient(145deg, rgba(255,255,255,0.88), rgba(245,242,238,0.9)), var(--card);
     }
     .home-page { margin-bottom: 28px; }
@@ -202,6 +317,8 @@
       padding: 16px 18px;
       display: grid;
       gap: 8px;
+      
+      align-content: start;
     }
     .explain-label {
       margin: 0;
@@ -412,6 +529,44 @@
     .cta-button:disabled { opacity: 0.6; cursor: not-allowed; }
     .chip-row, .tag-row, .badge-row { display: flex; flex-wrap: wrap; gap: 10px; }
     .chip { padding: 9px 14px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+    #queryPage.query-panel {
+      border-radius: 10px;
+    }
+    #queryPage .query-input,
+    #queryPage .mode-select {
+      border-radius: 10px;
+    }
+    #queryPage .cta-button {
+      border-radius: 10px;
+    }
+    #queryPage #chipRow {
+      margin-top: 8px;
+    }
+    #queryPage .utility-row {
+      align-items: flex-start;
+      flex-wrap: nowrap;
+      gap: 16px;
+    }
+    #queryPage .utility-row > :first-child {
+      min-width: 0;
+      flex: 1 1 auto;
+    }
+    #queryPage #statusMessage {
+      border-radius: 10px;
+      flex: 0 0 auto;
+      max-width: 420px;
+      margin-left: auto;
+      margin-top: 26px;
+    }
+    #csvPage.query-panel {
+      border-radius: 10px;
+    }
+    #csvResultSection.brief-section {
+      border-radius: 10px;
+    }
+    #csvStatusMessage {
+      border-radius: 10px;
+    }
 
     .connection-card {
       width: min(100%, 760px);
@@ -421,10 +576,19 @@
     }
     #apiKeyPage.connection-card {
       width: 100%;
+      border-radius: 10px;
+    }
+    #apiKeyPage .section-intro {
+      align-items: flex-start;
     }
     #apiKeyPage #providerNotes {
       min-height: 64px;
       margin-bottom: 10px;
+    }
+    #apiKeyPage .field-input,
+    #apiKeyPage .field-select,
+    #apiKeyPage .field-textarea {
+      border-radius: 10px;
     }
     .advanced-settings {
       grid-column: 1 / -1;
@@ -432,6 +596,9 @@
       border-radius: 18px;
       background: rgba(26,26,46,0.03);
       padding: 12px 14px;
+    }
+    #apiKeyPage .advanced-settings {
+      border-radius: 10px;
     }
     .advanced-settings summary {
       list-style: none;
@@ -454,7 +621,7 @@
       color: rgba(26,26,46,0.5);
     }
     .advanced-settings[open] summary::after {
-      content: "−";
+      content: "-";
     }
     .advanced-settings-grid {
       display: grid;
@@ -512,6 +679,9 @@
       background: #ffffff;
       box-shadow: 0 16px 34px rgba(26, 26, 46, 0.04);
     }
+    #apiKeyHelpSection .provider-help-card {
+      border-radius: 10px;
+    }
     .provider-help-card-head {
       display: flex;
       justify-content: space-between;
@@ -539,6 +709,26 @@
       white-space: nowrap;
     }
     .provider-help-link:hover { text-decoration: underline; }
+    .provider-help-label-group {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .provider-help-recommended {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(38, 122, 76, 0.14);
+      border: 1px solid rgba(38, 122, 76, 0.2);
+      color: #267a4c;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      line-height: 1;
+    }
     .provider-help-card h3 {
       margin: 0;
       font-size: 15px;
@@ -607,7 +797,7 @@
       gap: 12px;
       margin: 18px 0 20px;
       padding: 14px 18px;
-      border-radius: 18px;
+      border-radius: 10px;
       border: 1px solid var(--border);
       background: rgba(26,26,46,0.05);
       font-size: 13px;
@@ -627,7 +817,33 @@
       min-width: 0;
       overflow: hidden;
     }
+    #dashboard.dashboard {
+      border-radius: 10px;
+    }
+    #dashboard .agent-card {
+      border-radius: 10px;
+    }
+    #dashboard .mini-panel,
+    #dashboard .info-note,
+    #dashboard .list-card,
+    #dashboard .tier-card,
+    #dashboard .score-card {
+      border-radius: 10px;
+    }
     .agent-card.full-span { grid-column: 1 / -1; }
+    .agent-card-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 16px;
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+    }
+    .agent-card-icon .ui-icon {
+      width: 18px;
+      height: 18px;
+      vertical-align: 0;
+    }
     .list-stack, .summary-stack, .tier-stack { display: grid; gap: 14px; }
     .summary-stack { align-content: start; }
     .pill, .tag {
@@ -678,6 +894,21 @@
     .tier-block.notable { background: var(--notable-bg); }
     .tier-block.fyi { background: var(--fyi-bg); }
     .brief-actions { display: flex; gap: 12px; flex-wrap: wrap; justify-content: flex-end; }
+    .brief-header-side {
+      display: grid;
+      justify-items: end;
+      gap: 12px;
+    }
+    #briefSection.brief-section {
+      border-radius: 10px;
+    }
+    #briefSection .brief-summary,
+    #briefSection .tier-block,
+    #briefSection .list-card,
+    #briefSection .tier-card,
+    #briefSection .score-card {
+      border-radius: 10px;
+    }
 
     .modal {
       position: fixed;
@@ -720,6 +951,13 @@
       background: rgba(26,26,46,0.05);
       color: var(--text-secondary);
       font-size: 12px;
+    }
+    #apiKeyPage .inline-alert {
+      border-radius: 10px;
+    }
+    #apiKeyPage .secondary-button,
+    #apiKeyPage .cta-button {
+      border-radius: 10px;
     }
     .inline-alert.warning { background: var(--notable-bg); color: var(--notable); }
     .inline-alert.error { background: var(--urgent-bg); color: var(--urgent); }
@@ -2295,6 +2533,7 @@
       font-weight: 500;
       fill: #1a1a2e;
       text-anchor: middle;
+      dominant-baseline: middle;
     }
     .quality-score-caption {
       display: grid;
@@ -2328,15 +2567,18 @@
     }
     .quality-progress {
       flex: 1;
-      height: 2px;
+      height: 4px;
+      display: flex;
+      align-items: stretch;
       background: rgba(26,26,46,0.08);
-      border-radius: 1px;
+      border-radius: 999px;
       overflow: hidden;
     }
     .quality-progress-fill {
       width: 0;
       height: 100%;
-      border-radius: 1px;
+      display: block;
+      border-radius: inherit;
       transition: width 0.6s ease;
     }
     .quality-breakdown-value {
@@ -2735,9 +2977,19 @@
       body.print-mode #apiKeyHelpSection,
       body.print-mode #queryPage,
       body.print-mode #dashboard,
-      body.print-mode #briefSection,
       body.print-mode .csv-action-bar,
       body.print-mode .footnote {
+        display: none !important;
+      }
+      body.print-mode.print-brief #briefSection {
+        display: block !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        border: 0 !important;
+        box-shadow: none !important;
+        background: transparent !important;
+      }
+      body.print-mode.print-csv #briefSection {
         display: none !important;
       }
       body.print-mode .csv-brief-section {
@@ -2747,6 +2999,9 @@
         border: 0 !important;
         box-shadow: none !important;
         background: transparent !important;
+      }
+      body.print-mode.print-brief .csv-brief-section {
+        display: none !important;
       }
       body.print-mode .print-header {
         display: block !important;
@@ -2786,20 +3041,20 @@
   <div class="app-shell">
     <header class="topbar">
       <button class="brand-lockup" type="button" id="brandHomeButton" aria-label="Go to PulseBoard home">
-        <div class="brand-mark" aria-hidden="true">◌</div>
+        <div class="brand-mark" id="brandMarkIcon" aria-hidden="true"></div>
         <div>
           <p class="brand-title">PulseBoard</p>
           <div class="brand-meta">
             <span id="topbarMonitoringLabel">Real-time multi-agent intelligence monitor</span>
           </div>
         </div>
-      </button>
-      <div class="topbar-actions">
-        <span class="badge" id="providerStatusBadge">Not connected</span>
-<button class="ghost-button" type="button" id="apiKeyButton">Add API Key</button>
-        <button class="ghost-button" type="button" id="newQueryButton">New Query</button>
-        <button class="ghost-button" type="button" id="openCsvButton">Analyze CSV</button>
-      </div>
+        </button>
+        <div class="topbar-actions">
+          <span class="badge" id="providerStatusBadge">Not connected</span>
+  <button class="ghost-button" type="button" id="apiKeyButton">Add API Key</button>
+          <button class="ghost-button" type="button" id="newQueryButton">New Query</button>
+          <button class="ghost-button" type="button" id="openCsvButton">Analyze CSV</button>
+        </div>
     </header>
 
     <main>
@@ -2830,7 +3085,7 @@
             <article class="how-it-works-card">
               <p class="explain-label">Signal coverage</p>
               <p class="explain-title">5 agents fire simultaneously</p>
-              <p class="explain-copy">News, hiring signals, sentiment, regulatory changes, and competitor moves — each watched by a dedicated agent, all running in parallel.</p>
+              <p class="explain-copy">News, hiring signals, sentiment, regulatory changes, and competitor moves - each watched by a dedicated agent, all running in parallel.</p>
             </article>
             <article class="how-it-works-card">
               <p class="explain-label">Who it's for</p>
@@ -2840,7 +3095,7 @@
             <article class="how-it-works-card">
               <p class="explain-label">The output</p>
               <p class="explain-title">One brief, ranked by urgency</p>
-              <p class="explain-copy">Everything collapses into Urgent, Notable, and FYI — so you act on what matters and skip what doesn't.</p>
+              <p class="explain-copy">Everything collapses into Urgent, Notable, and FYI - so you act on what matters and skip what doesn't.</p>
             </article>
           </div>
 
@@ -2848,7 +3103,7 @@
             <div class="value-column">
               <h2 class="value-column-title" id="twoSidedValueHeading">For students</h2>
               <div class="value-list">
-                <div class="value-item"><span class="value-dot" aria-hidden="true"></span><p class="value-text">Research any company before an interview — news, hiring trends, and public perception in 60 seconds</p></div>
+                <div class="value-item"><span class="value-dot" aria-hidden="true"></span><p class="value-text">Research any company before an interview - news, hiring trends, and public perception in 60 seconds</p></div>
                 <div class="value-item"><span class="value-dot" aria-hidden="true"></span><p class="value-text">Track an industry for a case competition or class project without spending hours searching</p></div>
                 <div class="value-item"><span class="value-dot" aria-hidden="true"></span><p class="value-text">Upload a CSV and get an instant analyst-quality brief with charts and anomaly detection</p></div>
               </div>
@@ -2863,17 +3118,6 @@
               </div>
             </div>
           </section>
-
-          <div class="sponsor-row" aria-label="PulseBoard sponsor use cases">
-            <span class="sponsor-copy">Built for use cases at </span>
-            <span class="sponsor-chip">Uber</span>
-            <span class="sponsor-chip">UBS</span>
-            <span class="sponsor-chip">Sikich</span>
-            <span class="sponsor-chip">GEICO</span>
-            <span class="sponsor-chip">L'Oréal</span>
-            <span class="sponsor-chip">ZS Associates</span>
-            <span class="sponsor-chip">KPFF Engineers</span>
-          </div>
         </div>
       </section>
 
@@ -2883,7 +3127,6 @@
             <h2 class="connection-title" id="connectionTitle">Choose a provider and add credentials for this tab.</h2>
             <p class="section-subtitle">Keys stay in memory only for this tab and clear on refresh.</p>
           </div>
-          <div class="provider-row" id="connectionProviderChips"></div>
         </div>
         <form id="connectionForm">
           <div class="connection-grid">
@@ -2942,13 +3185,13 @@
             </div>
             <div>
               <h3>Create an OpenAI secret key</h3>
-              <p>Best fit if you want PulseBoard monitoring and CSV analysis through models like <code>gpt-4o</code>.</p>
+              <p>Best fit if you want PulseBoard monitoring and CSV analysis through models like <code>gpt-5.4</code>.</p>
             </div>
             <span class="provider-help-access">Paid API usage</span>
             <ol class="provider-help-steps">
               <li><strong>Sign in</strong> to the OpenAI platform and open the API keys page.</li>
               <li><strong>Create a new secret key</strong> for the project or organization you want to use.</li>
-              <li><strong>Copy it once</strong> and paste it here with the default OpenAI endpoint and your chosen model.</li>
+              <li><strong>Copy it once</strong> and paste it here with the default OpenAI endpoint and a model your OpenAI Platform project can access.</li>
             </ol>
           </article>
           <article class="provider-help-card">
@@ -2958,7 +3201,7 @@
             </div>
             <div>
               <h3>Create an Anthropic API key</h3>
-              <p>Use this if you want the relay to run PulseBoard through Claude models and the Anthropic Messages API.</p>
+              <p>Use this if you want the relay to run PulseBoard through Claude models like <code>claude-sonnet-4-20250514</code> and the Anthropic Messages API.</p>
             </div>
             <span class="provider-help-access">Usually paid, small trial credits for new users</span>
             <ol class="provider-help-steps">
@@ -2985,7 +3228,7 @@
           </article>
           <article class="provider-help-card">
             <div class="provider-help-card-head">
-              <span class="provider-help-label">NVIDIA API</span>
+              <span class="provider-help-label provider-help-label-group"><span class="provider-help-recommended">Recommended</span><span>NVIDIA API</span></span>
               <a class="provider-help-link" href="https://build.nvidia.com/" target="_blank" rel="noreferrer">Open Build</a>
             </div>
             <div>
@@ -3029,7 +3272,7 @@
                 <option value="interviewprep">Interview Prep</option>
               </select>
             </div>
-            <button class="cta-button" id="runButton" type="submit">Run PulseBoard -&gt;</button>
+            <button class="cta-button" id="runButton" type="submit"></button>
           </div>
           <div class="field-group" id="interviewRoleGroup" hidden>
             <label class="query-label" for="roleInput">Role</label>
@@ -3070,7 +3313,7 @@
                 <button class="csv-file-clear" id="clearCsvFileButton" type="button" aria-label="Remove selected CSV file" hidden>x</button>
                 <button class="csv-sample-link" id="useSampleCsvButton" type="button">Use sample CSV</button>
               </div>
-              <p class="csv-upload-description" id="csvInputHelper">Upload any CSV — sales data, survey results, financial reports, or any tabular dataset.</p>
+              <p class="csv-upload-description" id="csvInputHelper">Upload any CSV - sales data, survey results, financial reports, or any tabular dataset.</p>
               <div class="quality-preview-container" id="qualityPreviewContainer" hidden></div>
               <div class="field-group" style="margin-top:16px;">
                 <label class="query-label" for="csvGoalInput">Analysis Goal</label>
@@ -3078,7 +3321,7 @@
               </div>
               <div class="single-csv-action-row" id="singleCsvActionRow" hidden>
                 <div class="single-csv-action-spacer"></div>
-                <button class="cta-button single-csv-run-button" id="runCsvButton" type="submit">Analyze CSV →</button>
+                <button class="cta-button single-csv-run-button" id="runCsvButton" type="submit">Analyze CSV -&gt;</button>
               </div>
             </section>
           </div>
@@ -3119,7 +3362,7 @@
             </div>
             <div class="compare-csv-action-row">
               <div class="single-csv-action-spacer"></div>
-              <button class="cta-button compare-csv-run-button" id="compareRunCsvButton" type="submit">Analyze Files →</button>
+              <button class="cta-button compare-csv-run-button" id="compareRunCsvButton" type="submit">Analyze Files -&gt;</button>
             </div>
           </div>
           <div class="inline-alert" id="csvStatusMessage" hidden></div>
@@ -3130,14 +3373,14 @@
         <div class="dashboard-header">
           <div>
             <h2 class="section-title" id="dashboardHeading">Agent Dashboard</h2>
-            <p class="section-subtitle" id="dashboardSubtitle">Monitoring: —</p>
+            <p class="section-subtitle" id="dashboardSubtitle">Monitoring: -</p>
           </div>
           <span class="badge" id="dashboardModePill">Mode: General</span>
         </div>
         <div class="muted" id="progressLabel">Progress: 0/5 agents complete</div>
         <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
         <div class="muted" style="margin-top: 8px;" id="progressDetail">Waiting to start</div>
-        <div class="aggregator-banner" id="aggregatorBanner"><span class="spinner" aria-hidden="true"></span><span>⚡ Aggregator synthesizing the intelligence brief...</span></div>
+        <div class="aggregator-banner" id="aggregatorBanner"><span class="spinner" aria-hidden="true"></span><span class="aggregator-copy"><span id="aggregatorBannerIcon" aria-hidden="true"></span><span>Aggregator synthesizing the intelligence brief...</span></span></div>
         <div class="agent-grid" id="agentGrid"></div>
       </section>
 
@@ -3173,10 +3416,8 @@
     const DEMO_TOPICS = [
       { label: "Uber", mode: "company" },
       { label: "UBS", mode: "company" },
-      { label: "L'Oréal", mode: "esg" },
-      { label: "Sikich", mode: "company" },
+      { label: "L'Oreal", mode: "esg" },
       { label: "GEICO", mode: "company" },
-      { label: "pharma industry", mode: "industry" },
       { label: "AI startups", mode: "industry" },
       { label: "ZS Associates", mode: "company" }
     ];
@@ -3210,35 +3451,35 @@
       {
         key: "news",
         name: "Interview Signals",
-        icon: "📰",
+        icon: "news",
         focus: "Recent interview reports, org changes, and company signals that affect the process.",
         fullSpan: false
       },
       {
         key: "jobs",
         name: "Role Expectations",
-        icon: "💼",
+        icon: "jobs",
         focus: "Role-specific openings, required skills, and official expectations.",
         fullSpan: false
       },
       {
         key: "sentiment",
         name: "Candidate Experience",
-        icon: "💬",
+        icon: "sentiment",
         focus: "Reddit and community-reported interview experiences, themes, and candidate sentiment.",
         fullSpan: false
       },
       {
         key: "regulatory",
         name: "Process & Policy Signals",
-        icon: "🧭",
+        icon: "regulatory",
         focus: "Assessment formats, location constraints, and process requirements that shape preparation.",
         fullSpan: false
       },
       {
         key: "competitor",
         name: "Peer Interview Calibration",
-        icon: "🎯",
+        icon: "competitor",
         focus: "Comparable interview patterns across peer companies for the same role family.",
         fullSpan: true
       }
@@ -3248,7 +3489,7 @@
     const PROVIDER_PRESETS = {
       openai: {
         label: "OpenAI",
-        defaultModel: "gpt-4o",
+        defaultModel: "gpt-5.4",
         defaultEndpoint: "https://api.openai.com/v1",
         supportsWebSearch: true,
         supportsPulseboard: true,
@@ -3256,7 +3497,7 @@
       },
       anthropic: {
         label: "Claude / Anthropic",
-        defaultModel: "claude-3-7-sonnet-latest",
+        defaultModel: "claude-sonnet-4-20250514",
         defaultEndpoint: "https://api.anthropic.com/v1/messages",
         supportsWebSearch: false,
         supportsPulseboard: true,
@@ -3264,7 +3505,7 @@
       },
       gemini: {
         label: "Google Gemini",
-        defaultModel: "gemini-1.5-pro",
+        defaultModel: "gemini-2.5-flash",
         defaultEndpoint: "https://generativelanguage.googleapis.com/v1beta/models",
         supportsWebSearch: false,
         supportsPulseboard: true,
@@ -3284,7 +3525,7 @@
       {
         key: "news",
         name: "News Watcher",
-        icon: "📰",
+        icon: "news",
         focus: "Recent developments, activity level, and time-sensitive headlines.",
         fullSpan: false,
         useWebSearch: true,
@@ -3297,7 +3538,7 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
       {
         key: "jobs",
         name: "Job Signal Tracker",
-        icon: "💼",
+        icon: "jobs",
         focus: "Hiring momentum, strategic role demand, and warning signs.",
         fullSpan: false,
         useWebSearch: true,
@@ -3307,7 +3548,7 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
       {
         key: "sentiment",
         name: "Sentiment Analyzer",
-        icon: "💬",
+        icon: "sentiment",
         focus: "Reputation, public perception, and stakeholder mood.",
         fullSpan: false,
         useWebSearch: true,
@@ -3317,7 +3558,7 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
       {
         key: "regulatory",
         name: "Regulatory & ESG Scanner",
-        icon: "🏛️",
+        icon: "regulatory",
         focus: "Compliance pressure, ESG standing, and watchlist events.",
         fullSpan: false,
         useWebSearch: true,
@@ -3327,7 +3568,7 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
       {
         key: "competitor",
         name: "Competitor Tracker",
-        icon: "🎯",
+        icon: "competitor",
         focus: "Competitive threats, differentiators, and market motion.",
         fullSpan: true,
         useWebSearch: true,
@@ -3339,12 +3580,33 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
     const AGGREGATOR_PROMPT = `You are a senior intelligence analyst synthesizing 5 agent reports. Return ONLY valid JSON with this exact shape:
 {"subjectSummary":"string","overallRiskScore":0,"overallOpportunityScore":0,"urgent":[{"finding":"string","source":"string","action":"string"}],"notable":[{"finding":"string","source":"string","whyItMatters":"string"}],"fyi":[{"finding":"string","context":"string"}],"oneLineSummary":"string","recommendedActions":["string","string","string"],"monitoringFrequency":"string"}`;
 
+    function renderIcon(name, options = {}) {
+      const sizeClass = options.size ? ` ${options.size}` : " md";
+      const className = options.className ? ` ${options.className}` : "";
+      const attrs = `class="ui-icon${sizeClass}${className}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"`;
+      const icons = {
+        pulse: `<svg ${attrs}><circle cx="12" cy="12" r="8.5"></circle><path d="M7 12h2.3l1.4-2.6 2.6 5.2 1.3-2.6H17"></path></svg>`,
+        play: `<svg ${attrs}><path d="M8 6.5v11l8.5-5.5z"></path></svg>`,
+        spark: `<svg ${attrs}><path d="M13.5 2.5 6.8 13H11l-.5 8.5L17.2 11H13z"></path></svg>`,
+        news: `<svg ${attrs}><rect x="4" y="5" width="16" height="14" rx="2"></rect><path d="M8 9h8"></path><path d="M8 13h8"></path><path d="M8 17h5"></path></svg>`,
+        jobs: `<svg ${attrs}><rect x="4" y="7" width="16" height="11" rx="2"></rect><path d="M9 7V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V7"></path><path d="M4 11h16"></path></svg>`,
+        sentiment: `<svg ${attrs}><path d="M6.5 18.5 4 20l1-3.7A7 7 0 1 1 19 12a7 7 0 0 1-12.5 6.5z"></path><path d="M9 11h.01"></path><path d="M15 11h.01"></path><path d="M9 14c.8.7 1.8 1 3 1s2.2-.3 3-1"></path></svg>`,
+        regulatory: `<svg ${attrs}><path d="M12 4 5 7v4c0 4.2 2.8 7.6 7 8.9 4.2-1.3 7-4.7 7-8.9V7z"></path><path d="M9.5 12.5 11.5 14.5 15 10.5"></path></svg>`,
+        competitor: `<svg ${attrs}><path d="M12 3v3"></path><path d="M12 18v3"></path><path d="M3 12h3"></path><path d="M18 12h3"></path><circle cx="12" cy="12" r="4.5"></circle></svg>`,
+        urgent: `<svg ${attrs}><path d="M12 4 4 19h16L12 4z"></path><path d="M12 9v4.5"></path><path d="M12 16.5h.01"></path></svg>`,
+        notable: `<svg ${attrs}><circle cx="12" cy="12" r="8"></circle><path d="M12 8v4"></path><path d="M12 16h.01"></path></svg>`,
+        fyi: `<svg ${attrs}><circle cx="12" cy="12" r="8"></circle><path d="M12 10.5v4"></path><path d="M12 7.5h.01"></path></svg>`
+      };
+      return icons[name] || icons.pulse;
+    }
+
     /**
      * Normalized provider shape:
      * provider: "openai" | "anthropic" | "gemini" | "nvidia"
      */
     const state = {
       route: "home",
+      homeTheme: "light",
       connection: null,
       topic: "",
       mode: "general",
@@ -3383,6 +3645,7 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
 
     document.addEventListener("DOMContentLoaded", () => {
       cacheElements();
+      syncStaticIcons();
       renderDemoChips();
       renderAgentCards();
       bindEvents();
@@ -3395,11 +3658,19 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
       setStatusMessage("Configure a provider session to begin.", "warning");
     });
 
+    function syncStaticIcons() {
+      const brandMark = document.getElementById("brandMarkIcon");
+      if (brandMark) brandMark.innerHTML = renderIcon("pulse", { size: "lg" });
+      const aggregatorIcon = document.getElementById("aggregatorBannerIcon");
+      if (aggregatorIcon) aggregatorIcon.innerHTML = renderIcon("spark", { size: "md" });
+      setRunButtonIdleState();
+    }
+
     function cacheElements() {
-      const ids = [
-        "topbarMonitoringLabel", "providerStatusBadge", "apiKeyButton", "newQueryButton", "brandHomeButton",
-        "homePage", "homeExplanation", "apiKeyPage", "apiKeyHelpSection", "connectionProviderChips", "connectionStateMessage",
-        "openCsvButton", "queryPage", "csvPage", "queryConnectionPrompt", "csvConnectionPrompt", "queryConnectButton", "csvConnectButton", "topicInput",
+        const ids = [
+          "topbarMonitoringLabel", "providerStatusBadge", "apiKeyButton", "newQueryButton", "brandHomeButton",
+          "homePage", "homeExplanation", "apiKeyPage", "apiKeyHelpSection", "connectionStateMessage",
+          "openCsvButton", "queryPage", "csvPage", "queryConnectionPrompt", "csvConnectionPrompt", "queryConnectButton", "csvConnectButton", "topicInput",
         "modeSelect", "roleInput", "interviewRoleGroup", "queryForm", "runButton", "statusMessage", "runCounterBadge", "chipRow",
         "dashboard", "dashboardSubtitle", "dashboardModePill", "progressLabel", "progressFill",
         "progressDetail", "aggregatorBanner", "agentGrid", "briefSection", "csvResultSection",
@@ -3417,12 +3688,12 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
     function bindEvents() {
       window.addEventListener("popstate", handlePopState);
       elements.brandHomeButton.addEventListener("click", () => navigateTo("home"));
-      elements.apiKeyButton.addEventListener("click", openConnectionModal);
-      if (elements.closeConnectionButton) elements.closeConnectionButton.addEventListener("click", closeConnectionModal);
-      elements.newQueryButton.addEventListener("click", handleNewQueryClick);
-      elements.openCsvButton.addEventListener("click", handleCsvEntryClick);
-      elements.queryConnectButton.addEventListener("click", () => navigateTo("apiKey"));
-      elements.csvConnectButton.addEventListener("click", () => navigateTo("apiKey"));
+        elements.apiKeyButton.addEventListener("click", openConnectionModal);
+        if (elements.closeConnectionButton) elements.closeConnectionButton.addEventListener("click", closeConnectionModal);
+        elements.newQueryButton.addEventListener("click", handleNewQueryClick);
+        elements.openCsvButton.addEventListener("click", handleCsvEntryClick);
+        elements.queryConnectButton.addEventListener("click", () => navigateTo("apiKey"));
+        elements.csvConnectButton.addEventListener("click", () => navigateTo("apiKey"));
       elements.providerHelpShortcut?.addEventListener("click", handleProviderHelpShortcutClick);
       elements.useSampleCsvButton.addEventListener("click", applySampleCsv);
       elements.csvModeSingle.addEventListener("click", () => setCsvMode("single"));
@@ -3621,6 +3892,16 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
       return state.mode === "interviewprep" ? INTERVIEW_PREP_AGENT_CONFIGS : AGENT_CONFIGS;
     }
 
+    function setRunButtonIdleState() {
+      if (!elements.runButton) return;
+      elements.runButton.innerHTML = `<span class="button-icon">${renderIcon("play", { size: "sm" })}<span>Run PulseBoard</span></span>`;
+    }
+
+    function setRunButtonLoadingState() {
+      if (!elements.runButton) return;
+      elements.runButton.innerHTML = `<span class="button-icon">${renderIcon("spark", { size: "sm" })}<span>Generating...</span></span>`;
+    }
+
     function syncQueryModeUi() {
       const mode = elements.modeSelect?.value || "general";
       const interviewMode = mode === "interviewprep";
@@ -3664,7 +3945,7 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
         elements.csvFileInput.value = "";
         elements.csvFileName.textContent = "No file chosen";
         elements.csvInputHelper.hidden = false;
-        elements.csvInputHelper.textContent = "Upload any CSV — sales data, survey results, financial reports, or any tabular dataset.";
+        elements.csvInputHelper.textContent = "Upload any CSV - sales data, survey results, financial reports, or any tabular dataset.";
         renderSingleQualityPreview();
         syncCsvFileClearButtons();
         setCsvStatusMessage(fileResult.error || "CSV ingestion failed.", "error");
@@ -3745,7 +4026,7 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
         card.innerHTML = `
           <div class="section-intro" style="margin-bottom:0;">
             <div class="card-header">
-              <div class="brand-mark" aria-hidden="true" style="width:44px;height:44px;border-radius:16px;">${agent.icon}</div>
+              <div class="brand-mark agent-card-icon" aria-hidden="true">${renderIcon(agent.icon, { size: "md" })}</div>
               <div><h3 style="margin:0;font-size:15px;">${agent.name}</h3><p class="section-subtitle" style="margin-top:4px;">${agent.focus}</p></div>
             </div>
             <div class="status-badge waiting" id="status-${agent.key}"><span class="dot"></span><span>Waiting</span></div>
@@ -3883,18 +4164,12 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
     function renderConnectionSummary() {
       if (!state.connection) {
         elements.providerStatusBadge.textContent = "Not connected";
-        elements.connectionProviderChips.innerHTML = '<span class="provider-chip">No provider configured</span>';
         elements.connectionStateMessage.textContent = "No active provider session yet. Save a provider key to unlock monitoring and CSV analysis.";
         return;
       }
 
       const preset = PROVIDER_PRESETS[state.connection.provider];
-      elements.providerStatusBadge.textContent = `Connected: ${preset.label} · ${state.connection.model}`;
-      elements.connectionProviderChips.innerHTML = `
-        <span class="provider-chip">${preset.label}</span>
-        <span class="provider-chip">${state.connection.model}</span>
-        <span class="provider-chip">${state.connection.supportsPulseboard ? "PulseBoard ready" : "Unsupported"}</span>
-      `;
+      elements.providerStatusBadge.textContent = `Connected: ${preset.label} - ${state.connection.model}`;
       elements.connectionStateMessage.textContent = `${preset.label} is ready for a full Phase 1 monitoring run in this tab via the local relay.`;
     }
 
@@ -3941,7 +4216,7 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
       elements.qualityPreviewContainer.innerHTML = "";
       elements.singleCsvActionRow.hidden = true;
       elements.csvInputHelper.hidden = false;
-      elements.csvInputHelper.textContent = "Upload any CSV — sales data, survey results, financial reports, or any tabular dataset.";
+      elements.csvInputHelper.textContent = "Upload any CSV - sales data, survey results, financial reports, or any tabular dataset.";
       elements.csvFileName.textContent = "No file chosen";
       if (elements.compareFileAName) elements.compareFileAName.textContent = "No file chosen";
       if (elements.compareFileBName) elements.compareFileBName.textContent = "No file chosen";
@@ -3993,8 +4268,8 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
       elements.csvModeCompare.classList.toggle("active", !single);
       elements.csvModeSingle.setAttribute("aria-pressed", String(single));
       elements.csvModeCompare.setAttribute("aria-pressed", String(!single));
-      elements.runCsvButton.textContent = "Analyze CSV →";
-      if (elements.compareRunCsvButton) elements.compareRunCsvButton.textContent = "Analyze Files →";
+      elements.runCsvButton.textContent = "Analyze CSV ->";
+      if (elements.compareRunCsvButton) elements.compareRunCsvButton.textContent = "Analyze Files ->";
       if (single) {
         renderSingleQualityPreview();
       } else {
@@ -4041,7 +4316,7 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
       state.schemaExpanded = true;
       elements.csvFileName.textContent = "No file chosen";
       elements.csvInputHelper.hidden = false;
-      elements.csvInputHelper.textContent = "Upload any CSV — sales data, survey results, financial reports, or any tabular dataset.";
+      elements.csvInputHelper.textContent = "Upload any CSV - sales data, survey results, financial reports, or any tabular dataset.";
       renderSingleQualityPreview();
       syncCsvFileClearButtons();
       setCsvStatusMessage("", "ready");
@@ -4175,31 +4450,49 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
       return elements.csvGoalInput.value.trim();
     }
 
-    function applyRouteState() {
-      const showHome = state.route === "home";
-      const showQuery = state.route === "query";
-      const showCsv = state.route === "csv";
-      const showApiKey = state.route === "apiKey";
-      elements.homePage.hidden = !showHome;
-      syncHomeExplanationState();
-      elements.apiKeyPage.hidden = !showApiKey;
-      elements.apiKeyHelpSection.hidden = !showApiKey;
-      elements.queryPage.hidden = !showQuery;
-      elements.csvPage.hidden = !showCsv;
-      elements.dashboard.hidden = !(showQuery && state.dashboardVisible);
-      elements.briefSection.hidden = !(showQuery && state.briefVisible);
-      elements.csvResultSection.hidden = !(showCsv && state.csvResultVisible);
-      elements.queryConnectionPrompt.hidden = !showQuery || Boolean(state.connection);
-      elements.csvConnectionPrompt.hidden = !showCsv || Boolean(state.connection);
-      updateTopbarLabel();
-    }
+      function applyRouteState() {
+        const showHome = state.route === "home";
+        const showQuery = state.route === "query";
+        const showCsv = state.route === "csv";
+        const showApiKey = state.route === "apiKey";
+        document.body.classList.toggle("query-route", showQuery);
+        document.body.classList.toggle("home-dark-mode", showHome && state.homeTheme === "dark");
+        elements.homePage.hidden = !showHome;
+        syncHomeExplanationState();
+        elements.apiKeyPage.hidden = !showApiKey;
+        elements.apiKeyHelpSection.hidden = !showApiKey;
+        elements.queryPage.hidden = !showQuery;
+        elements.csvPage.hidden = !showCsv;
+        elements.dashboard.hidden = !(showQuery && state.dashboardVisible);
+        elements.briefSection.hidden = !(showQuery && state.briefVisible);
+        elements.csvResultSection.hidden = !(showCsv && state.csvResultVisible);
+        elements.queryConnectionPrompt.hidden = !showQuery || Boolean(state.connection);
+        elements.csvConnectionPrompt.hidden = !showCsv || Boolean(state.connection);
+        syncHomeThemeUi();
+        updateTopbarLabel();
+      }
 
-    function syncHomeExplanationState() {
-      if (!elements.homeExplanation) return;
-      elements.homeExplanation.classList.toggle("collapsed", Boolean(state.homeExplanationCollapsed));
-    }
+      function syncHomeExplanationState() {
+        if (!elements.homeExplanation) return;
+        elements.homeExplanation.classList.toggle("collapsed", Boolean(state.homeExplanationCollapsed));
+      }
 
-    function updateTopbarLabel() {
+      function toggleHomeTheme() {
+        state.homeTheme = state.homeTheme === "dark" ? "light" : "dark";
+        syncHomeThemeUi();
+        applyRouteState();
+      }
+
+      function syncHomeThemeUi() {
+        if (!elements.homeThemeToggleButton) return;
+        const isDark = state.homeTheme === "dark";
+        elements.homeThemeToggleButton.hidden = state.route !== "home";
+        elements.homeThemeToggleButton.textContent = isDark ? "Light Mode" : "Dark Mode";
+        elements.homeThemeToggleButton.setAttribute("aria-pressed", isDark ? "true" : "false");
+        elements.homeThemeToggleButton.setAttribute("aria-label", isDark ? "Switch landing page to light mode" : "Switch landing page to dark mode");
+      }
+
+      function updateTopbarLabel() {
       if (state.route === "csv") {
         elements.topbarMonitoringLabel.textContent = "CSV Analyst";
         return;
@@ -4252,11 +4545,11 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
       renderAgentCards();
       elements.runCounterBadge.textContent = `Runs: ${state.runCount}`;
       elements.dashboardSubtitle.textContent = mode === "interviewprep"
-        ? `Interview prep: "${topic}" — ${role}`
+        ? `Interview prep: "${topic}" - ${role}`
         : `Monitoring: "${topic}"`;
       elements.dashboardModePill.textContent = `Mode: ${MODE_LABELS[mode]}`;
       elements.runButton.disabled = true;
-      elements.runButton.textContent = "Agents running...";
+      setRunButtonLoadingState();
       setStatusMessage(mode === "interviewprep"
         ? `Launching five live interview-prep agents for ${topic} (${role}).`
         : `Launching five live monitoring agents for ${topic}.`, "analyzing");
@@ -4273,7 +4566,7 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
       } finally {
         if (runId === state.activeRunId) {
           elements.runButton.disabled = false;
-          elements.runButton.textContent = "Run PulseBoard →";
+          setRunButtonIdleState();
           elements.aggregatorBanner.classList.remove("visible");
         }
       }
@@ -4394,7 +4687,7 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
         });
       } finally {
         elements.runCsvButton.disabled = false;
-        elements.runCsvButton.textContent = "Analyze CSV →";
+        elements.runCsvButton.textContent = "Analyze CSV ->";
         if (elements.compareRunCsvButton) elements.compareRunCsvButton.disabled = false;
       }
     }
@@ -4471,10 +4764,10 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
         setCsvStatusMessage(error.message || "CSV comparison failed.", "error");
       } finally {
         elements.runCsvButton.disabled = false;
-        elements.runCsvButton.textContent = "Analyze CSV →";
+        elements.runCsvButton.textContent = "Analyze CSV ->";
         if (elements.compareRunCsvButton) {
           elements.compareRunCsvButton.disabled = false;
-          elements.compareRunCsvButton.textContent = "Analyze Files →";
+          elements.compareRunCsvButton.textContent = "Analyze Files ->";
         }
       }
     }
@@ -4623,7 +4916,8 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
       const payload = await response.json().catch(() => ({}));
       return {
         ok: response.ok && Boolean(payload.ok),
-        message: payload.message || (payload.error && payload.error.message) || "Connection validation failed."
+        message: payload.message || (payload.error && payload.error.message) || "Connection validation failed.",
+        error: payload.error || null
       };
     }
 
@@ -4636,9 +4930,9 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
           renderAgentOutput(event.agent, event.result);
           break;
         case "agent_error":
-          state.agentResults[event.agent] = { error: true, message: event.error || "Agent failed." };
+          state.agentResults[event.agent] = { error: true, ...extractRelayErrorInfo(event.error) };
           updateAgentStatus(event.agent, "error");
-          renderAgentError(event.agent, event.error || "Agent failed.");
+          renderAgentError(event.agent, event.error);
           break;
         case "aggregator_started":
           elements.aggregatorBanner.classList.add("visible");
@@ -4646,13 +4940,17 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
         case "brief":
           state.agentResults.aggregator = event.result;
           renderBrief(event.result);
-          setStatusMessage(state.mode === "interviewprep"
-            ? `Interview prep roadmap complete for ${state.topic} (${state.role}).`
-            : `PulseBoard brief complete for ${state.topic}.`, "complete");
+          if (event.warning) {
+            setStatusMessage(extractRelayErrorInfo(event.warning).message, "warning");
+          } else {
+            setStatusMessage(state.mode === "interviewprep"
+              ? `Interview prep roadmap complete for ${state.topic} (${state.role}).`
+              : `PulseBoard brief complete for ${state.topic}.`, "complete");
+          }
           break;
         case "brief_error":
           renderBriefFailure(event.successCount || countSuccessfulMonitoringAgents(), event.error);
-          setStatusMessage(event.error || "PulseBoard could not synthesize the brief.", "warning");
+          setStatusMessage(extractRelayErrorInfo(event.error).message || "PulseBoard could not synthesize the brief.", "warning");
           break;
         case "done":
           elements.aggregatorBanner.classList.remove("visible");
@@ -4870,7 +5168,7 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
       elements.progressFill.style.width = `${(completeCount / AGENT_CONFIGS.length) * 100}%`;
       elements.progressLabel.textContent = `Progress: ${completeCount}/5 agents complete`;
       elements.progressDetail.textContent = analyzingCount > 0
-        ? `${analyzingCount} analyzing${errorCount ? ` · ${errorCount} error` : ""}`
+        ? `${analyzingCount} analyzing${errorCount ? ` - ${errorCount} error` : ""}`
         : completeCount === AGENT_CONFIGS.length
           ? "Monitoring sweep complete"
           : errorCount
@@ -4881,13 +5179,111 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
     function renderAgentOutput(agentKey, result) {
       const body = document.getElementById(`body-${agentKey}`);
       if (!body) return;
-      body.innerHTML = getAgentMarkup(agentKey, result);
+      const markup = getAgentMarkup(agentKey, result);
+      setAgentCardVisibility(agentKey, Boolean(markup && markup.trim()));
+      body.innerHTML = markup || "";
     }
 
     function renderAgentError(agentKey, message) {
       const body = document.getElementById(`body-${agentKey}`);
       if (!body) return;
-      body.innerHTML = `<div class="inline-alert error">${escapeHtml(message)}</div>`;
+      setAgentCardVisibility(agentKey, true);
+      body.innerHTML = `<div class="inline-alert error">${escapeHtml(extractRelayErrorInfo(message).message)}</div>`;
+    }
+
+    function setAgentCardVisibility(agentKey, visible) {
+      const card = document.getElementById(`agent-card-${agentKey}`);
+      if (card) card.hidden = !visible;
+    }
+
+    function extractRelayErrorInfo(errorValue) {
+      if (errorValue && typeof errorValue === "object") {
+        const provider = String(errorValue.provider || "unknown");
+        const kind = String(errorValue.kind || "unknown");
+        const retryAfterSeconds = Number(errorValue.retryAfterSeconds);
+        return {
+          provider,
+          kind,
+          retryAfterSeconds: Number.isFinite(retryAfterSeconds) ? retryAfterSeconds : null,
+          message: buildFriendlyRelayErrorMessage({
+            provider,
+            kind,
+            message: String(errorValue.message || "Agent failed.")
+          }, retryAfterSeconds)
+        };
+      }
+      return {
+        provider: "unknown",
+        kind: "unknown",
+        retryAfterSeconds: null,
+        message: buildFriendlyRelayErrorMessage({
+          provider: "unknown",
+          kind: "unknown",
+          message: String(errorValue || "Agent failed.")
+        })
+      };
+    }
+
+    function buildFriendlyRelayErrorMessage(errorInfo, retryAfterSeconds = null) {
+      const providerLabel = PROVIDER_PRESETS[errorInfo.provider]?.label || "Provider";
+      switch (errorInfo.kind) {
+        case "quota":
+          return `${providerLabel} quota exceeded. Monitoring may be incomplete until your quota resets.${Number.isFinite(retryAfterSeconds) ? ` Try again in about ${retryAfterSeconds}s.` : ""}`;
+        case "auth":
+          return errorInfo.message || `${providerLabel} could not verify the saved API key. Update it and try again.`;
+        case "model_access":
+          return errorInfo.message || `${providerLabel} accepted the key, but the selected model may not be available for this account or project.`;
+        case "not_found":
+          return `${providerLabel} could not find the configured model or endpoint.`;
+        case "bad_request":
+          return errorInfo.message || `${providerLabel} rejected this request for the configured model.`;
+        case "search_unavailable":
+          return "Live web search is temporarily unavailable for this agent. Results may be incomplete.";
+        case "provider_unavailable":
+          return `${providerLabel} is temporarily unavailable. Try again in a moment.`;
+        case "insufficient_evidence":
+          return errorInfo.message || "PulseBoard could not gather enough evidence to finish this run.";
+        default:
+          return errorInfo.message || "Agent failed.";
+      }
+    }
+
+    function hasMeaningfulText(value) {
+      return typeof value === "string"
+        ? value.trim().length > 0
+        : value !== null && value !== undefined && String(value).trim().length > 0;
+    }
+
+    function renderOptionalInfoNote(title, text) {
+      if (!hasMeaningfulText(text)) return "";
+      return `<div class="info-note"><strong>${escapeHtml(title)}</strong><p>${escapeHtml(String(text).trim())}</p></div>`;
+    }
+
+    function renderOptionalTagRow(tags) {
+      const safeTags = Array.isArray(tags) ? tags.map((tag) => String(tag || "").trim()).filter(Boolean) : [];
+      if (!safeTags.length) return "";
+      return `<div class="tag-row">${safeTags.map((tag) => `<span class="tag neutral">${escapeHtml(tag)}</span>`).join("")}</div>`;
+    }
+
+    function renderOptionalListCard(title, items) {
+      const safeItems = Array.isArray(items) ? items.map((item) => String(item || "").trim()).filter(Boolean) : [];
+      if (!safeItems.length) return "";
+      return `<div class="list-card"><strong>${escapeHtml(title)}</strong><ul>${safeItems.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul></div>`;
+    }
+
+    function renderOptionalAudienceBreakdown(breakdown) {
+      if (!breakdown || typeof breakdown !== "object") return "";
+      const rows = [
+        hasMeaningfulText(breakdown.employees) ? `<p><span class="meta-label">Employees</span> ${escapeHtml(String(breakdown.employees).trim())}</p>` : "",
+        hasMeaningfulText(breakdown.customers) ? `<p><span class="meta-label">Customers</span> ${escapeHtml(String(breakdown.customers).trim())}</p>` : "",
+        hasMeaningfulText(breakdown.investors) ? `<p><span class="meta-label">Investors</span> ${escapeHtml(String(breakdown.investors).trim())}</p>` : ""
+      ].filter(Boolean);
+      if (!rows.length) return "";
+      return `<div class="list-card"><strong>Audience breakdown</strong>${rows.join("")}</div>`;
+    }
+
+    function joinMarkupSections(sections) {
+      return sections.filter((section) => typeof section === "string" && section.trim()).join("");
     }
 
     function getAgentMarkup(agentKey, result) {
@@ -4914,14 +5310,20 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
     function renderNewsMarkup(result) {
       const headlines = Array.isArray(result.headlines) ? result.headlines : [];
       const resolvedSignalStrength = resolveNewsSignalStrength(result);
-      return `
-        <div class="signal-grid" style="grid-template-columns:repeat(2,minmax(0,1fr));">
+      const headlineCards = headlines
+        .filter((headline) => hasMeaningfulText(headline?.title) || hasMeaningfulText(headline?.summary))
+        .map((headline) => `<div class="list-card"><div class="list-meta">${escapeHtml(headline.recency || "Recent")} · ${escapeHtml(headline.sentiment || "neutral")}</div><p><strong>${escapeHtml(headline.title || "Headline")}</strong></p><p>${escapeHtml(headline.summary || "")}</p></div>`)
+        .join("");
+      const hasContent = resolvedSignalStrength > 0 || hasMeaningfulText(result.biggestStory) || hasMeaningfulText(result.overallSentiment) || Boolean(result.urgencyFlag) || Boolean(headlineCards);
+      if (!hasContent) return "";
+      return joinMarkupSections([
+        `<div class="signal-grid" style="grid-template-columns:repeat(2,minmax(0,1fr));">
           <div class="mini-panel"><strong>Signal strength</strong><div class="metric-big">${normalizeMetricValue(resolvedSignalStrength)}/100</div>${renderMetricDirectionHint("higher")}</div>
           <div class="mini-panel"><strong>Sentiment</strong><div class="badge-row">${renderSentimentPill(result.overallSentiment)}${result.urgencyFlag ? '<span class="pill danger">Urgent</span>' : '<span class="pill neutral">No alert</span>'}</div></div>
-        </div>
-        <div class="info-note"><strong>Biggest story</strong><p>${escapeHtml(result.biggestStory || "No major story summarized.")}</p></div>
-        <div class="list-stack">${headlines.map((headline) => `<div class="list-card"><div class="list-meta">${escapeHtml(headline.recency || "Recent")} · ${escapeHtml(headline.sentiment || "neutral")}</div><p><strong>${escapeHtml(headline.title || "Headline")}</strong></p><p>${escapeHtml(headline.summary || "")}</p></div>`).join("") || '<div class="info-note">No recent headlines returned.</div>'}</div>
-      `;
+        </div>`,
+        renderOptionalInfoNote("Biggest story", result.biggestStory),
+        headlineCards ? `<div class="list-stack">${headlineCards}</div>` : ""
+      ]);
     }
 
     function resolveNewsSignalStrength(result) {
@@ -4954,17 +5356,19 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
           </div>
         `
         : "";
-      return `
-        <div class="signal-grid" style="grid-template-columns:repeat(2,minmax(0,1fr));">
-          <div class="mini-panel"><strong>Velocity</strong><div class="metric-big">${escapeHtml(result.hiringVelocity || "stable")}</div></div>
+      const hasContent = roles.length || flags.length || careersPage || jobLinks.length || hasMeaningfulText(result.hiringSignal) || hasMeaningfulText(result.opportunitySignal) || hasMeaningfulText(result.hiringVelocity) || Number.isFinite(Number(result.velocityScore));
+      if (!hasContent) return "";
+      return joinMarkupSections([
+        `<div class="signal-grid" style="grid-template-columns:repeat(2,minmax(0,1fr));">
           <div class="mini-panel"><strong>Score</strong><div class="metric-big">${normalizeMetricValue(result.velocityScore)}/100</div>${renderMetricDirectionHint("higher")}</div>
-        </div>
-        <div class="tag-row">${roles.map((role) => `<span class="tag neutral">${escapeHtml(role)}</span>`).join("") || '<span class="tag neutral">No hot roles returned</span>'}</div>
-        <div class="info-note"><strong>Hiring signal</strong><p>${escapeHtml(result.hiringSignal || "No hiring signal returned.")}</p></div>
-        <div class="info-note"><strong>Opportunity signal</strong><p>${escapeHtml(result.opportunitySignal || "No opportunity signal returned.")}</p></div>
-        ${linkBlock}
-        <div class="list-card"><strong>Red flags</strong>${flags.length ? `<ul>${flags.map((flag) => `<li>${escapeHtml(flag)}</li>`).join("")}</ul>` : "<p>No major warning signs surfaced.</p>"}</div>
-      `;
+          <div class="mini-panel"><strong>Velocity</strong><div class="metric-big">${escapeHtml(result.hiringVelocity || "stable")}</div></div>
+        </div>`,
+        renderOptionalTagRow(roles),
+        renderOptionalInfoNote("Hiring signal", result.hiringSignal),
+        renderOptionalInfoNote("Opportunity signal", result.opportunitySignal),
+        linkBlock,
+        renderOptionalListCard("Red flags", flags)
+      ]);
     }
 
     function normalizeJobLink(link, fallbackLabel) {
@@ -4987,43 +5391,65 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
     function renderSentimentMarkup(result) {
       const themes = Array.isArray(result.whatPeopleAreSaying) ? result.whatPeopleAreSaying : [];
       const breakdown = result.audienceBreakdown || {};
-      return `
-        <div class="signal-grid" style="grid-template-columns:repeat(2,minmax(0,1fr));">
+      const themeCards = themes
+        .filter((theme) => hasMeaningfulText(theme?.theme) || hasMeaningfulText(theme?.detail))
+        .map((theme) => `<div class="list-card"><div class="list-meta">${escapeHtml(theme.sentiment || "neutral")}</div><p><strong>${escapeHtml(theme.theme || "Theme")}</strong></p><p>${escapeHtml(theme.detail || "")}</p></div>`)
+        .join("");
+      const audienceBreakdown = renderOptionalAudienceBreakdown(breakdown);
+      const hasContent = Boolean(themeCards) || Boolean(audienceBreakdown) || hasMeaningfulText(result.reputationInsight) || Number.isFinite(Number(result.sentimentScore)) || hasMeaningfulText(result.sentimentLabel) || hasMeaningfulText(result.reputationRisk);
+      if (!hasContent) return "";
+      return joinMarkupSections([
+        `<div class="signal-grid" style="grid-template-columns:repeat(2,minmax(0,1fr));">
           <div class="mini-panel"><strong>Score</strong><div class="metric-big">${normalizeMetricValue(result.sentimentScore)}/100</div>${renderMetricDirectionHint("higher")}</div>
           <div class="mini-panel"><strong>Risk</strong><div class="badge-row">${renderRiskPill(result.reputationRisk)}<span class="pill neutral">${escapeHtml(result.sentimentLabel || "Mixed")}</span></div></div>
-        </div>
-        <div class="list-stack">${themes.map((theme) => `<div class="list-card"><div class="list-meta">${escapeHtml(theme.sentiment || "neutral")}</div><p><strong>${escapeHtml(theme.theme || "Theme")}</strong></p><p>${escapeHtml(theme.detail || "")}</p></div>`).join("")}</div>
-        <div class="list-card"><strong>Audience breakdown</strong><p><span class="meta-label">Employees</span> ${escapeHtml(breakdown.employees || "No employee signal.")}</p><p><span class="meta-label">Customers</span> ${escapeHtml(breakdown.customers || "No customer signal.")}</p><p><span class="meta-label">Investors</span> ${escapeHtml(breakdown.investors || "No investor signal.")}</p></div>
-        <div class="info-note"><strong>Reputation insight</strong><p>${escapeHtml(result.reputationInsight || "No reputation insight returned.")}</p></div>
-      `;
+        </div>`,
+        themeCards ? `<div class="list-stack">${themeCards}</div>` : "",
+        audienceBreakdown,
+        renderOptionalInfoNote("Reputation insight", result.reputationInsight)
+      ]);
     }
 
     function renderRegulatoryMarkup(result) {
       const actions = Array.isArray(result.recentRegActions) ? result.recentRegActions : [];
       const highlights = Array.isArray(result.esgHighlights) ? result.esgHighlights : [];
       const watchlist = Array.isArray(result.watchlist) ? result.watchlist : [];
-      return `
-        <div class="signal-grid" style="grid-template-columns:repeat(2,minmax(0,1fr));">
+      const actionCards = actions
+        .filter((item) => hasMeaningfulText(item?.action) || hasMeaningfulText(item?.detail))
+        .map((item) => `<div class="list-card"><div class="list-meta">${escapeHtml(item.impact || "impact unknown")} impact</div><p><strong>${escapeHtml(item.action || "Recent action")}</strong></p><p>${escapeHtml(item.detail || "")}</p></div>`)
+        .join("");
+      const hasContent = Boolean(actionCards) || highlights.length || watchlist.length || hasMeaningfulText(result.regulatoryRisk) || Number.isFinite(Number(result.esgScore)) || hasMeaningfulText(result.esgLabel);
+      if (!hasContent) return "";
+      return joinMarkupSections([
+        `<div class="signal-grid" style="grid-template-columns:repeat(2,minmax(0,1fr));">
+          <div class="mini-panel"><strong>ESG</strong><div class="metric-big">${normalizeMetricValue(result.esgScore)}/100</div>${renderMetricDirectionHint("higher")}<div class="badge-row"><span class="pill neutral">${escapeHtml(result.esgLabel || "Unknown")}</span></div></div>
           <div class="mini-panel"><strong>Risk</strong><div class="badge-row">${renderRiskPill(result.regulatoryRisk)}</div></div>
-          <div class="mini-panel"><strong>ESG</strong><div class="metric-big">${normalizeMetricValue(result.esgScore)}/100</div>${renderMetricDirectionHint("higher")}<div class="badge-row"><span class="pill neutral">${escapeHtml(result.esgLabel || "No label returned.")}</span></div></div>
-        </div>
-        <div class="list-stack">${actions.map((item) => `<div class="list-card"><div class="list-meta">${escapeHtml(item.impact || "impact unknown")} impact</div><p><strong>${escapeHtml(item.action || "Recent action")}</strong></p><p>${escapeHtml(item.detail || "")}</p></div>`).join("") || '<div class="info-note">No recent regulatory actions returned.</div>'}</div>
-        <div class="list-card"><strong>ESG highlights</strong>${highlights.length ? `<ul>${highlights.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>` : "<p>No ESG highlights returned.</p>"}</div>
-        <div class="list-card"><strong>Watchlist</strong>${watchlist.length ? `<ul>${watchlist.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>` : "<p>No watchlist items returned.</p>"}</div>
-      `;
+        </div>`,
+        actionCards ? `<div class="list-stack">${actionCards}</div>` : "",
+        renderOptionalListCard("ESG highlights", highlights),
+        renderOptionalListCard("Watchlist", watchlist)
+      ]);
     }
 
     function renderCompetitorMarkup(result) {
       const competitors = Array.isArray(result.topCompetitors) ? result.topCompetitors : [];
-      return `
-        <div class="signal-grid" style="grid-template-columns:repeat(2,minmax(0,1fr));">
+      const competitorCards = competitors
+        .filter((item) => hasMeaningfulText(item?.name) || hasMeaningfulText(item?.recentMove))
+        .map((item) => `<div class="list-card"><div class="tier-heading"><p><strong>${escapeHtml(item.name || "Competitor")}</strong></p>${renderThreatPill(item.threat)}</div><p>${escapeHtml(item.recentMove || "")}</p></div>`)
+        .join("");
+      const opportunityBlock = hasMeaningfulText(result.opportunity) || hasMeaningfulText(result.differentiator)
+        ? `<div class="signal-grid" style="grid-template-columns:repeat(2,minmax(0,1fr));">${hasMeaningfulText(result.opportunity) ? `<div class="list-card"><strong>Opportunity</strong><p>${escapeHtml(result.opportunity)}</p></div>` : ""}${hasMeaningfulText(result.differentiator) ? `<div class="list-card"><strong>Differentiator</strong><p>${escapeHtml(result.differentiator)}</p></div>` : ""}</div>`
+        : "";
+      const hasContent = Boolean(competitorCards) || hasMeaningfulText(result.marketPosition) || hasMeaningfulText(result.biggestThreat) || Boolean(opportunityBlock) || hasMeaningfulText(result.competitiveLandscape);
+      if (!hasContent) return "";
+      return joinMarkupSections([
+        `<div class="signal-grid" style="grid-template-columns:repeat(2,minmax(0,1fr));">
           <div class="mini-panel"><strong>Landscape</strong><div class="metric-big">${escapeHtml(result.competitiveLandscape || "stable")}</div></div>
-          <div class="mini-panel"><strong>Biggest threat</strong><p>${escapeHtml(result.biggestThreat || "No threat returned.")}</p></div>
-        </div>
-        <div class="list-stack">${competitors.map((item) => `<div class="list-card"><div class="tier-heading"><p><strong>${escapeHtml(item.name || "Competitor")}</strong></p>${renderThreatPill(item.threat)}</div><p>${escapeHtml(item.recentMove || "")}</p></div>`).join("") || '<div class="info-note">No competitor landscape returned.</div>'}</div>
-        <div class="info-note"><strong>Market position</strong><p>${escapeHtml(result.marketPosition || "No market position returned.")}</p></div>
-        <div class="signal-grid" style="grid-template-columns:repeat(2,minmax(0,1fr));"><div class="list-card"><strong>Opportunity</strong><p>${escapeHtml(result.opportunity || "No opportunity returned.")}</p></div><div class="list-card"><strong>Differentiator</strong><p>${escapeHtml(result.differentiator || "No differentiator returned.")}</p></div></div>
-      `;
+          ${hasMeaningfulText(result.biggestThreat) ? `<div class="mini-panel"><strong>Biggest threat</strong><p>${escapeHtml(result.biggestThreat)}</p></div>` : ""}
+        </div>`,
+        competitorCards ? `<div class="list-stack">${competitorCards}</div>` : "",
+        renderOptionalInfoNote("Market position", result.marketPosition),
+        opportunityBlock
+      ]);
     }
 
     function renderBrief(result) {
@@ -5038,8 +5464,8 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
       elements.briefSection.hidden = false;
       elements.briefSection.innerHTML = `
         <div class="brief-header">
-          <div><span class="badge">Intelligence Brief</span><h2 class="section-title" id="briefHeading" style="font-size:32px;margin-top:10px;">${escapeHtml(state.topic)}</h2><p class="section-subtitle">${escapeHtml(result.subjectSummary || "PulseBoard synthesized the available signals into a single intelligence brief.")}</p></div>
-          <div class="brief-actions"><button class="secondary-button" type="button" id="copyBriefButton">Copy to Clipboard</button><button class="secondary-button" type="button" id="downloadBriefButton">Download Brief</button></div>
+          <div><h2 class="section-title" id="briefHeading" style="font-size:32px;">${escapeHtml(state.topic)}</h2></div>
+          <div class="brief-header-side"><span class="badge">Intelligence Brief</span></div>
         </div>
         <div class="brief-summary">
           <p class="one-line-summary">${escapeHtml(result.oneLineSummary || "No one-line summary returned.")}</p>
@@ -5049,14 +5475,17 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
           </div>
         </div>
         <div class="brief-columns">
-          ${renderTier("urgent", "🔴 Urgent", urgent, (item) => `<p><strong>${escapeHtml(item.finding || "Urgent finding")}</strong></p><p><span class="meta-label">Source</span> ${escapeHtml(item.source || "Unknown")}</p><p><span class="meta-label">Action</span> ${escapeHtml(item.action || "No action provided.")}</p>`)}
-          ${renderTier("notable", "🟡 Notable", notable, (item) => `<p><strong>${escapeHtml(item.finding || "Notable finding")}</strong></p><p><span class="meta-label">Source</span> ${escapeHtml(item.source || "Unknown")}</p><p>${escapeHtml(item.whyItMatters || "No context provided.")}</p>`)}
-          ${renderTier("fyi", "⚪ FYI", fyi, (item) => `<p><strong>${escapeHtml(item.finding || "Background note")}</strong></p><p>${escapeHtml(item.context || "No context provided.")}</p>`)}
+          ${renderTier("urgent", "Urgent", urgent, (item) => `<p><strong>${escapeHtml(item.finding || "Urgent finding")}</strong></p><p><span class="meta-label">Source</span> ${escapeHtml(item.source || "Unknown")}</p><p><span class="meta-label">Action</span> ${escapeHtml(item.action || "No action provided.")}</p>`)}
+          ${renderTier("notable", "Notable", notable, (item) => `<p><strong>${escapeHtml(item.finding || "Notable finding")}</strong></p><p><span class="meta-label">Source</span> ${escapeHtml(item.source || "Unknown")}</p><p>${escapeHtml(item.whyItMatters || "No context provided.")}</p>`)}
+          ${renderTier("fyi", "FYI", fyi, (item) => `<p><strong>${escapeHtml(item.finding || "Background note")}</strong></p><p>${escapeHtml(item.context || "No context provided.")}</p>`)}
         </div>
         <div class="list-card" style="margin-top:20px;"><strong>Recommended actions</strong>${actions.length ? `<ol>${actions.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ol>` : "<p>No recommended actions returned.</p>"}<p><span class="meta-label">Monitoring cadence</span> ${escapeHtml(result.monitoringFrequency || "No cadence recommendation returned.")}</p></div>
+        ${renderMonitoringBriefActionBar()}
       `;
-      document.getElementById("copyBriefButton").addEventListener("click", copyBriefToClipboard);
-      document.getElementById("downloadBriefButton").addEventListener("click", () => window.print());
+      const copyButton = document.getElementById("copyMonitoringBriefButton");
+      if (copyButton) copyButton.addEventListener("click", copyMonitoringBriefToClipboard);
+      document.getElementById("exportMonitoringBriefJsonButton").addEventListener("click", exportMonitoringBriefJSON);
+      document.getElementById("downloadMonitoringBriefButton").addEventListener("click", downloadBrief);
     }
 
     function renderInterviewPrepBrief(result) {
@@ -5064,14 +5493,26 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
       const prepPlan = Array.isArray(result.prepPlan) ? result.prepPlan : [];
       const keyWarnings = Array.isArray(result.keyWarnings) ? result.keyWarnings : [];
       const sourceNotes = Array.isArray(result.sourceNotes) ? result.sourceNotes : [];
+      const prepItemsMarkup = prepPlan.length
+        ? `<ol>${prepPlan.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ol>`
+        : "<p>No prep plan returned.</p>";
+      const warningsMarkup = keyWarnings.length
+        ? `<ul>${keyWarnings.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`
+        : "<p>No major warnings returned.</p>";
+      const sourceNotesMarkup = sourceNotes.length
+        ? `<ul>${sourceNotes.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`
+        : "<p>No source notes returned.</p>";
       state.briefVisible = true;
       elements.briefSection.hidden = false;
       elements.briefSection.innerHTML = `
         <div class="brief-header">
-          <div><span class="badge">Interview Prep Brief</span><h2 class="section-title" id="briefHeading" style="font-size:32px;margin-top:10px;">${escapeHtml(state.topic)}</h2><p class="section-subtitle">${escapeHtml(state.role || "Target role")} · ${escapeHtml(result.roadmapSummary || "Company-specific interview roadmap built from current reported signals.")}</p></div>
-          <div class="brief-actions"><button class="secondary-button" type="button" id="copyBriefButton">Copy to Clipboard</button><button class="secondary-button" type="button" id="downloadBriefButton">Download Brief</button></div>
+          <div>
+            <h2 class="section-title" id="briefHeading" style="font-size:32px;">${escapeHtml(state.topic)}</h2>
+          </div>
+          <div class="brief-header-side"><span class="badge">Interview Prep Brief</span></div>
         </div>
         <div class="brief-summary">
+          <p class="section-subtitle">${escapeHtml(state.role || "Target role")} - ${escapeHtml(result.roadmapSummary || "Company-specific interview roadmap built from current reported signals.")}</p>
           <p class="one-line-summary">${escapeHtml(result.oneLineSummary || "No one-line interview prep summary returned.")}</p>
           <div class="score-grid">
             <div class="score-card"><div class="score-label">Reported rounds</div><div class="score-value">${escapeHtml(result.reportedRoundCount || "Unknown")}</div></div>
@@ -5081,11 +5522,14 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
         <div class="list-card" style="margin-top:20px;"><strong>Roadmap summary</strong><p>${escapeHtml(result.roadmapSummary || "No roadmap summary returned.")}</p></div>
         <div class="brief-columns">
           <div class="tier-block notable"><div class="tier-heading"><h3 style="margin:0;">Rounds</h3><span class="meta-label">${rounds.length} round${rounds.length === 1 ? "" : "s"}</span></div><div class="tier-stack">${rounds.length ? rounds.map((round, index) => renderInterviewRoundCard(round, index)).join("") : '<div class="tier-card"><p>No rounds returned.</p></div>'}</div></div>
-          <div class="tier-block fyi"><div class="tier-heading"><h3 style="margin:0;">Prep Plan</h3><span class="meta-label">${prepPlan.length} step${prepPlan.length === 1 ? "" : "s"}</span></div><div class="tier-stack"><div class="tier-card">${prepPlan.length ? `<ol>${prepPlan.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ol>` : "<p>No prep plan returned.</p>"}</div><div class="tier-card"><p><strong>Warnings</strong></p>${keyWarnings.length ? `<ul>${keyWarnings.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>` : "<p>No major warnings returned.</p>"}</div><div class="tier-card"><p><strong>Source notes</strong></p>${sourceNotes.length ? `<ul>${sourceNotes.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>` : "<p>No source notes returned.</p>"}</div></div></div>
+          <div class="tier-block fyi"><div class="tier-heading"><h3 style="margin:0;">Prep Plan</h3><span class="meta-label">${prepPlan.length} step${prepPlan.length === 1 ? "" : "s"}</span></div><div class="tier-stack"><div class="tier-card">${prepItemsMarkup}</div></div></div>
+          <div class="tier-block urgent"><div class="tier-heading"><h3 style="margin:0;">Warnings & Notes</h3><span class="meta-label">${keyWarnings.length + sourceNotes.length} item${keyWarnings.length + sourceNotes.length === 1 ? "" : "s"}</span></div><div class="tier-stack"><div class="tier-card"><p><strong>Warnings</strong></p>${warningsMarkup}</div><div class="tier-card"><p><strong>Source notes</strong></p>${sourceNotesMarkup}</div></div></div>
         </div>
+        ${renderInterviewPrepBriefActionBar()}
       `;
-      document.getElementById("copyBriefButton").addEventListener("click", copyBriefToClipboard);
-      document.getElementById("downloadBriefButton").addEventListener("click", () => window.print());
+      const copyButton = document.getElementById("copyInterviewPrepBriefButton");
+      if (copyButton) copyButton.addEventListener("click", copyBriefToClipboard);
+      document.getElementById("downloadInterviewPrepBriefButton").addEventListener("click", downloadBrief);
     }
 
     function renderInterviewRoundCard(round, index) {
@@ -5097,13 +5541,19 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
 
     function renderTier(kind, title, items, renderItem) {
       const empty = kind === "urgent" ? "No immediate crisis signals surfaced in this run." : "No items were returned.";
-      return `<div class="tier-block ${kind}"><div class="tier-heading"><h3 style="margin:0;">${title}</h3><span class="meta-label">${items.length} item${items.length === 1 ? "" : "s"}</span></div><div class="tier-stack">${items.length ? items.map((item) => `<div class="tier-card">${renderItem(item)}</div>`).join("") : `<div class="tier-card"><p>${empty}</p></div>`}</div></div>`;
+      return `<div class="tier-block ${kind}"><div class="tier-heading"><h3 style="margin:0;" class="tier-title">${renderTierDot(kind)}<span>${title}</span></h3><span class="meta-label">${items.length} item${items.length === 1 ? "" : "s"}</span></div><div class="tier-stack">${items.length ? items.map((item) => `<div class="tier-card">${renderItem(item)}</div>`).join("") : `<div class="tier-card"><p>${empty}</p></div>`}</div></div>`;
+    }
+
+    function renderTierDot(kind) {
+      const tone = kind === "urgent" || kind === "notable" || kind === "fyi" ? kind : "fyi";
+      return `<span class="tier-dot ${tone}" aria-hidden="true"></span>`;
     }
 
     function renderBriefFailure(successCount, errorMessage) {
+      const friendlyMessage = extractRelayErrorInfo(errorMessage).message;
       state.briefVisible = true;
       elements.briefSection.hidden = false;
-      elements.briefSection.innerHTML = `<div class="brief-summary"><p class="one-line-summary">PulseBoard could not synthesize this run.</p><p class="section-subtitle">${successCount}/5 monitoring agents returned usable data.${errorMessage ? ` ${escapeHtml(errorMessage)}` : ""}</p></div>`;
+      elements.briefSection.innerHTML = `<div class="brief-summary"><p class="one-line-summary">PulseBoard could not synthesize this run.</p><p class="section-subtitle">${successCount}/5 monitoring agents returned usable data.${friendlyMessage ? ` ${escapeHtml(friendlyMessage)}` : ""}</p></div>`;
     }
 
     async function copyBriefToClipboard() {
@@ -5167,6 +5617,96 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
       ].join("\n");
     }
 
+    function renderMonitoringBriefActionBar() {
+      const copyButton = canUseClipboard()
+        ? `<button class="csv-action-button ghost" type="button" id="copyMonitoringBriefButton">Copy Summary</button>`
+        : "";
+      return `
+        <div class="csv-action-bar action-bar">
+          ${copyButton}
+          <button class="csv-action-button outline" type="button" id="exportMonitoringBriefJsonButton">
+            ${getDownloadIconMarkup()}
+            <span>Export JSON</span>
+          </button>
+          <button class="csv-action-button primary" type="button" id="downloadMonitoringBriefButton">
+            ${getDownloadIconMarkup()}
+            <span>Download Brief</span>
+          </button>
+        </div>
+        `;
+    }
+
+    function renderInterviewPrepBriefActionBar() {
+      const copyButton = canUseClipboard()
+        ? `<button class="csv-action-button ghost" type="button" id="copyInterviewPrepBriefButton">Copy Summary</button>`
+        : "";
+      return `
+        <div class="csv-action-bar action-bar">
+          ${copyButton}
+          <button class="csv-action-button primary" type="button" id="downloadInterviewPrepBriefButton">
+            ${getDownloadIconMarkup()}
+            <span>Download Brief</span>
+          </button>
+        </div>
+      `;
+    }
+
+    async function copyMonitoringBriefToClipboard() {
+      if (!canUseClipboard()) return;
+      if (!state.agentResults.aggregator) {
+        setStatusMessage("There is no completed brief to copy yet.", "warning");
+        return;
+      }
+      const button = document.getElementById("copyMonitoringBriefButton");
+      await navigator.clipboard.writeText(buildBriefText(state.agentResults.aggregator));
+      if (!button) {
+        setStatusMessage("Brief copied to clipboard.", "complete");
+        return;
+      }
+      const original = button.textContent;
+      button.textContent = "Copied!";
+      setStatusMessage("Brief copied to clipboard.", "complete");
+      window.setTimeout(() => {
+        button.textContent = original || "Copy Summary";
+      }, 2000);
+    }
+
+    function exportMonitoringBriefJSON() {
+      const exportData = buildMonitoringBriefExportData();
+      if (!exportData) return;
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = buildMonitoringBriefExportFilename(exportData);
+      anchor.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function buildMonitoringBriefExportData() {
+      const brief = state.agentResults.aggregator;
+      if (!brief || state.mode === "interviewprep") return null;
+      return {
+        exportedAt: new Date().toISOString(),
+        mode: state.mode,
+        topic: state.topic,
+        briefType: "intelligence",
+        brief,
+        agentResults: {
+          news: state.agentResults.news || null,
+          jobs: state.agentResults.jobs || null,
+          sentiment: state.agentResults.sentiment || null,
+          regulatory: state.agentResults.regulatory || null,
+          competitor: state.agentResults.competitor || null
+        }
+      };
+    }
+
+    function buildMonitoringBriefExportFilename(exportData) {
+      const base = sanitizeFilenamePart(exportData?.topic || "monitoring_brief");
+      return `${base}_pulseboard_brief.json`;
+    }
+
     function setStatusMessage(message, tone) {
       const toneClass = tone === "error" ? "error" : tone === "warning" ? "warning" : tone === "complete" ? "success" : "";
       elements.statusMessage.className = `inline-alert${toneClass ? ` ${toneClass}` : ""}`;
@@ -5218,7 +5758,7 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
                   <p class="chart-reason">${escapeHtml(item.reason || "Recommended by the analyst based on this dataset.")}</p>
                   <div class="chart-meta-row" id="chartMeta-${mode}-${index}"></div>
                 </div>
-                <span class="chart-reason-icon" title="${escapeHtml(item.reason || "Recommended by the analyst based on this dataset.")}">ℹ</span>
+                <span class="chart-reason-icon" title="${escapeHtml(item.reason || "Recommended by the analyst based on this dataset.")}">i</span>
               </div>
               <div class="chart-body" id="chartBody-${mode}-${index}">
                 <div class="chart-canvas-wrap chart-canvas-container">
@@ -5250,7 +5790,7 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
                   <h4 class="chart-title">Preparing chart ${index + 1}</h4>
                   <p class="chart-reason">The analyst is selecting the most useful chart for this dataset.</p>
                 </div>
-                <span class="chart-reason-icon">ℹ</span>
+                <span class="chart-reason-icon">i</span>
               </div>
               <div class="chart-skeleton"></div>
             </article>
@@ -5345,8 +5885,8 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
         const midpoint = timestamps[Math.floor((timestamps.length - 1) / 2)];
         dateWindows[option.column] = [
           { value: "__all__", label: "All dates" },
-          { value: "early", label: `${formatDateLabel(timestamps[0])} → ${formatDateLabel(midpoint)}` },
-          { value: "late", label: `${formatDateLabel(midpoint)} → ${formatDateLabel(timestamps[timestamps.length - 1])}` }
+          { value: "early", label: `${formatDateLabel(timestamps[0])} -> ${formatDateLabel(midpoint)}` },
+          { value: "late", label: `${formatDateLabel(midpoint)} -> ${formatDateLabel(timestamps[timestamps.length - 1])}` }
         ];
       });
       return { categoryOptions, categoryValues, dateOptions, dateWindows };
@@ -5570,66 +6110,88 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
 
     function renderInterviewPrepNewsMarkup(result) {
       const signals = Array.isArray(result.recentSignals) ? result.recentSignals : [];
-      return `
-        <div class="signal-grid" style="grid-template-columns:repeat(2,minmax(0,1fr));">
+      const signalCards = signals
+        .filter((item) => hasMeaningfulText(item?.title) || hasMeaningfulText(item?.detail))
+        .map((item) => `<div class="list-card"><div class="list-meta">${escapeHtml(item.recency || "Recent")} · ${escapeHtml(item.source || "Source")}</div><p><strong>${escapeHtml(item.title || "Interview signal")}</strong></p><p>${escapeHtml(item.detail || "")}</p></div>`)
+        .join("");
+      const hasContent = Number.isFinite(Number(result.signalStrength)) || hasMeaningfulText(result.reportedRoundCount) || hasMeaningfulText(result.biggestSignal) || Boolean(signalCards);
+      if (!hasContent) return "";
+      return joinMarkupSections([
+        `<div class="signal-grid" style="grid-template-columns:repeat(2,minmax(0,1fr));">
           <div class="mini-panel"><strong>Signal strength</strong><div class="metric-big">${normalizeMetricValue(result.signalStrength)}/100</div>${renderMetricDirectionHint("higher")}</div>
           <div class="mini-panel"><strong>Reported rounds</strong><div class="metric-big">${escapeHtml(result.reportedRoundCount || "Unknown")}</div></div>
-        </div>
-        <div class="info-note"><strong>Most important update</strong><p>${escapeHtml(result.biggestSignal || "No major recent interview signal returned.")}</p></div>
-        <div class="list-stack">${signals.map((item) => `<div class="list-card"><div class="list-meta">${escapeHtml(item.recency || "Recent")} · ${escapeHtml(item.source || "Source")}</div><p><strong>${escapeHtml(item.title || "Interview signal")}</strong></p><p>${escapeHtml(item.detail || "")}</p></div>`).join("") || '<div class="info-note">No recent interview reports surfaced.</div>'}</div>
-      `;
+        </div>`,
+        renderOptionalInfoNote("Most important update", result.biggestSignal),
+        signalCards ? `<div class="list-stack">${signalCards}</div>` : ""
+      ]);
     }
 
     function renderInterviewPrepJobsMarkup(result) {
       const skillAreas = Array.isArray(result.skillAreas) ? result.skillAreas : [];
       const materials = Array.isArray(result.officialMaterials) ? result.officialMaterials : [];
-      return `
-        <div class="signal-grid" style="grid-template-columns:repeat(2,minmax(0,1fr));">
+      const hasContent = skillAreas.length || materials.length || hasMeaningfulText(result.roleExpectationSummary) || Number.isFinite(Number(result.roleFitScore)) || hasMeaningfulText(result.openingStatus);
+      if (!hasContent) return "";
+      return joinMarkupSections([
+        `<div class="signal-grid" style="grid-template-columns:repeat(2,minmax(0,1fr));">
           <div class="mini-panel"><strong>Fit score</strong><div class="metric-big">${normalizeMetricValue(result.roleFitScore)}/100</div>${renderMetricDirectionHint("higher")}</div>
           <div class="mini-panel"><strong>Current opening</strong><div class="badge-row"><span class="pill neutral">${escapeHtml(result.openingStatus || "Unknown")}</span></div></div>
-        </div>
-        <div class="info-note"><strong>Role expectations</strong><p>${escapeHtml(result.roleExpectationSummary || "No official role expectations returned.")}</p></div>
-        <div class="tag-row">${skillAreas.map((item) => `<span class="tag neutral">${escapeHtml(item)}</span>`).join("") || '<span class="tag neutral">No skill areas returned</span>'}</div>
-        ${renderInterviewPrepLinkBlock("Official prep materials", materials)}
-      `;
+        </div>`,
+        renderOptionalInfoNote("Role expectations", result.roleExpectationSummary),
+        renderOptionalTagRow(skillAreas),
+        renderInterviewPrepLinkBlock("Official prep materials", materials)
+      ]);
     }
 
     function renderInterviewPrepSentimentMarkup(result) {
       const themes = Array.isArray(result.candidateThemes) ? result.candidateThemes : [];
-      return `
-        <div class="signal-grid" style="grid-template-columns:repeat(2,minmax(0,1fr));">
+      const themeCards = themes
+        .filter((item) => hasMeaningfulText(item?.theme) || hasMeaningfulText(item?.detail))
+        .map((item) => `<div class="list-card"><div class="list-meta">${escapeHtml(item.sentiment || "neutral")} · ${escapeHtml(item.source || "community")}</div><p><strong>${escapeHtml(item.theme || "Theme")}</strong></p><p>${escapeHtml(item.detail || "")}</p></div>`)
+        .join("");
+      const hasContent = Boolean(themeCards) || hasMeaningfulText(result.processSentiment) || Number.isFinite(Number(result.experienceScore)) || hasMeaningfulText(result.difficultyLabel);
+      if (!hasContent) return "";
+      return joinMarkupSections([
+        `<div class="signal-grid" style="grid-template-columns:repeat(2,minmax(0,1fr));">
           <div class="mini-panel"><strong>Experience score</strong><div class="metric-big">${normalizeMetricValue(result.experienceScore)}/100</div>${renderMetricDirectionHint("higher")}</div>
           <div class="mini-panel"><strong>Difficulty</strong><div class="badge-row"><span class="pill neutral">${escapeHtml(result.difficultyLabel || "Mixed")}</span></div></div>
-        </div>
-        <div class="info-note"><strong>Process sentiment</strong><p>${escapeHtml(result.processSentiment || "No process sentiment returned.")}</p></div>
-        <div class="list-stack">${themes.map((item) => `<div class="list-card"><div class="list-meta">${escapeHtml(item.sentiment || "neutral")} · ${escapeHtml(item.source || "community")}</div><p><strong>${escapeHtml(item.theme || "Theme")}</strong></p><p>${escapeHtml(item.detail || "")}</p></div>`).join("") || '<div class="info-note">No candidate themes surfaced.</div>'}</div>
-      `;
+        </div>`,
+        renderOptionalInfoNote("Process sentiment", result.processSentiment),
+        themeCards ? `<div class="list-stack">${themeCards}</div>` : ""
+      ]);
     }
 
     function renderInterviewPrepProcessMarkup(result) {
       const constraints = Array.isArray(result.constraints) ? result.constraints : [];
       const materials = Array.isArray(result.processMaterials) ? result.processMaterials : [];
-      return `
-        <div class="signal-grid" style="grid-template-columns:repeat(2,minmax(0,1fr));">
+      const hasContent = constraints.length || materials.length || hasMeaningfulText(result.processNote) || hasMeaningfulText(result.assessmentFormat) || hasMeaningfulText(result.locationMode);
+      if (!hasContent) return "";
+      return joinMarkupSections([
+        `<div class="signal-grid" style="grid-template-columns:repeat(2,minmax(0,1fr));">
           <div class="mini-panel"><strong>Assessment likely</strong><div class="badge-row"><span class="pill neutral">${escapeHtml(result.assessmentFormat || "Unknown")}</span></div></div>
           <div class="mini-panel"><strong>Location mode</strong><div class="badge-row"><span class="pill neutral">${escapeHtml(result.locationMode || "Unknown")}</span></div></div>
-        </div>
-        <div class="info-note"><strong>Process note</strong><p>${escapeHtml(result.processNote || "No process note returned.")}</p></div>
-        <div class="list-card"><strong>Constraints</strong>${constraints.length ? `<ul>${constraints.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>` : "<p>No major constraints returned.</p>"}</div>
-        ${renderInterviewPrepLinkBlock("Process materials", materials)}
-      `;
+        </div>`,
+        renderOptionalInfoNote("Process note", result.processNote),
+        renderOptionalListCard("Constraints", constraints),
+        renderInterviewPrepLinkBlock("Process materials", materials)
+      ]);
     }
 
     function renderInterviewPrepCompetitorMarkup(result) {
       const peers = Array.isArray(result.peerPatterns) ? result.peerPatterns : [];
-      return `
-        <div class="signal-grid" style="grid-template-columns:repeat(2,minmax(0,1fr));">
+      const peerCards = peers
+        .filter((item) => hasMeaningfulText(item?.company) || hasMeaningfulText(item?.pattern) || hasMeaningfulText(item?.detail))
+        .map((item) => `<div class="list-card"><div class="list-meta">${escapeHtml(item.company || "Peer company")}</div><p><strong>${escapeHtml(item.pattern || "Interview pattern")}</strong></p><p>${escapeHtml(item.detail || "")}</p></div>`)
+        .join("");
+      const hasContent = Boolean(peerCards) || hasMeaningfulText(result.peerSummary) || Number.isFinite(Number(result.calibrationScore)) || hasMeaningfulText(result.likelyEmphasis);
+      if (!hasContent) return "";
+      return joinMarkupSections([
+        `<div class="signal-grid" style="grid-template-columns:repeat(2,minmax(0,1fr));">
           <div class="mini-panel"><strong>Calibration score</strong><div class="metric-big">${normalizeMetricValue(result.calibrationScore)}/100</div>${renderMetricDirectionHint("higher")}</div>
           <div class="mini-panel"><strong>Most likely emphasis</strong><div class="badge-row"><span class="pill neutral">${escapeHtml(result.likelyEmphasis || "Unknown")}</span></div></div>
-        </div>
-        <div class="info-note"><strong>Peer benchmark</strong><p>${escapeHtml(result.peerSummary || "No peer benchmark returned.")}</p></div>
-        <div class="list-stack">${peers.map((item) => `<div class="list-card"><div class="list-meta">${escapeHtml(item.company || "Peer company")}</div><p><strong>${escapeHtml(item.pattern || "Interview pattern")}</strong></p><p>${escapeHtml(item.detail || "")}</p></div>`).join("") || '<div class="info-note">No peer interview patterns returned.</div>'}</div>
-      `;
+        </div>`,
+        renderOptionalInfoNote("Peer benchmark", result.peerSummary),
+        peerCards ? `<div class="list-stack">${peerCards}</div>` : ""
+      ]);
     }
 
     function renderInterviewPrepLinkBlock(title, links) {
@@ -6377,7 +6939,7 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
       }
       const width = (max - min) / binCount;
       const bins = Array.from({ length: binCount }, (_, index) => ({
-        label: `${formatAxisValue(min + (width * index), sourceColumn)}–${formatAxisValue(min + (width * (index + 1)), sourceColumn)}`,
+        label: `${formatAxisValue(min + (width * index), sourceColumn)} to ${formatAxisValue(min + (width * (index + 1)), sourceColumn)}`,
         value: 0
       }));
       values.forEach((value) => {
@@ -7171,7 +7733,7 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
               <svg class="quality-score-ring" viewBox="0 0 56 56" aria-hidden="true">
                 <circle cx="28" cy="28" r="22" fill="none" stroke="rgba(26,26,46,0.08)" stroke-width="5"></circle>
                 <circle class="quality-ring-arc" cx="28" cy="28" r="22" fill="none" stroke="${escapeHtml(quality.color)}" stroke-width="5" stroke-linecap="round" stroke-dasharray="${circumference.toFixed(2)}" stroke-dashoffset="${circumference.toFixed(2)}" data-final-offset="${offset.toFixed(2)}" transform="rotate(-90 28 28)" style="transition: stroke-dashoffset 0.8s ease"></circle>
-                <text class="quality-score-number" x="28" y="26">${escapeHtml(quality.overallScore)}</text>
+                <text class="quality-score-number" x="28" y="28">${escapeHtml(quality.overallScore)}</text>
               </svg>
               <div class="quality-score-caption">
                 <strong style="color:${escapeHtml(quality.color)};">${escapeHtml(quality.label)}</strong>
@@ -7273,7 +7835,7 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
       }
       if (column.type === "date" && column.stats) {
         return `
-          <div class="schema-stat-line">${escapeHtml(column.stats.earliest || "Unknown")} → ${escapeHtml(column.stats.latest || "Unknown")}</div>
+          <div class="schema-stat-line">${escapeHtml(column.stats.earliest || "Unknown")} -> ${escapeHtml(column.stats.latest || "Unknown")}</div>
           <div class="schema-note-line">${escapeHtml(column.stats.uniqueCount)} unique dates</div>
         `;
       }
@@ -7327,7 +7889,7 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
         <section class="cleaning-preview-section">
           <div class="cleaning-preview-header">
             <h3 class="cleaning-preview-title">Data Cleaning</h3>
-            <span class="cleaning-preview-meta">${summary.appliedCount} applied · ${summary.missingFillCount || 0} fills</span>
+            <span class="cleaning-preview-meta">${summary.appliedCount} applied - ${summary.missingFillCount || 0} fills</span>
           </div>
           <div class="cleaning-preview-copy">${rawMode
             ? "Raw mode is active. This file will be analyzed exactly as parsed, without numeric or categorical cleaning."
@@ -7487,10 +8049,10 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
       const stateClass = entry.state === "suggested" ? "suggested" : "applied";
       const typeLabel = String(entry.type || "").replace(/_/g, " ");
       const location = Number.isInteger(entry.rowIndex)
-        ? `Row ${entry.rowIndex + 2} · ${entry.column || "dataset"}`
+        ? `Row ${entry.rowIndex + 2} - ${entry.column || "dataset"}`
         : `${entry.column || "dataset"}`;
       const valueChange = entry.state === "applied"
-        ? `"${String(entry.originalValue ?? "")}" → "${String(entry.cleanedValue ?? "")}"`
+        ? `"${String(entry.originalValue ?? "")}" -> "${String(entry.cleanedValue ?? "")}"`
         : entry.detail;
       return `
         <div class="cleaning-log-entry">
@@ -7514,11 +8076,11 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
           <svg class="quality-score-ring mini" viewBox="0 0 40 40" aria-hidden="true">
             <circle cx="20" cy="20" r="15" fill="none" stroke="rgba(26,26,46,0.08)" stroke-width="4"></circle>
             <circle class="quality-ring-arc" cx="20" cy="20" r="15" fill="none" stroke="${escapeHtml(quality.color)}" stroke-width="4" stroke-linecap="round" stroke-dasharray="${circumference.toFixed(2)}" stroke-dashoffset="${circumference.toFixed(2)}" data-final-offset="${offset.toFixed(2)}" transform="rotate(-90 20 20)" style="transition: stroke-dashoffset 0.8s ease"></circle>
-            <text x="20" y="18" style="font-size:10px;font-weight:500;fill:#1a1a2e;text-anchor:middle;">${escapeHtml(quality.overallScore)}</text>
+            <text x="20" y="20" style="font-size:10px;font-weight:500;fill:#1a1a2e;text-anchor:middle;dominant-baseline:middle;">${escapeHtml(quality.overallScore)}</text>
           </svg>
           <div class="quality-mini-copy">
             <div class="quality-mini-label" style="color:${escapeHtml(quality.color)};">${escapeHtml(quality.label)}</div>
-            <div class="quality-mini-meta">${escapeHtml(quality.completeness)}% complete · ${escapeHtml(quality.uniqueness)}% unique</div>
+            <div class="quality-mini-meta">${escapeHtml(quality.completeness)}% complete - ${escapeHtml(quality.uniqueness)}% unique</div>
             ${quality.issueCount ? `<span class="quality-issue-chip">${escapeHtml(quality.issueCount)} issues detected</span>` : ""}
             ${quality.sampleNote ? `<div class="quality-sample-note" style="margin-top:0;">${escapeHtml(quality.sampleNote)}</div>` : ""}
           </div>
@@ -7582,11 +8144,11 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
     }
 
     function buildCsvPrintHeader(filenames) {
-      const fileText = Array.isArray(filenames) ? filenames.filter(Boolean).join(" · ") : String(filenames || "CSV analysis");
+      const fileText = Array.isArray(filenames) ? filenames.filter(Boolean).join(" - ") : String(filenames || "CSV analysis");
       return `
         <div class="print-header">
           <div class="print-header-title">PulseBoard - CSV Analysis Brief</div>
-          <div class="print-header-meta">Generated on ${escapeHtml(formatPrintTimestamp(new Date()))} · ${escapeHtml(fileText)}</div>
+          <div class="print-header-meta">Generated on ${escapeHtml(formatPrintTimestamp(new Date()))} - ${escapeHtml(fileText)}</div>
           <hr class="print-header-rule" />
         </div>
       `;
@@ -7609,10 +8171,14 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
     function downloadBrief() {
       const cleanup = () => {
         document.body.classList.remove("print-mode");
+        document.body.classList.remove("print-brief");
+        document.body.classList.remove("print-csv");
         resizeAllCharts();
         window.removeEventListener("afterprint", cleanup);
       };
       document.body.classList.add("print-mode");
+      document.body.classList.toggle("print-brief", Boolean(state.briefVisible) && !state.csvResultVisible);
+      document.body.classList.toggle("print-csv", Boolean(state.csvResultVisible));
       resizeAllCharts();
       window.addEventListener("afterprint", cleanup, { once: true });
       window.requestAnimationFrame(() => {
@@ -7934,7 +8500,7 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
           <div class="cross-ref-controls">
             <label class="cross-ref-label" for="cross-ref-topic-input">Monitor topic:</label>
             <input id="cross-ref-topic-input" class="cross-ref-input" value="${topicValue}" />
-            <button type="button" class="${showRerun ? "secondary-button cross-ref-rerun-button" : "cross-ref-run-button"}" data-cross-ref-action="run">${showRerun ? "Re-run Cross-Reference ↺" : "Run Cross-Reference →"}</button>
+            <button type="button" class="${showRerun ? "secondary-button cross-ref-rerun-button" : "cross-ref-run-button"}" data-cross-ref-action="run">${showRerun ? "Re-run Cross-Reference" : "Run Cross-Reference ->"}</button>
           </div>
           ${showGrid ? renderCrossRefGrid(completedCount) : ""}
           ${crossRef.status === "synthesizing" ? '<div class="cross-ref-synth-banner">Synthesizing internal + external intelligence...</div>' : ""}
@@ -8015,14 +8581,14 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
                     <div class="meta-label">Internal</div>
                     <p>${escapeHtml(item.internalFinding || "No internal finding returned.")}</p>
                   </div>
-                  <div class="cross-ref-arrow">→</div>
+                  <div class="cross-ref-arrow">-&gt;</div>
                   <div class="cross-ref-signal-box">
                     <div class="meta-label">External signal</div>
                     <p>${escapeHtml(item.externalSignal || "No external signal returned.")}</p>
                   </div>
                 </div>
                 <div class="cross-ref-connection-body">${escapeHtml(item.connection || "No connection explanation returned.")}</div>
-                <p class="cross-ref-implication">→ ${escapeHtml(item.implication || "No implication returned.")}</p>
+                <p class="cross-ref-implication">-> ${escapeHtml(item.implication || "No implication returned.")}</p>
               </article>
             `).join("") : '<div class="csv-empty-state"><strong>No strong connections surfaced</strong><span>The synthesis agent could not confidently connect the internal data to external intelligence.</span></div>'}
           </section>
@@ -8048,7 +8614,7 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
     function truncateText(value, maxLength) {
       const text = String(value || "");
       if (text.length <= maxLength) return text;
-      return `${text.slice(0, Math.max(0, maxLength - 1)).trimEnd()}…`;
+      return `${text.slice(0, Math.max(0, maxLength - 3)).trimEnd()}...`;
     }
 
     function renderCsvAnalysisResult(result, sourceLabel) {
@@ -8167,13 +8733,13 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
       elements.csvResultSection.hidden = false;
       elements.csvResultSection.innerHTML = `
         ${buildCsvPrintHeader([meta.fileNameA || meta.labelA || "File A", meta.fileNameB || meta.labelB || "File B"])}
-        <div class="brief-header">
-          <div>
-            <h2 class="section-title" id="csvResultHeading" style="font-size:32px;">CSV Comparison Brief</h2>
-          </div>
-        </div>
-        ${!sharedColumns.length ? '<div class="compare-banner warning">These files appear to be unrelated datasets — comparison may not be meaningful.</div>' : ''}
+        ${!sharedColumns.length ? '<div class="compare-banner warning">These files appear to be unrelated datasets - comparison may not be meaningful.</div>' : ''}
         ${fewerRowsInB ? `<div class="compare-banner alert">${escapeHtml(meta.labelB)} has fewer rows than ${escapeHtml(meta.labelA)}, which may indicate incomplete or filtered data.</div>` : ''}
+        <div class="brief-summary csv-summary-callout brief-card">
+          <div class="query-label" style="margin-bottom:10px;">Key Insight</div>
+          <p class="one-line-summary">${escapeHtml(result.keyInsight || "No key insight returned.")}</p>
+          <p class="section-subtitle" style="margin-top:14px;">${escapeHtml(result.recommendation || "No recommendation returned.")}</p>
+        </div>
         <div class="file-overview-grid">
           ${renderFileOverviewCard("A", meta.labelA, meta.fileNameA, fileA, schemaMatch, "file-a", state.csvComparisonQuality.fileA || state.csvChartPayload?.qualityA)}
           ${renderFileOverviewCard("B", meta.labelB, meta.fileNameB, fileB, schemaMatch, "file-b", state.csvComparisonQuality.fileB || state.csvChartPayload?.qualityB)}
@@ -8216,8 +8782,8 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
               ${metricComparisons.length ? metricComparisons.map((item) => `
                 <tr>
                   <td><strong>${escapeHtml(item.metric || "Metric")}</strong></td>
-                  <td>${escapeHtml(item.valueA || "—")}</td>
-                  <td>${escapeHtml(item.valueB || "—")}</td>
+                  <td>${escapeHtml(item.valueA || "-")}</td>
+                  <td>${escapeHtml(item.valueB || "-")}</td>
                   <td><span class="change-pill ${escapeHtml(changeDirectionClass(item.direction))}">${escapeHtml(item.change || "No change")}</span></td>
                   <td><span class="pill significance-pill ${escapeHtml(significanceClass(item.significance))}">${escapeHtml(item.significance || "low")}</span></td>
                 </tr>
@@ -8237,11 +8803,6 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
         </div>
         ${renderChartsSectionMarkup(chartRecommendations, "compare")}
         ${renderPlainComparisonAnomalySection(anomalies)}
-        <div class="insight-callout brief-card">
-          <div class="query-label">Key Insight</div>
-          <p class="one-line-summary">${escapeHtml(result.keyInsight || "No key insight returned.")}</p>
-          <p class="section-subtitle" style="margin-top:14px;">${escapeHtml(result.recommendation || "No recommendation returned.")}</p>
-        </div>
         ${renderCsvActionBar("compare")}
         <div id="crossReferenceMount"></div>
       `;
@@ -8269,7 +8830,7 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
                 <article class="correlation-item">
                   <div class="correlation-main">
                     <strong>${escapeHtml(item.left)}</strong>
-                    <span class="correlation-arrow">↔</span>
+                    <span class="correlation-arrow">&lt;-&gt;</span>
                     <strong>${escapeHtml(item.right)}</strong>
                   </div>
                   <div class="correlation-meta">
@@ -8307,7 +8868,7 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
                     ${group.segments.map((segment) => `
                       <article class="segment-chip-card">
                         <div class="segment-chip-title">${escapeHtml(segment.label)}</div>
-                        <div class="segment-chip-meta">${escapeHtml(segment.rowCount)} rows · ${escapeHtml(segment.rowPct)}%</div>
+                        <div class="segment-chip-meta">${escapeHtml(segment.rowCount)} rows - ${escapeHtml(segment.rowPct)}%</div>
                         ${Array.isArray(segment.metrics) && segment.metrics.length ? `
                           <div class="segment-chip-metrics">
                             ${segment.metrics.map((metric) => `<span class="provider-chip">${escapeHtml(metric.aggregation)} ${escapeHtml(metric.column)}: ${escapeHtml(formatAxisValue(metric.value))}</span>`).join("")}
@@ -8524,7 +9085,7 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
                     const highlight = header === highlightColumn;
                     return `
                       <td class="${highlight ? "highlight" : ""}" ${highlight ? `title="${escapeHtml(anomaly.description || "")}"` : ""}>
-                        ${missing ? '<span class="anomaly-missing">—</span>' : escapeHtml(value)}
+                        ${missing ? '<span class="anomaly-missing">-</span>' : escapeHtml(value)}
                         ${highlight && !missing ? renderAnomalyWarningIcon() : ""}
                       </td>
                     `;
@@ -8533,7 +9094,7 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
               </tbody>
             </table>
           </div>
-          <div class="anomaly-context">Row ${escapeHtml(anomaly.rowNumber)} of ${escapeHtml(totalRows)} · ${escapeHtml(sourceLabel)}</div>
+          <div class="anomaly-context">Row ${escapeHtml(anomaly.rowNumber)} of ${escapeHtml(totalRows)} - ${escapeHtml(sourceLabel)}</div>
         </div>
       `;
     }
@@ -8564,7 +9125,7 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
           </div>
           ${!hasMatch ? '<div class="anomaly-unmatched-note">The agent flagged this pattern but the specific row could not be automatically identified.</div>' : ""}
           <button class="anomaly-toggle" type="button" ${hasMatch ? `data-anomaly-toggle="${escapeHtml(anomaly.id)}"` : "disabled"}>
-            <span>${hasMatch ? "View anomalous row →" : "No matching row found"}</span>
+            <span>${hasMatch ? "View anomalous row ->" : "No matching row found"}</span>
             ${hasMatch ? renderAnomalyChevron(expanded) : ""}
           </button>
           ${renderAnomalyExpandedTable(anomaly, headers, sourceLabel, totalRows)}
@@ -8705,3 +9266,4 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
   </script>
 </body>
 </html>
+
