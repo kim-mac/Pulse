@@ -420,7 +420,7 @@
       letter-spacing: 0.16em;
       text-transform: uppercase;
     }
-    .hero-title { font-size: clamp(42px, 8vw, 76px); line-height: 0.98; max-width: 10ch; }
+    .hero-title { font-size: clamp(34px, 5.4vw, 58px); line-height: 1.04; max-width: 13ch; }
     .hero-subtitle { margin: 14px 0 0; max-width: 52ch; color: var(--text-secondary); }
     .hero-rail, .info-note, .mini-panel, .list-card, .tier-card, .modal-note {
       padding: 16px;
@@ -557,6 +557,149 @@
       max-width: 420px;
       margin-left: auto;
       margin-top: 26px;
+    }
+    .history-section {
+      margin-top: 20px;
+      padding: 20px;
+      border-radius: 10px;
+      border: 1px solid rgba(26,26,46,0.08);
+      background: rgba(26,26,46,0.03);
+    }
+    .history-section .section-intro {
+      margin-bottom: 14px;
+    }
+    .history-list {
+      display: grid;
+      gap: 12px;
+    }
+    .history-card {
+      padding: 16px;
+      border-radius: 10px;
+      border: 1px solid rgba(26,26,46,0.08);
+      background: rgba(255,255,255,0.82);
+    }
+    .history-card.active {
+      border-color: rgba(26, 26, 46, 0.24);
+      box-shadow: inset 0 0 0 1px rgba(26, 26, 46, 0.08);
+    }
+    .history-card-header,
+    .history-card-meta,
+    .history-card-actions,
+    .change-detection-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+    .history-card-header {
+      margin-bottom: 10px;
+    }
+    .history-card-meta {
+      justify-content: flex-start;
+      margin-top: 12px;
+    }
+    .history-card-title {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+    .history-card-summary {
+      margin: 0;
+      color: var(--text-secondary);
+      font-size: 13px;
+    }
+    .history-section .secondary-button,
+    .history-section .ghost-button {
+      border-radius: 10px;
+    }
+    .history-toggle {
+      padding: 0 2px;
+      border: 0;
+      background: transparent;
+      color: var(--text-secondary);
+      font-size: 14px;
+      line-height: 1;
+      box-shadow: none;
+    }
+    .history-toggle:hover,
+    .history-toggle:focus-visible {
+      color: var(--ink);
+      background: transparent;
+      transform: none;
+      outline: none;
+    }
+    .guide-page {
+      padding: 24px;
+      margin-bottom: 28px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.82);
+      box-shadow: var(--shadow);
+    }
+    .guide-hero {
+      padding: 22px;
+      border-radius: 10px;
+      border: 1px solid rgba(26,26,46,0.08);
+      background: linear-gradient(145deg, rgba(255,255,255,0.92), rgba(245,242,238,0.88)), var(--card);
+    }
+    .guide-grid {
+      display: grid;
+      gap: 18px;
+      margin-top: 20px;
+    }
+    .guide-card {
+      padding: 18px;
+      border-radius: 10px;
+      border: 1px solid rgba(26,26,46,0.08);
+      background: rgba(26,26,46,0.03);
+    }
+    .guide-card ul,
+    .guide-card ol {
+      margin: 12px 0 0;
+      padding-left: 18px;
+    }
+    .guide-card p {
+      margin: 0;
+    }
+    .guide-step-list {
+      display: grid;
+      gap: 12px;
+      margin-top: 14px;
+    }
+    .guide-step {
+      padding: 16px;
+      border-radius: 10px;
+      border: 1px solid rgba(26,26,46,0.08);
+      background: rgba(255,255,255,0.82);
+    }
+    .history-empty {
+      padding: 18px;
+      border-radius: 10px;
+      border: 1px dashed rgba(26,26,46,0.12);
+      color: var(--text-secondary);
+      background: rgba(255,255,255,0.52);
+    }
+    .change-detection-card {
+      margin-top: 20px;
+      padding: 18px;
+      border-radius: 10px;
+      border: 1px solid rgba(26,26,46,0.08);
+      background: rgba(26,26,46,0.03);
+    }
+    .change-detection-card ul {
+      margin: 12px 0 0;
+      padding-left: 18px;
+    }
+    .change-detection-card li {
+      margin-bottom: 10px;
+    }
+    .change-detection-card li:last-child {
+      margin-bottom: 0;
+    }
+    .change-detection-card .pill {
+      margin-right: 8px;
     }
     #csvPage.query-panel {
       border-radius: 10px;
@@ -879,6 +1022,63 @@
       letter-spacing: -0.02em;
     }
     .score-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 18px; }
+    .reliability-summary {
+      margin-top: 18px;
+      padding: 16px 18px;
+      border-radius: 18px;
+      border: 1px solid rgba(26,26,46,0.08);
+      background: rgba(26,26,46,0.03);
+      display: grid;
+      gap: 10px;
+    }
+    .reliability-topline {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .reliability-copy {
+      margin: 0;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+    .reliability-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+    .freshness-pill.fresh {
+      background: rgba(59, 109, 17, 0.08);
+      color: var(--success);
+    }
+    .freshness-pill.recent {
+      background: rgba(183, 119, 13, 0.08);
+      color: var(--notable);
+    }
+    .freshness-pill.older,
+    .freshness-pill.unknown {
+      background: rgba(26,26,46,0.05);
+      color: var(--fyi);
+    }
+    .confidence-pill.high {
+      background: rgba(59, 109, 17, 0.08);
+      color: var(--success);
+    }
+    .confidence-pill.medium {
+      background: rgba(183, 119, 13, 0.08);
+      color: var(--notable);
+    }
+    .confidence-pill.low {
+      background: rgba(192, 57, 43, 0.08);
+      color: var(--urgent);
+    }
+    .reliability-note {
+      margin: 0;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
     .score-card {
       padding: 18px;
       border-radius: 22px;
@@ -3052,6 +3252,7 @@
         <div class="topbar-actions">
           <span class="badge" id="providerStatusBadge">Not connected</span>
   <button class="ghost-button" type="button" id="apiKeyButton">Add API Key</button>
+          <button class="ghost-button" type="button" id="guideButton">Guide</button>
           <button class="ghost-button" type="button" id="newQueryButton">New Query</button>
           <button class="ghost-button" type="button" id="openCsvButton">Analyze CSV</button>
         </div>
@@ -3062,19 +3263,19 @@
         <section class="hero">
           <div class="hero-grid">
             <div>
-              <div class="eyebrow">Editorial intelligence in under 60 seconds</div>
-              <h1 class="hero-title" id="heroTitle">Type anything. Five agents watch it.</h1>
-              <p class="hero-subtitle">PulseBoard turns a company, industry, or trend into a live intelligence brief. News, hiring, sentiment, regulatory pressure, and competitor motion arrive in parallel, then collapse into one concise briefing you can act on.</p>
+              <div class="eyebrow">AI intelligence monitor for fast-moving signals</div>
+              <h1 class="hero-title" id="heroTitle">PulseBoard turns scattered market signals and internal data into decision-ready briefs.</h1>
+              <p class="hero-subtitle">Monitor a company, industry, or trend in under a minute. Five signal streams run in parallel, then collapse into one ranked brief that tells you what matters, what changed, and what to do next.</p>
             </div>
             <aside class="hero-rail">
               <div class="mini-panel">
                 <div class="metric-label">Signal channels</div>
                 <div class="metric-value">5 live agents</div>
-                <div class="muted">Each card resolves independently as results arrive.</div>
+                <div class="muted">News, hiring, sentiment, regulatory pressure, and competitor motion arrive independently, then feed one brief.</div>
               </div>
               <div class="mini-panel">
-                <div class="metric-label">Connection model</div>
-                <div class="muted">Add a provider key for this tab, then launch a monitoring run or CSV analysis when you're ready.</div>
+                <div class="metric-label">Core outcome</div>
+                <div class="muted">One decision-ready brief with urgency-ranked findings, recommended actions, and change detection across runs.</div>
               </div>
             </aside>
           </div>
@@ -3085,39 +3286,119 @@
             <article class="how-it-works-card">
               <p class="explain-label">Signal coverage</p>
               <p class="explain-title">5 agents fire simultaneously</p>
-              <p class="explain-copy">News, hiring signals, sentiment, regulatory changes, and competitor moves - each watched by a dedicated agent, all running in parallel.</p>
+              <p class="explain-copy">News, hiring signals, sentiment, regulatory changes, and competitor moves are each watched by a dedicated agent, all running in parallel.</p>
             </article>
             <article class="how-it-works-card">
               <p class="explain-label">Who it's for</p>
-              <p class="explain-title">Students and companies, equally</p>
-              <p class="explain-copy">Students research companies before interviews. Recruiters monitor competitors. Analysts track markets. Same tool, different intent.</p>
+              <p class="explain-title">Built for students, analysts, and operators</p>
+              <p class="explain-copy">Students use it for company research, analysts track markets faster, and teams monitor competitors or industry movement without stitching tools together.</p>
             </article>
             <article class="how-it-works-card">
               <p class="explain-label">The output</p>
               <p class="explain-title">One brief, ranked by urgency</p>
-              <p class="explain-copy">Everything collapses into Urgent, Notable, and FYI - so you act on what matters and skip what doesn't.</p>
+              <p class="explain-copy">Everything collapses into Urgent, Notable, and FYI so you can act on what matters instead of sorting through scattered sources.</p>
             </article>
           </div>
 
           <section class="two-sided-card" aria-labelledby="twoSidedValueHeading">
             <div class="value-column">
-              <h2 class="value-column-title" id="twoSidedValueHeading">For students</h2>
+              <h2 class="value-column-title" id="twoSidedValueHeading">Practical workflows</h2>
               <div class="value-list">
-                <div class="value-item"><span class="value-dot" aria-hidden="true"></span><p class="value-text">Research any company before an interview - news, hiring trends, and public perception in 60 seconds</p></div>
-                <div class="value-item"><span class="value-dot" aria-hidden="true"></span><p class="value-text">Track an industry for a case competition or class project without spending hours searching</p></div>
-                <div class="value-item"><span class="value-dot" aria-hidden="true"></span><p class="value-text">Upload a CSV and get an instant analyst-quality brief with charts and anomaly detection</p></div>
+                <div class="value-item"><span class="value-dot" aria-hidden="true"></span><p class="value-text">Monitor a company before an interview, case competition, meeting, or client conversation in under 60 seconds</p></div>
+                <div class="value-item"><span class="value-dot" aria-hidden="true"></span><p class="value-text">Track an industry or competitor over time and see what changed between runs instead of starting from zero</p></div>
+                <div class="value-item"><span class="value-dot" aria-hidden="true"></span><p class="value-text">Upload internal CSV data, analyze it instantly, and cross-reference it with live external signals</p></div>
               </div>
             </div>
             <div class="value-divider" aria-hidden="true"></div>
             <div class="value-column right">
-              <h2 class="value-column-title">For companies</h2>
+              <h2 class="value-column-title">Why PulseBoard matters</h2>
               <div class="value-list">
-                <div class="value-item"><span class="value-dot" aria-hidden="true"></span><p class="value-text">Monitor competitors, regulatory changes, and market signals without paying for Bloomberg or Crayon</p></div>
-                <div class="value-item"><span class="value-dot" aria-hidden="true"></span><p class="value-text">See how students and candidates actually perceive your employer brand before they apply</p></div>
-                <div class="value-item"><span class="value-dot" aria-hidden="true"></span><p class="value-text">Analyze internal sales or ops data and cross-reference it against live market intelligence</p></div>
+                <div class="value-item"><span class="value-dot" aria-hidden="true"></span><p class="value-text">Most research workflows are slow because the signals live in too many places. PulseBoard brings them into one system and ranks what matters.</p></div>
+                <div class="value-item"><span class="value-dot" aria-hidden="true"></span><p class="value-text">The monitoring brief is built to be decision-ready, not just descriptive, with ranked findings and recommended actions.</p></div>
+                <div class="value-item"><span class="value-dot" aria-hidden="true"></span><p class="value-text">Interview prep and CSV analysis extend the same intelligence workflow instead of feeling like disconnected side tools.</p></div>
               </div>
             </div>
           </section>
+        </div>
+      </section>
+
+      <section class="guide-page" id="guidePage" aria-labelledby="guideHeading" hidden>
+        <div class="guide-hero">
+          <div class="section-intro">
+            <div>
+              <h2 class="section-title" id="guideHeading">How to Use PulseBoard</h2>
+              <p class="section-subtitle">A practical walkthrough of every major PulseBoard feature, when to use it, and what output to expect.</p>
+            </div>
+            <span class="badge">Guide</span>
+          </div>
+          <p class="one-line-summary" style="font-size:28px;">PulseBoard is an AI intelligence monitor that turns scattered external signals and internal data into decision-ready briefs.</p>
+        </div>
+        <div class="guide-grid">
+          <article class="guide-card">
+            <p class="query-label">Start here</p>
+            <p class="section-subtitle" style="margin-top:6px;">Best first path for judges and first-time users.</p>
+            <div class="guide-step-list">
+              <div class="guide-step"><strong>1. Add API Key</strong><p class="section-subtitle" style="margin-top:6px;">Connect one supported provider for this browser tab so PulseBoard can run live monitoring and CSV analysis.</p></div>
+              <div class="guide-step"><strong>2. Run New Query monitoring</strong><p class="section-subtitle" style="margin-top:6px;">Enter a company, industry, or trend, choose a monitoring mode, and let the five agents gather signals in parallel.</p></div>
+              <div class="guide-step"><strong>3. Read the Intelligence Brief</strong><p class="section-subtitle" style="margin-top:6px;">Review the ranked findings, recommended actions, and change-detection summary for the latest run.</p></div>
+            </div>
+          </article>
+          <article class="guide-card">
+            <p class="query-label">New Query Monitoring</p>
+            <ul>
+              <li><strong>What it does:</strong> Monitors a company, industry, or trend across news, hiring, sentiment, regulatory pressure, and competitor movement.</li>
+              <li><strong>When to use it:</strong> Before interviews, market scans, competitive reviews, strategy work, or fast-moving research tasks.</li>
+              <li><strong>What you get:</strong> A live agent dashboard and one intelligence brief with Urgent, Notable, FYI, recommended actions, and monitoring cadence.</li>
+            </ul>
+          </article>
+          <article class="guide-card">
+            <p class="query-label">Interview Prep</p>
+            <ul>
+              <li><strong>What it does:</strong> Builds a company-specific interview prep brief using the same monitoring engine, but tuned for role expectations and interview signals.</li>
+              <li><strong>When to use it:</strong> Before interviews when you need fast context on company changes, candidate themes, and role-specific prep direction.</li>
+              <li><strong>What you get:</strong> A prep brief with rounds, confidence, prep plan, warnings, and supporting notes.</li>
+            </ul>
+          </article>
+          <article class="guide-card">
+            <p class="query-label">CSV Analyst</p>
+            <ul>
+              <li><strong>What it does:</strong> Analyzes a single uploaded CSV for quality, schema, trends, anomalies, and key storylines.</li>
+              <li><strong>When to use it:</strong> When you want a fast internal-data read before a meeting, project review, or decision.</li>
+              <li><strong>What you get:</strong> A structured analyst-style brief with charts, quality scoring, and anomaly detection.</li>
+            </ul>
+          </article>
+          <article class="guide-card">
+            <p class="query-label">Compare Two Files</p>
+            <ul>
+              <li><strong>What it does:</strong> Compares two CSVs side by side to highlight quality differences, metric shifts, schema drift, and the most important change.</li>
+              <li><strong>When to use it:</strong> When you need a before-vs-after snapshot across two datasets.</li>
+              <li><strong>What you get:</strong> A comparison brief with a top key insight, file-overview cards, metric changes, and difference summaries.</li>
+            </ul>
+          </article>
+          <article class="guide-card">
+            <p class="query-label">Cross-Reference Internal and External Signals</p>
+            <ul>
+              <li><strong>What it does:</strong> Combines uploaded CSV findings with live external monitoring signals so you can see what your internal data means in the context of the market.</li>
+              <li><strong>When to use it:</strong> When you want to connect internal sales, ops, customer, or performance data to competitor movement, sentiment, hiring patterns, or broader market changes.</li>
+              <li><strong>What you get:</strong> A synthesized view of internal signal, external signal, and the combined takeaway so the dataset becomes more decision-ready than a standalone CSV read.</li>
+            </ul>
+          </article>
+          <article class="guide-card">
+            <p class="query-label">Recent Monitoring Runs</p>
+            <ul>
+              <li><strong>What it does:</strong> Saves completed monitoring runs locally in the browser so you can reopen a prior snapshot or rerun the same topic.</li>
+              <li><strong>When to use it:</strong> When you want to track a topic over time instead of treating each run as a one-off scan.</li>
+              <li><strong>What you get:</strong> Saved runs, re-run shortcuts, and a “What Changed Since Last Run” summary when PulseBoard finds a prior comparable run.</li>
+            </ul>
+          </article>
+          <article class="guide-card">
+            <p class="query-label">Provider Setup</p>
+            <ul>
+              <li><strong>What it does:</strong> Lets you connect OpenAI, Anthropic, Gemini, or NVIDIA for the current tab session.</li>
+              <li><strong>When to use it:</strong> Before any live monitoring or CSV analysis.</li>
+              <li><strong>What you get:</strong> A session-only connection that clears on refresh and powers the rest of the app without permanently storing credentials.</li>
+            </ul>
+          </article>
         </div>
       </section>
 
@@ -3286,6 +3567,7 @@
             <div class="inline-alert" id="statusMessage">Choose a supported provider and then launch a monitoring run.</div>
           </div>
         </form>
+        <section class="history-section" id="runHistorySection" aria-labelledby="runHistoryHeading"></section>
       </section>
 
       <section class="query-panel" id="csvPage" aria-labelledby="csvHeading" hidden>
@@ -3433,10 +3715,14 @@
 
     const ROUTES = {
       home: "/",
+      guide: "/guide",
       query: "/query",
       csv: "/csv",
       apiKey: "/api-key"
     };
+    const MONITORING_HISTORY_STORAGE_KEY = "pulseboardMonitoringHistory";
+    const MAX_MONITORING_HISTORY_ITEMS = 18;
+    const MONITORING_HISTORY_MODES = ["general", "company", "jobmarket", "esg", "industry"];
 
     const MODE_MODIFIERS = {
       general: "Provide balanced coverage across all signal types.",
@@ -3631,6 +3917,9 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
       schemaExpanded: true,
       runCount: 0,
       activeRunId: 0,
+      runHistory: [],
+      selectedHistoryRunId: null,
+      runHistoryCollapsed: false,
       homeExplanationCollapsed: false,
       dashboardVisible: false,
       briefVisible: false,
@@ -3649,6 +3938,8 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
       renderDemoChips();
       renderAgentCards();
       bindEvents();
+      state.runHistory = loadRunHistory();
+      renderRunHistorySection();
       syncProviderForm();
       syncQueryModeUi();
       renderCsvMode();
@@ -3668,10 +3959,11 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
 
     function cacheElements() {
         const ids = [
-          "topbarMonitoringLabel", "providerStatusBadge", "apiKeyButton", "newQueryButton", "brandHomeButton",
-          "homePage", "homeExplanation", "apiKeyPage", "apiKeyHelpSection", "connectionStateMessage",
+          "topbarMonitoringLabel", "providerStatusBadge", "apiKeyButton", "guideButton", "newQueryButton", "brandHomeButton",
+          "homePage", "homeExplanation", "guidePage", "apiKeyPage", "apiKeyHelpSection", "connectionStateMessage",
           "openCsvButton", "queryPage", "csvPage", "queryConnectionPrompt", "csvConnectionPrompt", "queryConnectButton", "csvConnectButton", "topicInput",
         "modeSelect", "roleInput", "interviewRoleGroup", "queryForm", "runButton", "statusMessage", "runCounterBadge", "chipRow",
+        "runHistorySection",
         "dashboard", "dashboardSubtitle", "dashboardModePill", "progressLabel", "progressFill",
         "progressDetail", "aggregatorBanner", "agentGrid", "briefSection", "csvResultSection",
         "connectionForm", "providerSelect", "providerHelpShortcut", "providerModelInput", "providerApiKeyInput",
@@ -3689,6 +3981,7 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
       window.addEventListener("popstate", handlePopState);
       elements.brandHomeButton.addEventListener("click", () => navigateTo("home"));
         elements.apiKeyButton.addEventListener("click", openConnectionModal);
+        elements.guideButton.addEventListener("click", () => navigateTo("guide"));
         if (elements.closeConnectionButton) elements.closeConnectionButton.addEventListener("click", closeConnectionModal);
         elements.newQueryButton.addEventListener("click", handleNewQueryClick);
         elements.openCsvButton.addEventListener("click", handleCsvEntryClick);
@@ -3708,6 +4001,7 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
       elements.modeSelect.addEventListener("change", syncQueryModeUi);
       elements.connectionForm.addEventListener("submit", saveConnectionFromForm);
       elements.queryForm.addEventListener("submit", handleRunSubmit);
+      elements.runHistorySection?.addEventListener("click", handleRunHistoryClick);
       elements.csvForm.addEventListener("submit", handleCsvSubmit);
       elements.qualityPreviewContainer.addEventListener("click", handleSinglePreviewInteraction);
       elements.qualityPreviewContainer.addEventListener("change", handleSinglePreviewInputChange);
@@ -3872,6 +4166,344 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
 
     function createInitialResults() {
       return { news: null, jobs: null, sentiment: null, regulatory: null, competitor: null, aggregator: null };
+    }
+
+    function isMonitoringHistoryMode(mode) {
+      return MONITORING_HISTORY_MODES.includes(String(mode || "").toLowerCase());
+    }
+
+    function normalizeHistoryTopic(topic) {
+      return String(topic || "").trim().toLowerCase().replace(/\s+/g, " ");
+    }
+
+    function cloneSerializable(value) {
+      if (value === null || value === undefined) return value;
+      return JSON.parse(JSON.stringify(value));
+    }
+
+    function serializeMonitoringRunForHistory(input) {
+      if (!input || !isMonitoringHistoryMode(input.mode) || !input.brief) return null;
+      const timestamp = typeof input.timestamp === "string" && input.timestamp ? input.timestamp : new Date().toISOString();
+      const topic = String(input.topic || "").trim();
+      if (!topic) return null;
+      const agentResults = {
+        news: cloneSerializable(input.agentResults?.news || null),
+        jobs: cloneSerializable(input.agentResults?.jobs || null),
+        sentiment: cloneSerializable(input.agentResults?.sentiment || null),
+        regulatory: cloneSerializable(input.agentResults?.regulatory || null),
+        competitor: cloneSerializable(input.agentResults?.competitor || null)
+      };
+      return {
+        id: input.id || `${normalizeHistoryTopic(topic).replace(/[^a-z0-9]+/g, "-") || "run"}-${String(input.mode)}-${Number(input.runId || Date.now())}-${Date.parse(timestamp) || Date.now()}`,
+        runId: Number(input.runId || 0),
+        topic,
+        topicKey: normalizeHistoryTopic(topic),
+        mode: String(input.mode),
+        role: "",
+        timestamp,
+        brief: cloneSerializable(input.brief),
+        agentResults,
+        summary: {
+          riskScore: normalizeMetricValue(input.brief?.overallRiskScore),
+          opportunityScore: normalizeMetricValue(input.brief?.overallOpportunityScore),
+          urgentCount: Array.isArray(input.brief?.urgent) ? input.brief.urgent.length : 0,
+          notableCount: Array.isArray(input.brief?.notable) ? input.brief.notable.length : 0,
+          fyiCount: Array.isArray(input.brief?.fyi) ? input.brief.fyi.length : 0
+        }
+      };
+    }
+
+    function loadRunHistory() {
+      try {
+        const raw = window.localStorage.getItem(MONITORING_HISTORY_STORAGE_KEY);
+        if (!raw) return [];
+        const parsed = JSON.parse(raw);
+        if (!Array.isArray(parsed)) return [];
+        return parsed
+          .filter((item) => item && typeof item === "object" && isMonitoringHistoryMode(item.mode) && item.topic && item.brief)
+          .sort((a, b) => Date.parse(b.timestamp || "") - Date.parse(a.timestamp || ""));
+      } catch (error) {
+        return [];
+      }
+    }
+
+    function saveRunHistory(runHistory) {
+      try {
+        window.localStorage.setItem(MONITORING_HISTORY_STORAGE_KEY, JSON.stringify(runHistory));
+      } catch (error) {
+        return false;
+      }
+      return true;
+    }
+
+    function saveMonitoringRunToHistory(runRecord) {
+      if (!runRecord) return null;
+      const withoutDuplicate = state.runHistory.filter((item) => item.id !== runRecord.id);
+      const nextHistory = [runRecord, ...withoutDuplicate]
+        .sort((a, b) => Date.parse(b.timestamp || "") - Date.parse(a.timestamp || ""))
+        .slice(0, MAX_MONITORING_HISTORY_ITEMS);
+      state.runHistory = nextHistory;
+      saveRunHistory(nextHistory);
+      renderRunHistorySection();
+      return runRecord;
+    }
+
+    function getSelectedHistoryRun() {
+      return state.runHistory.find((item) => item.id === state.selectedHistoryRunId) || null;
+    }
+
+    function getPreviousComparableRun(currentRun) {
+      if (!currentRun) return null;
+      return state.runHistory
+        .filter((item) => item.id !== currentRun.id && item.mode === currentRun.mode && item.topicKey === currentRun.topicKey)
+        .sort((a, b) => Date.parse(b.timestamp || "") - Date.parse(a.timestamp || ""))
+        [0] || null;
+    }
+
+    function formatHistoryTimestamp(timestamp) {
+      const date = new Date(timestamp);
+      if (Number.isNaN(date.getTime())) return "Saved run";
+      return new Intl.DateTimeFormat("en-US", {
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit"
+      }).format(date);
+    }
+
+    function escapeHtmlAttribute(value) {
+      return escapeHtml(String(value || ""));
+    }
+
+    function getFindingTexts(items, keyName) {
+      return new Set((Array.isArray(items) ? items : [])
+        .map((item) => String(item?.[keyName] || "").trim())
+        .filter(Boolean));
+    }
+
+    function buildSetDifference(nextSet, previousSet) {
+      return [...nextSet].filter((item) => !previousSet.has(item));
+    }
+
+    function compareNumericSignal(currentValue, previousValue, increasedText, decreasedText) {
+      const currentNumber = Number(currentValue);
+      const previousNumber = Number(previousValue);
+      if (!Number.isFinite(currentNumber) || !Number.isFinite(previousNumber)) return null;
+      if (currentNumber > previousNumber) return increasedText;
+      if (currentNumber < previousNumber) return decreasedText;
+      return null;
+    }
+
+    function buildChangeDetectionSummary(currentRun, previousRun) {
+      if (!currentRun || !previousRun) return [];
+      const changes = [];
+      const currentBrief = currentRun.brief || {};
+      const previousBrief = previousRun.brief || {};
+
+      const riskShift = compareNumericSignal(
+        currentBrief.overallRiskScore,
+        previousBrief.overallRiskScore,
+        "Risk score increased since the last run.",
+        "Risk score eased since the last run."
+      );
+      if (riskShift) changes.push({ tone: riskShift.includes("eased") ? "positive" : "danger", text: riskShift });
+
+      const opportunityShift = compareNumericSignal(
+        currentBrief.overallOpportunityScore,
+        previousBrief.overallOpportunityScore,
+        "Opportunity score increased since the last run.",
+        "Opportunity score softened since the last run."
+      );
+      if (opportunityShift) changes.push({ tone: opportunityShift.includes("increased") ? "positive" : "warning", text: opportunityShift });
+
+      const currentUrgent = getFindingTexts(currentBrief.urgent, "finding");
+      const previousUrgent = getFindingTexts(previousBrief.urgent, "finding");
+      const addedUrgent = buildSetDifference(currentUrgent, previousUrgent);
+      const removedUrgent = buildSetDifference(previousUrgent, currentUrgent);
+      if (addedUrgent.length) changes.push({ tone: "danger", text: `New urgent item appeared: ${addedUrgent[0]}.` });
+      if (removedUrgent.length) changes.push({ tone: "positive", text: `Urgent item cleared: ${removedUrgent[0]}.` });
+
+      const currentNotable = getFindingTexts(currentBrief.notable, "finding");
+      const previousNotable = getFindingTexts(previousBrief.notable, "finding");
+      const addedNotable = buildSetDifference(currentNotable, previousNotable);
+      if (addedNotable.length) changes.push({ tone: "warning", text: `New notable development: ${addedNotable[0]}.` });
+
+      const currentActions = new Set((Array.isArray(currentBrief.recommendedActions) ? currentBrief.recommendedActions : []).map((item) => String(item || "").trim()).filter(Boolean));
+      const previousActions = new Set((Array.isArray(previousBrief.recommendedActions) ? previousBrief.recommendedActions : []).map((item) => String(item || "").trim()).filter(Boolean));
+      const newActions = buildSetDifference(currentActions, previousActions);
+      if (newActions.length) changes.push({ tone: "neutral", text: `Recommended action changed: ${newActions[0]}.` });
+
+      const currentSentimentScore = currentRun.agentResults?.sentiment?.sentimentScore;
+      const previousSentimentScore = previousRun.agentResults?.sentiment?.sentimentScore;
+      const sentimentShift = compareNumericSignal(
+        previousSentimentScore,
+        currentSentimentScore,
+        "Sentiment weakened since the last run.",
+        "Sentiment improved since the last run."
+      );
+      if (sentimentShift) changes.push({ tone: sentimentShift.includes("improved") ? "positive" : "warning", text: sentimentShift });
+
+      const currentVelocity = currentRun.agentResults?.jobs?.velocityScore;
+      const previousVelocity = previousRun.agentResults?.jobs?.velocityScore;
+      const hiringShift = compareNumericSignal(
+        currentVelocity,
+        previousVelocity,
+        "Hiring momentum strengthened.",
+        "Hiring momentum cooled."
+      );
+      if (hiringShift) changes.push({ tone: hiringShift.includes("strengthened") ? "positive" : "warning", text: hiringShift });
+
+      const currentRegRisk = String(currentRun.agentResults?.regulatory?.regulatoryRisk || "").toLowerCase();
+      const previousRegRisk = String(previousRun.agentResults?.regulatory?.regulatoryRisk || "").toLowerCase();
+      if (currentRegRisk && previousRegRisk && currentRegRisk !== previousRegRisk) {
+        changes.push({ tone: currentRegRisk === "high" || currentRegRisk === "critical" ? "danger" : "neutral", text: `Regulatory posture shifted from ${previousRegRisk} to ${currentRegRisk}.` });
+      }
+
+      const currentLandscape = String(currentRun.agentResults?.competitor?.competitiveLandscape || "").trim();
+      const previousLandscape = String(previousRun.agentResults?.competitor?.competitiveLandscape || "").trim();
+      if (currentLandscape && previousLandscape && currentLandscape !== previousLandscape) {
+        changes.push({ tone: "warning", text: `Competitive landscape moved from ${previousLandscape} to ${currentLandscape}.` });
+      }
+
+      return changes.slice(0, 6);
+    }
+
+    function renderChangeDetectionPanel(currentRun) {
+      const previousRun = getPreviousComparableRun(currentRun);
+      const changes = buildChangeDetectionSummary(currentRun, previousRun);
+      if (!previousRun || !changes.length) return "";
+      return `
+        <div class="change-detection-card">
+          <div class="change-detection-header">
+            <div>
+              <div class="query-label">What Changed Since Last Run</div>
+              <p class="section-subtitle" style="margin-top:4px;">Compared with ${escapeHtml(formatHistoryTimestamp(previousRun.timestamp))} for the same topic and mode.</p>
+            </div>
+            <span class="badge">${escapeHtml(MODE_LABELS[currentRun.mode] || currentRun.mode)}</span>
+          </div>
+          <ul>${changes.map((change) => `<li><span class="pill ${change.tone || "neutral"}">${escapeHtml(change.tone || "neutral")}</span> ${escapeHtml(change.text)}</li>`).join("")}</ul>
+        </div>
+      `;
+    }
+
+    function renderRunHistorySection() {
+      if (!elements.runHistorySection) return;
+      const history = state.runHistory.filter((item) => isMonitoringHistoryMode(item.mode));
+      const toggleIcon = state.runHistoryCollapsed ? "▼" : "▲";
+      const toggleLabel = state.runHistoryCollapsed ? "Expand recent monitoring runs" : "Collapse recent monitoring runs";
+      elements.runHistorySection.innerHTML = `
+        <div class="section-intro">
+          <div>
+            <h3 class="section-title" id="runHistoryHeading">Recent Monitoring Runs</h3>
+            <p class="section-subtitle">Reopen prior snapshots, compare signal movement, or rerun a saved topic in one click.</p>
+          </div>
+          <div class="history-card-actions">
+            <span class="badge">${history.length} saved</span>
+            <button class="history-toggle" type="button" data-history-action="toggle-collapse" aria-expanded="${state.runHistoryCollapsed ? "false" : "true"}" aria-label="${toggleLabel}" title="${toggleLabel}">${toggleIcon}</button>
+          </div>
+        </div>
+        ${history.length && !state.runHistoryCollapsed ? `<div class="history-list">${history.map((item) => `
+          <article class="history-card${item.id === state.selectedHistoryRunId ? " active" : ""}">
+            <div class="history-card-header">
+              <div>
+                <p class="history-card-title">${escapeHtml(item.topic)}</p>
+                <p class="history-card-summary">${escapeHtml(formatHistoryTimestamp(item.timestamp))} · ${escapeHtml(MODE_LABELS[item.mode] || item.mode)}</p>
+              </div>
+              <div class="history-card-actions">
+                <button class="secondary-button" type="button" data-history-action="restore" data-history-id="${escapeHtmlAttribute(item.id)}">Open Snapshot</button>
+                <button class="ghost-button" type="button" data-history-action="rerun" data-history-id="${escapeHtmlAttribute(item.id)}">Re-run</button>
+              </div>
+            </div>
+            <p class="history-card-summary">${escapeHtml(item.brief?.oneLineSummary || "Saved monitoring snapshot.")}</p>
+            <div class="history-card-meta">
+              <span class="pill neutral">Risk ${escapeHtml(String(item.summary?.riskScore ?? "--"))}</span>
+              <span class="pill positive">Opportunity ${escapeHtml(String(item.summary?.opportunityScore ?? "--"))}</span>
+              <span class="tag neutral">${escapeHtml(String(item.summary?.urgentCount ?? 0))} urgent</span>
+              <span class="tag neutral">${escapeHtml(String(item.summary?.notableCount ?? 0))} notable</span>
+            </div>
+          </article>
+        `).join("")}</div>` : history.length ? `<div class="history-empty">Saved monitoring runs are collapsed. Choose Expand to view them again.</div>` : `<div class="history-empty">No monitoring snapshots saved yet. Complete a New Query monitoring run and it will appear here automatically.</div>`}
+      `;
+    }
+
+    function restoreMonitoringRunFromHistory(runId) {
+      const run = state.runHistory.find((item) => item.id === runId);
+      if (!run) return;
+      state.selectedHistoryRunId = run.id;
+      state.topic = run.topic;
+      state.mode = run.mode;
+      state.role = "";
+      elements.topicInput.value = run.topic;
+      elements.modeSelect.value = run.mode;
+      elements.roleInput.value = "";
+      syncQueryModeUi();
+      resetRunState();
+      state.agentResults = {
+        ...createInitialResults(),
+        ...cloneSerializable(run.agentResults || {}),
+        aggregator: cloneSerializable(run.brief)
+      };
+      state.dashboardVisible = true;
+      state.briefVisible = true;
+      navigateTo("query");
+      renderAgentCards();
+      for (const agent of getActiveAgentConfigs()) {
+        const result = run.agentResults?.[agent.key];
+        if (result?.error) {
+          updateAgentStatus(agent.key, "error");
+          renderAgentError(agent.key, result.message || result);
+          continue;
+        }
+        if (result) {
+          updateAgentStatus(agent.key, "complete");
+          renderAgentOutput(agent.key, result);
+          continue;
+        }
+        updateAgentStatus(agent.key, "waiting");
+        setAgentCardVisibility(agent.key, false);
+      }
+      elements.dashboardSubtitle.textContent = `Monitoring: "${run.topic}"`;
+      elements.dashboardModePill.textContent = `Mode: ${MODE_LABELS[run.mode] || run.mode}`;
+      elements.aggregatorBanner.classList.remove("visible");
+      setRunButtonIdleState();
+      renderBrief(run.brief);
+      renderRunHistorySection();
+      setStatusMessage(`Restored monitoring snapshot from ${formatHistoryTimestamp(run.timestamp)}.`, "complete");
+    }
+
+    async function rerunMonitoringRunFromHistory(runId) {
+      const run = state.runHistory.find((item) => item.id === runId);
+      if (!run) return;
+      elements.topicInput.value = run.topic;
+      elements.modeSelect.value = run.mode;
+      elements.roleInput.value = "";
+      syncQueryModeUi();
+      if (!state.connection) {
+        navigateTo("apiKey");
+        setStatusMessage("Reconnect a provider to rerun this saved monitoring topic.", "warning");
+        return;
+      }
+      await handleRunSubmit({ preventDefault() {} });
+    }
+
+    function handleRunHistoryClick(event) {
+      const actionButton = event.target.closest("[data-history-action]");
+      if (!actionButton) return;
+      const action = actionButton.getAttribute("data-history-action");
+      if (action === "toggle-collapse") {
+        state.runHistoryCollapsed = !state.runHistoryCollapsed;
+        renderRunHistorySection();
+        return;
+      }
+      const runId = actionButton.getAttribute("data-history-id");
+      if (!runId) return;
+      if (action === "restore") {
+        restoreMonitoringRunFromHistory(runId);
+        return;
+      }
+      if (action === "rerun") {
+        rerunMonitoringRunFromHistory(runId);
+      }
     }
 
     function createInitialCrossReferenceState() {
@@ -4063,6 +4695,7 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
 
     function getRouteFromLocation() {
       const pathname = window.location.pathname.replace(/\/+$/, "") || "/";
+      if (pathname === "/guide") return "guide";
       if (pathname === "/query") return "query";
       if (pathname === "/csv") return "csv";
       if (pathname === "/api-key") return "apiKey";
@@ -4452,6 +5085,7 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
 
       function applyRouteState() {
         const showHome = state.route === "home";
+        const showGuide = state.route === "guide";
         const showQuery = state.route === "query";
         const showCsv = state.route === "csv";
         const showApiKey = state.route === "apiKey";
@@ -4459,6 +5093,7 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
         document.body.classList.toggle("home-dark-mode", showHome && state.homeTheme === "dark");
         elements.homePage.hidden = !showHome;
         syncHomeExplanationState();
+        elements.guidePage.hidden = !showGuide;
         elements.apiKeyPage.hidden = !showApiKey;
         elements.apiKeyHelpSection.hidden = !showApiKey;
         elements.queryPage.hidden = !showQuery;
@@ -4495,6 +5130,10 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
       function updateTopbarLabel() {
       if (state.route === "csv") {
         elements.topbarMonitoringLabel.textContent = "CSV Analyst";
+        return;
+      }
+      if (state.route === "guide") {
+        elements.topbarMonitoringLabel.textContent = "PulseBoard Guide";
         return;
       }
       if (state.route === "apiKey") {
@@ -4534,6 +5173,7 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
       state.topic = topic;
       state.mode = mode;
       state.role = role;
+      state.selectedHistoryRunId = null;
       state.runCount += 1;
       state.activeRunId += 1;
       const runId = state.activeRunId;
@@ -4939,6 +5579,17 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
           break;
         case "brief":
           state.agentResults.aggregator = event.result;
+          if (state.mode !== "interviewprep") {
+            const savedRun = saveMonitoringRunToHistory(serializeMonitoringRunForHistory({
+              runId,
+              topic: state.topic,
+              mode: state.mode,
+              brief: event.result,
+              agentResults: state.agentResults,
+              timestamp: new Date().toISOString()
+            }));
+            state.selectedHistoryRunId = savedRun?.id || null;
+          }
           renderBrief(event.result);
           if (event.warning) {
             setStatusMessage(extractRelayErrorInfo(event.warning).message, "warning");
@@ -5312,7 +5963,7 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
       const resolvedSignalStrength = resolveNewsSignalStrength(result);
       const headlineCards = headlines
         .filter((headline) => hasMeaningfulText(headline?.title) || hasMeaningfulText(headline?.summary))
-        .map((headline) => `<div class="list-card"><div class="list-meta">${escapeHtml(headline.recency || "Recent")} · ${escapeHtml(headline.sentiment || "neutral")}</div><p><strong>${escapeHtml(headline.title || "Headline")}</strong></p><p>${escapeHtml(headline.summary || "")}</p></div>`)
+        .map((headline) => `<div class="list-card"><div class="list-meta">${renderFreshnessPill(classifyFreshnessFromText(headline.recency))} <span>${escapeHtml(headline.recency || "Recent")} · ${escapeHtml(headline.sentiment || "neutral")}</span></div><p><strong>${escapeHtml(headline.title || "Headline")}</strong></p><p>${escapeHtml(headline.summary || "")}</p></div>`)
         .join("");
       const hasContent = resolvedSignalStrength > 0 || hasMeaningfulText(result.biggestStory) || hasMeaningfulText(result.overallSentiment) || Boolean(result.urgencyFlag) || Boolean(headlineCards);
       if (!hasContent) return "";
@@ -5351,8 +6002,8 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
         ? `
           <div class="list-card">
             <strong>Career Links</strong>
-            ${careersPage ? `<p style="margin:10px 0 8px;"><a href="${escapeHtml(careersPage.url)}" target="_blank" rel="noopener noreferrer" title="${escapeHtml(careersPage.label)}">${escapeHtml(careersPage.label)}</a></p>` : ""}
-            ${jobLinks.length ? `<ul>${jobLinks.map((link) => `<li><a href="${escapeHtml(link.url)}" target="_blank" rel="noopener noreferrer" title="${escapeHtml(link.title)}">${escapeHtml(truncateText(link.title, 72))}</a></li>`).join("")}</ul>` : "" }
+            ${careersPage ? `<p style="margin:10px 0 8px;"><a href="${escapeHtml(careersPage.url)}" target="_blank" rel="noopener noreferrer" title="${escapeHtml(careersPage.label)}">${escapeHtml(careersPage.label)}</a> ${renderFreshnessPill(careersPage.freshnessLabel)}</p>` : ""}
+            ${jobLinks.length ? `<ul>${jobLinks.map((link) => `<li><a href="${escapeHtml(link.url)}" target="_blank" rel="noopener noreferrer" title="${escapeHtml(link.title)}">${escapeHtml(truncateText(link.title, 72))}</a> ${renderFreshnessPill(link.freshnessLabel)}</li>`).join("")}</ul>` : "" }
           </div>
         `
         : "";
@@ -5374,9 +6025,13 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
     function normalizeJobLink(link, fallbackLabel) {
       if (!link || typeof link !== "object") return null;
       const url = String(link.url || "").trim();
-      if (!/^https?:\/\//i.test(url)) return null;
+      if (!/^https?:\/\//i.test(url) || link.verified === false) return null;
       const label = String(link.label || link.title || fallbackLabel || "Open link").trim() || fallbackLabel || "Open link";
-      return { label, url };
+      return {
+        label,
+        url,
+        freshnessLabel: String(link.freshnessLabel || classifyFreshnessFromText(link.publishedAt || link.recency || "") || "Unknown")
+      };
     }
 
     function normalizeJobLinks(links) {
@@ -5385,7 +6040,29 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
         .map((link) => normalizeJobLink(link, "Open role"))
         .filter(Boolean)
         .slice(0, 3)
-        .map((link) => ({ title: link.label, url: link.url }));
+        .map((link) => ({ title: link.label, url: link.url, freshnessLabel: link.freshnessLabel }));
+    }
+
+    function classifyFreshnessFromText(value) {
+      const text = String(value || "").trim().toLowerCase();
+      if (!text) return "Unknown";
+      if (/(today|just now|minutes? ago|hours? ago)/i.test(text)) return "Fresh";
+      if (/(yesterday|days? ago|this week|last week|recent)/i.test(text)) return "Recent";
+      if (/(month|older|weeks? ago|archive)/i.test(text)) return "Older";
+      return "Unknown";
+    }
+
+    function normalizeVerifiedLinks(links, maxCount = 4) {
+      if (!Array.isArray(links)) return [];
+      return links
+        .filter((link) => link && typeof link === "object" && typeof link.url === "string" && /^https?:\/\//i.test(link.url) && link.verified !== false)
+        .slice(0, maxCount)
+        .map((link) => ({
+          ...link,
+          url: String(link.url).trim(),
+          title: String(link.title || link.label || link.url).trim(),
+          freshnessLabel: String(link.freshnessLabel || classifyFreshnessFromText(link.publishedAt || link.recency || "") || "Unknown")
+        }));
     }
 
     function renderSentimentMarkup(result) {
@@ -5452,6 +6129,49 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
       ]);
     }
 
+    function renderFreshnessPill(value) {
+      const normalized = String(value || "").trim().toLowerCase();
+      if (!normalized || normalized === "unknown") return "";
+      if (normalized === "fresh") return '<span class="pill freshness-pill fresh">Fresh</span>';
+      if (normalized === "recent") return '<span class="pill freshness-pill recent">Recent</span>';
+      if (normalized === "older") return '<span class="pill freshness-pill older">Older</span>';
+      return "";
+    }
+
+    function renderConfidencePill(value) {
+      const normalized = String(value || "").trim().toLowerCase();
+      if (!normalized || normalized === "unknown") return "";
+      if (normalized === "high") return '<span class="pill confidence-pill high">High confidence</span>';
+      if (normalized === "low") return '<span class="pill confidence-pill low">Low confidence</span>';
+      if (normalized === "medium") return '<span class="pill confidence-pill medium">Medium confidence</span>';
+      return "";
+    }
+
+    function renderReliabilitySummary(reliability) {
+      if (!reliability || typeof reliability !== "object") return "";
+      const sourceCount = Number(reliability.sourceCount || 0);
+      const verifiedLinkCount = Number(reliability.verifiedLinkCount || 0);
+      const badges = [
+        renderFreshnessPill(reliability.freshnessLabel),
+        renderConfidencePill(reliability.confidenceLabel)
+      ].filter(Boolean).join("");
+      const partialCopy = reliability.partialCoverage
+        ? `<p class="reliability-note">This run uses partial evidence because some agents or searches failed, so PulseBoard is being explicit about partial coverage.</p>`
+        : "";
+      const verificationCopy = `<p class="reliability-note">Only verified-working links are shown in the brief. Link verification is applied before source links are rendered.</p>`;
+      return `
+        <div class="reliability-summary">
+          <div class="reliability-topline">
+            ${badges ? `<div class="reliability-badges">${badges}</div>` : ""}
+            <p class="reliability-copy">based on ${escapeHtml(String(reliability.sourceCount || 0))} signals and ${escapeHtml(String(verifiedLinkCount))} verified links</p>
+          </div>
+          ${sourceCount ? `<p class="reliability-note">Based on ${escapeHtml(String(reliability.sourceCount || 0))} signals gathered across the live monitoring sweep.</p>` : '<p class="reliability-note">No structured evidence count was available for this run.</p>'}
+          ${partialCopy}
+          ${verificationCopy}
+        </div>
+      `;
+    }
+
     function renderBrief(result) {
       if (state.mode === "interviewprep") {
         return renderInterviewPrepBrief(result);
@@ -5460,6 +6180,8 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
       const notable = Array.isArray(result.notable) ? result.notable : [];
       const fyi = Array.isArray(result.fyi) ? result.fyi : [];
       const actions = Array.isArray(result.recommendedActions) ? result.recommendedActions : [];
+      const currentRun = getSelectedHistoryRun();
+      const changeDetectionMarkup = renderChangeDetectionPanel(currentRun);
       state.briefVisible = true;
       elements.briefSection.hidden = false;
       elements.briefSection.innerHTML = `
@@ -5473,6 +6195,7 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
             <div class="score-card"><div class="score-label">Risk score</div><div class="score-value">${normalizeMetricValue(result.overallRiskScore)}</div><div class="score-track"><div class="score-fill risk" style="width:${clampScore(result.overallRiskScore)}%"></div></div>${renderMetricDirectionHint("lower")}</div>
             <div class="score-card"><div class="score-label">Opportunity score</div><div class="score-value">${normalizeMetricValue(result.overallOpportunityScore)}</div><div class="score-track"><div class="score-fill opportunity" style="width:${clampScore(result.overallOpportunityScore)}%"></div></div>${renderMetricDirectionHint("higher")}</div>
           </div>
+          ${renderReliabilitySummary(result.reliability)}
         </div>
         <div class="brief-columns">
           ${renderTier("urgent", "Urgent", urgent, (item) => `<p><strong>${escapeHtml(item.finding || "Urgent finding")}</strong></p><p><span class="meta-label">Source</span> ${escapeHtml(item.source || "Unknown")}</p><p><span class="meta-label">Action</span> ${escapeHtml(item.action || "No action provided.")}</p>`)}
@@ -5480,6 +6203,7 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
           ${renderTier("fyi", "FYI", fyi, (item) => `<p><strong>${escapeHtml(item.finding || "Background note")}</strong></p><p>${escapeHtml(item.context || "No context provided.")}</p>`)}
         </div>
         <div class="list-card" style="margin-top:20px;"><strong>Recommended actions</strong>${actions.length ? `<ol>${actions.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ol>` : "<p>No recommended actions returned.</p>"}<p><span class="meta-label">Monitoring cadence</span> ${escapeHtml(result.monitoringFrequency || "No cadence recommendation returned.")}</p></div>
+        ${changeDetectionMarkup}
         ${renderMonitoringBriefActionBar()}
       `;
       const copyButton = document.getElementById("copyMonitoringBriefButton");
@@ -5516,8 +6240,8 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
           <p class="one-line-summary">${escapeHtml(result.oneLineSummary || "No one-line interview prep summary returned.")}</p>
           <div class="score-grid">
             <div class="score-card"><div class="score-label">Reported rounds</div><div class="score-value">${escapeHtml(result.reportedRoundCount || "Unknown")}</div></div>
-            <div class="score-card"><div class="score-label">Confidence</div><div class="score-value">${escapeHtml(capitalize(result.confidenceLabel || "medium"))}</div></div>
           </div>
+          ${renderReliabilitySummary(result.reliability)}
         </div>
         <div class="list-card" style="margin-top:20px;"><strong>Roadmap summary</strong><p>${escapeHtml(result.roadmapSummary || "No roadmap summary returned.")}</p></div>
         <div class="brief-columns">
@@ -5534,9 +6258,9 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
 
     function renderInterviewRoundCard(round, index) {
       const focusAreas = Array.isArray(round.focusAreas) ? round.focusAreas : [];
-      const materials = Array.isArray(round.materials) ? round.materials.filter((item) => typeof item?.url === "string" && /^https?:\/\//i.test(item.url)).slice(0, 5) : [];
+      const materials = normalizeVerifiedLinks(round.materials, 5);
       const signals = Array.isArray(round.signals) ? round.signals : [];
-      return `<div class="tier-card"><p><strong>${escapeHtml(round.name || `Round ${index + 1}`)}</strong></p><p>${escapeHtml(round.description || "No round description returned.")}</p>${focusAreas.length ? `<p><span class="meta-label">Focus areas</span> ${escapeHtml(focusAreas.join(", "))}</p>` : ""}${signals.length ? `<p><span class="meta-label">Signals</span> ${escapeHtml(signals.join(" | "))}</p>` : ""}${materials.length ? `<div class="list-card" style="margin-top:12px;"><strong>Materials</strong><ul>${materials.map((item) => `<li><a href="${escapeHtml(item.url)}" target="_blank" rel="noopener noreferrer" title="${escapeHtml(item.title || item.url)}">${escapeHtml(truncateText(item.title || item.url, 72))}</a>${item.type ? ` <span class="meta-label">(${escapeHtml(item.type)})</span>` : ""}</li>`).join("")}</ul></div>` : ""}</div>`;
+      return `<div class="tier-card"><p><strong>${escapeHtml(round.name || `Round ${index + 1}`)}</strong></p><p>${escapeHtml(round.description || "No round description returned.")}</p>${focusAreas.length ? `<p><span class="meta-label">Focus areas</span> ${escapeHtml(focusAreas.join(", "))}</p>` : ""}${signals.length ? `<p><span class="meta-label">Signals</span> ${escapeHtml(signals.join(" | "))}</p>` : ""}${materials.length ? `<div class="list-card" style="margin-top:12px;"><strong>Materials</strong><ul>${materials.map((item) => `<li><a href="${escapeHtml(item.url)}" target="_blank" rel="noopener noreferrer" title="${escapeHtml(item.title || item.url)}">${escapeHtml(truncateText(item.title || item.url, 72))}</a>${item.type ? ` <span class="meta-label">(${escapeHtml(item.type)})</span>` : ""} ${renderFreshnessPill(item.freshnessLabel)}</li>`).join("")}</ul></div>` : ""}</div>`;
     }
 
     function renderTier(kind, title, items, renderItem) {
@@ -6112,7 +6836,7 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
       const signals = Array.isArray(result.recentSignals) ? result.recentSignals : [];
       const signalCards = signals
         .filter((item) => hasMeaningfulText(item?.title) || hasMeaningfulText(item?.detail))
-        .map((item) => `<div class="list-card"><div class="list-meta">${escapeHtml(item.recency || "Recent")} · ${escapeHtml(item.source || "Source")}</div><p><strong>${escapeHtml(item.title || "Interview signal")}</strong></p><p>${escapeHtml(item.detail || "")}</p></div>`)
+        .map((item) => `<div class="list-card"><div class="list-meta">${renderFreshnessPill(classifyFreshnessFromText(item.recency))} <span>${escapeHtml(item.recency || "Recent")} · ${escapeHtml(item.source || "Source")}</span></div><p><strong>${escapeHtml(item.title || "Interview signal")}</strong></p><p>${escapeHtml(item.detail || "")}</p></div>`)
         .join("");
       const hasContent = Number.isFinite(Number(result.signalStrength)) || hasMeaningfulText(result.reportedRoundCount) || hasMeaningfulText(result.biggestSignal) || Boolean(signalCards);
       if (!hasContent) return "";
@@ -6128,7 +6852,7 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
 
     function renderInterviewPrepJobsMarkup(result) {
       const skillAreas = Array.isArray(result.skillAreas) ? result.skillAreas : [];
-      const materials = Array.isArray(result.officialMaterials) ? result.officialMaterials : [];
+      const materials = normalizeVerifiedLinks(result.officialMaterials, 4);
       const hasContent = skillAreas.length || materials.length || hasMeaningfulText(result.roleExpectationSummary) || Number.isFinite(Number(result.roleFitScore)) || hasMeaningfulText(result.openingStatus);
       if (!hasContent) return "";
       return joinMarkupSections([
@@ -6162,7 +6886,7 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
 
     function renderInterviewPrepProcessMarkup(result) {
       const constraints = Array.isArray(result.constraints) ? result.constraints : [];
-      const materials = Array.isArray(result.processMaterials) ? result.processMaterials : [];
+      const materials = normalizeVerifiedLinks(result.processMaterials, 4);
       const hasContent = constraints.length || materials.length || hasMeaningfulText(result.processNote) || hasMeaningfulText(result.assessmentFormat) || hasMeaningfulText(result.locationMode);
       if (!hasContent) return "";
       return joinMarkupSections([
@@ -6195,11 +6919,9 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
     }
 
     function renderInterviewPrepLinkBlock(title, links) {
-      const safeLinks = Array.isArray(links)
-        ? links.filter((link) => typeof link?.url === "string" && /^https?:\/\//i.test(link.url)).slice(0, 4)
-        : [];
+      const safeLinks = normalizeVerifiedLinks(links, 4);
       if (!safeLinks.length) return "";
-      return `<div class="list-card"><strong>${escapeHtml(title)}</strong><ul>${safeLinks.map((link) => `<li><a href="${escapeHtml(link.url)}" target="_blank" rel="noopener noreferrer" title="${escapeHtml(link.title || link.url)}">${escapeHtml(truncateText(link.title || link.url, 72))}</a>${link.type ? ` <span class="meta-label">(${escapeHtml(link.type)})</span>` : ""}</li>`).join("")}</ul></div>`;
+      return `<div class="list-card"><strong>${escapeHtml(title)}</strong><ul>${safeLinks.map((link) => `<li><a href="${escapeHtml(link.url)}" target="_blank" rel="noopener noreferrer" title="${escapeHtml(link.title || link.url)}">${escapeHtml(truncateText(link.title || link.url, 72))}</a>${link.type ? ` <span class="meta-label">(${escapeHtml(link.type)})</span>` : ""} ${renderFreshnessPill(link.freshnessLabel)}</li>`).join("")}</ul></div>`;
     }
 
     function parseCsvLine(line) {

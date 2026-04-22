@@ -167,6 +167,12 @@ calibrationScore must be an integer from 0 to 100.`
 
 const AGGREGATOR_PROMPT = `You are a senior intelligence analyst synthesizing 5 agent reports. Return ONLY valid JSON with this exact shape:
 {"subjectSummary":"string","overallRiskScore":0,"overallOpportunityScore":0,"urgent":[{"finding":"string","source":"string","action":"string"}],"notable":[{"finding":"string","source":"string","whyItMatters":"string"}],"fyi":[{"finding":"string","context":"string"}],"oneLineSummary":"string","recommendedActions":["string","string","string"],"monitoringFrequency":"string"}`;
+const AGGREGATOR_PROMPT_RULES = `
+Rules:
+- overallRiskScore and overallOpportunityScore must be integers from 0 to 100
+- use a true 0-100 scale, not a 1-10 shorthand rating
+- single-digit scores should only be used when the real score is genuinely near zero
+- if the situation is meaningfully risky or promising, use a score that reflects that on the full 0-100 scale`;
 
 const INTERVIEW_PREP_AGGREGATOR_PROMPT = `You are a senior interview-prep strategist. Synthesize the 5 agent reports into a company-specific interview roadmap for the target role. Return ONLY valid JSON with this exact shape:
 {"reportedRoundCount":"string","confidenceLabel":"high|medium|low","oneLineSummary":"string","roadmapSummary":"string","rounds":[{"name":"string","description":"string","focusAreas":["string","string"],"materials":[{"title":"string","url":"string","type":"official|reddit|github|prep_guide|job_posting"}],"signals":["string","string"]}],"prepPlan":["string","string","string"],"keyWarnings":["string","string"],"sourceNotes":["string","string"]}
@@ -553,7 +559,11 @@ async function runPulseBoardSession(input, emit) {
 
   emit({ type: "aggregator_started" });
   try {
-    const brief = await runAggregator(input.connection, input.topic, input.mode, byAgent, input.role);
+    const briefResult = await runAggregator(input.connection, input.topic, input.mode, byAgent, input.role);
+    const brief = {
+      ...briefResult,
+      reliability: buildBriefReliability(byAgent, degradedWarning)
+    };
     emit({
       type: "brief",
       result: brief,
@@ -578,6 +588,229 @@ function getMonitoringAgentSpecs(mode) {
   return mode === "interviewprep" ? INTERVIEW_PREP_AGENT_SPECS : AGENT_SPECS;
 }
 
+function classifySourceFreshness(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return "Unknown";
+  const lowered = raw.toLowerCase();
+  if (/(today|just now|hours? ago|minutes? ago|minute ago|hour ago)/i.test(raw)) return "Fresh";
+  if (/(yesterday|days? ago|this week|past week|last week|recent)/i.test(raw)) return "Recent";
+  const timestamp = Date.parse(raw);
+  if (Number.isNaN(timestamp)) return "Unknown";
+  const ageMs = Date.now() - timestamp;
+  const oneDay = 24 * 60 * 60 * 1000;
+  if (ageMs <= oneDay * 2) return "Fresh";
+  if (ageMs <= oneDay * 14) return "Recent";
+  if (ageMs > oneDay * 14) return "Older";
+  return "Unknown";
+}
+
+async function verifyUrlReachable(url) {
+  const target = String(url || "").trim();
+  if (!/^https?:\/\//i.test(target)) return false;
+  const controller = typeof AbortController === "function" ? new AbortController() : null;
+  const timeout = controller ? setTimeout(() => controller.abort(), 4000) : null;
+  const attempt = async (method) => {
+    const response = await fetch(target, {
+      method,
+      redirect: "follow",
+      signal: controller ? controller.signal : undefined,
+      headers: {
+        "User-Agent": "PulseBoard/1.0 (+https://pulseboard.local)"
+      }
+    });
+    return response.ok;
+  };
+  try {
+    if (await attempt("HEAD")) return true;
+  } catch (error) {
+    // Fall through to GET for providers that block HEAD requests.
+  }
+  try {
+    return await attempt("GET");
+  } catch (error) {
+    return false;
+  } finally {
+    if (timeout) clearTimeout(timeout);
+  }
+}
+
+function sanitizeSearchSource(rawSource, index) {
+  const title = String(rawSource?.title || rawSource?.name || `Source ${index + 1}`).trim() || `Source ${index + 1}`;
+  const url = String(rawSource?.url || rawSource?.link || "").trim();
+  const snippet = String(rawSource?.snippet || rawSource?.content || rawSource?.summary || "").trim();
+  const publishedAt = String(rawSource?.published_at || rawSource?.publishedAt || rawSource?.date || rawSource?.recency || "").trim();
+  return {
+    title,
+    url,
+    snippet,
+    publishedAt,
+    freshnessLabel: classifySourceFreshness(publishedAt)
+  };
+}
+
+function buildEvidenceSummary(query, sources) {
+  const normalizedSources = Array.isArray(sources)
+    ? sources.map((source, index) => sanitizeSearchSource(source, index))
+    : [];
+  const sourceCount = normalizedSources.length;
+  const verifiedLinks = normalizedSources.filter((source) => source.verified);
+  const verifiedLinkCount = verifiedLinks.length;
+  const freshCount = normalizedSources.filter((source) => source.freshnessLabel === "Fresh").length;
+  const recentCount = normalizedSources.filter((source) => source.freshnessLabel === "Recent").length;
+  const freshnessLabel = freshCount > 0 ? "Fresh" : recentCount > 0 ? "Recent" : sourceCount > 0 ? "Older" : "Unknown";
+  const confidenceLabel = sourceCount >= 4 && verifiedLinkCount >= 3
+    ? "High"
+    : sourceCount >= 2 && verifiedLinkCount >= 1
+      ? "Medium"
+      : "Low";
+  const evidenceText = normalizedSources.length
+    ? normalizedSources.map((source, index) => {
+      return `${index + 1}. ${source.title}
+URL: ${source.url || "Unavailable"}
+Freshness: ${source.freshnessLabel}
+Summary: ${source.snippet || "No summary returned."}`;
+    }).join("\n\n")
+    : "No usable live search results were available.";
+  return {
+    query,
+    sources: normalizedSources,
+    sourceCount,
+    verifiedLinkCount,
+    evidenceText,
+    freshnessLabel,
+    confidenceLabel,
+    partialCoverage: sourceCount < 3 || verifiedLinkCount < Math.min(sourceCount, 2)
+  };
+}
+
+function buildConfidenceFromCoverage(sourceCount, verifiedLinkCount, partialCoverage) {
+  if (!partialCoverage && sourceCount >= 4 && verifiedLinkCount >= 3) return "high";
+  if (sourceCount >= 2 && verifiedLinkCount >= 1) return "medium";
+  return "low";
+}
+
+function coerceBriefScoreValue(value) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return 0;
+  return Math.max(0, Math.min(100, Math.round(numeric)));
+}
+
+function shouldUpscaleMonitoringScore(score, counterpartScore, brief) {
+  if (!(score >= 1 && score <= 10)) return false;
+  if (counterpartScore >= 15) return true;
+  const urgentCount = Array.isArray(brief?.urgent) ? brief.urgent.length : 0;
+  const notableCount = Array.isArray(brief?.notable) ? brief.notable.length : 0;
+  const actionCount = Array.isArray(brief?.recommendedActions) ? brief.recommendedActions.length : 0;
+  const summaryText = [
+    brief?.subjectSummary,
+    brief?.oneLineSummary,
+    ...(Array.isArray(brief?.urgent) ? brief.urgent.map((item) => item?.finding) : []),
+    ...(Array.isArray(brief?.notable) ? brief.notable.map((item) => item?.finding) : [])
+  ].join(" ").toLowerCase();
+  if (score <= 3 && urgentCount === 0 && notableCount <= 1 && !/(urgent|material|major|high|significant|elevated|strong|meaningful)/i.test(summaryText)) {
+    return false;
+  }
+  return urgentCount > 0 || notableCount >= 2 || actionCount >= 2 || /(urgent|material|major|high|significant|elevated|strong|meaningful)/i.test(summaryText);
+}
+
+function normalizeMonitoringBriefScores(result) {
+  const brief = result && typeof result === "object" ? { ...result } : {};
+  let riskScore = coerceBriefScoreValue(brief.overallRiskScore);
+  let opportunityScore = coerceBriefScoreValue(brief.overallOpportunityScore);
+
+  if (shouldUpscaleMonitoringScore(riskScore, opportunityScore, brief)) {
+    riskScore = Math.min(100, riskScore * 10);
+  }
+  if (shouldUpscaleMonitoringScore(opportunityScore, riskScore, brief)) {
+    opportunityScore = Math.min(100, opportunityScore * 10);
+  }
+
+  brief.overallRiskScore = riskScore;
+  brief.overallOpportunityScore = opportunityScore;
+  return brief;
+}
+
+function pruneUnverifiedLink(link) {
+  if (!link || typeof link !== "object") return null;
+  const url = String(link.url || "").trim();
+  if (!/^https?:\/\//i.test(url) || link.verified === false) return null;
+  return {
+    ...link,
+    url,
+    freshnessLabel: classifySourceFreshness(link.publishedAt || link.recency || link.date || ""),
+    verified: link.verified !== false
+  };
+}
+
+function pruneUnverifiedLinks(links, maxCount = 5) {
+  if (!Array.isArray(links)) return [];
+  return links
+    .map((link) => pruneUnverifiedLink(link))
+    .filter(Boolean)
+    .slice(0, maxCount);
+}
+
+function attachReliabilityMetadata(result, evidence, options = {}) {
+  const safeResult = result && typeof result === "object" ? { ...result } : {};
+  const sourceCount = Number(evidence?.sourceCount || 0);
+  const verifiedLinkCount = Number(evidence?.verifiedLinkCount || 0);
+  const partialCoverage = Boolean(evidence?.partialCoverage);
+  const confidenceLabel = buildConfidenceFromCoverage(sourceCount, verifiedLinkCount, partialCoverage);
+
+  if (options.agentKey === "jobs") {
+    safeResult.careersPage = pruneUnverifiedLink(safeResult.careersPage);
+    safeResult.jobLinks = pruneUnverifiedLinks(safeResult.jobLinks, 3);
+    safeResult.officialMaterials = pruneUnverifiedLinks(safeResult.officialMaterials, 4);
+  }
+  if (options.agentKey === "regulatory" && options.mode === "interviewprep") {
+    safeResult.processMaterials = pruneUnverifiedLinks(safeResult.processMaterials, 4);
+  }
+
+  safeResult.reliability = {
+    sourceCount,
+    verifiedLinkCount,
+    freshnessLabel: evidence?.freshnessLabel || "Unknown",
+    confidenceLabel,
+    partialCoverage,
+    partialEvidenceMessage: partialCoverage
+      ? "This section is based on partial coverage because some agents or searches failed to return full evidence."
+      : "",
+    verifiedLinks: Array.isArray(evidence?.sources)
+      ? evidence.sources.filter((source) => source.verified).map((source) => ({
+        title: source.title,
+        url: source.url,
+        freshnessLabel: source.freshnessLabel
+      }))
+      : []
+  };
+
+  return safeResult;
+}
+
+function buildBriefReliability(byAgent, warning = null) {
+  const allAgents = Object.values(byAgent || {});
+  const successfulAgents = Object.values(byAgent || {}).filter((entry) => entry && !entry.error);
+  const sourceCount = successfulAgents.reduce((sum, entry) => sum + Number(entry?.reliability?.sourceCount || 0), 0);
+  const verifiedLinkCount = successfulAgents.reduce((sum, entry) => sum + Number(entry?.reliability?.verifiedLinkCount || 0), 0);
+  const freshnessPriority = ["Fresh", "Recent", "Older", "Unknown"];
+  const freshnessLabel = successfulAgents
+    .map((entry) => entry?.reliability?.freshnessLabel || "Unknown")
+    .sort((a, b) => freshnessPriority.indexOf(a) - freshnessPriority.indexOf(b))[0] || "Unknown";
+  const failedAgents = allAgents.filter((entry) => entry && entry.error);
+  const partialCoverage = Boolean(warning) || successfulAgents.length < 5 || failedAgents.length > 0;
+  return {
+    sourceCount,
+    verifiedLinkCount,
+    freshnessLabel,
+    confidenceLabel: buildConfidenceFromCoverage(sourceCount, verifiedLinkCount, partialCoverage),
+    partialCoverage,
+    partialEvidenceMessage: partialCoverage
+      ? (warning?.message || "This brief is based on partial evidence because some agents or searches failed.")
+      : "",
+    verifiedLinks: successfulAgents.flatMap((entry) => Array.isArray(entry?.reliability?.verifiedLinks) ? entry.reliability.verifiedLinks : []).slice(0, 8)
+  };
+}
+
 async function runMonitoringAgent(providerConfig, topic, mode, agentSpec, options = {}) {
   const evidence = await searchTopicSignals(topic, mode, agentSpec, options.role);
   const userContent = [
@@ -589,13 +822,18 @@ async function runMonitoringAgent(providerConfig, topic, mode, agentSpec, option
     options.extraContext ? `Additional context from internal CSV analysis:\n${options.extraContext}` : "",
     "",
     "Evidence gathered from live web search:",
-    evidence
+    `Based on ${evidence.sourceCount} live signals and ${evidence.verifiedLinkCount} verified links.`,
+    evidence.evidenceText
   ].join("\n");
 
-  return runModelJson({
+  const result = await runModelJson({
     providerConfig,
     systemPrompt: agentSpec.systemPrompt,
     userContent
+  });
+  return attachReliabilityMetadata(result, evidence, {
+    mode,
+    agentKey: agentSpec.key
   });
 }
 
@@ -605,6 +843,7 @@ async function runAggregator(providerConfig, topic, mode, byAgent, role = "") {
     `Monitoring mode: ${MODE_LABELS[mode]}`,
     role ? `Target role: "${role}"` : "",
     `Focus instruction: ${MODE_MODIFIERS[mode]}`,
+    mode === "interviewprep" ? "" : AGGREGATOR_PROMPT_RULES,
     "",
     `News: ${JSON.stringify(byAgent.news)}`,
     `Jobs: ${JSON.stringify(byAgent.jobs)}`,
@@ -613,11 +852,25 @@ async function runAggregator(providerConfig, topic, mode, byAgent, role = "") {
     `Competitor: ${JSON.stringify(byAgent.competitor)}`
   ].join("\n");
 
-  return runModelJson({
+  const result = await runModelJson({
     providerConfig,
     systemPrompt: mode === "interviewprep" ? INTERVIEW_PREP_AGGREGATOR_PROMPT : AGGREGATOR_PROMPT,
     userContent
   });
+  const normalizedResult = mode === "interviewprep" ? result : normalizeMonitoringBriefScores(result);
+  const reliability = buildBriefReliability(byAgent);
+  if (mode === "interviewprep") {
+    normalizedResult.rounds = Array.isArray(normalizedResult.rounds)
+      ? normalizedResult.rounds.map((round) => ({
+        ...round,
+        materials: pruneUnverifiedLinks(round?.materials, 5)
+      }))
+      : [];
+  }
+  return {
+    ...normalizedResult,
+    reliability
+  };
 }
 
 async function analyzeCsvSession(input) {
@@ -696,14 +949,35 @@ async function crossReferenceSession(input, emit) {
 
 async function searchTopicSignals(topic, mode, agentSpec, role = "") {
   const query = agentSpec.searchQuery(topic, mode, role);
+  let sources;
   if (process.env.TAVILY_API_KEY) {
     try {
-      return await searchWithTavily(query);
+      sources = await searchWithTavily(query);
     } catch (error) {
       console.warn("Tavily search failed, falling back to DuckDuckGo:", error.message);
     }
   }
-  return searchWithDuckDuckGo(query);
+  if (!sources) {
+    sources = await searchWithDuckDuckGo(query);
+  }
+  const verifiedSources = await Promise.all((Array.isArray(sources) ? sources : []).map(async (source, index) => {
+    const normalized = sanitizeSearchSource(source, index);
+    normalized.verified = normalized.url ? await verifyUrlReachable(normalized.url) : false;
+    return normalized;
+  }));
+  const evidence = buildEvidenceSummary(query, verifiedSources);
+  ({ sources } = evidence);
+  const { sourceCount, verifiedLinkCount, evidenceText } = evidence;
+  return {
+    query,
+    sources,
+    sourceCount,
+    verifiedLinkCount,
+    evidenceText,
+    freshnessLabel: evidence.freshnessLabel,
+    confidenceLabel: evidence.confidenceLabel,
+    partialCoverage: evidence.partialCoverage
+  };
 }
 
 async function searchWithTavily(query) {
@@ -722,9 +996,12 @@ async function searchWithTavily(query) {
   }
   const payload = await response.json();
   const results = Array.isArray(payload.results) ? payload.results : [];
-  return results.slice(0, 5).map((item, index) => {
-    return `${index + 1}. ${item.title || "Untitled"}\nURL: ${item.url || ""}\nSummary: ${item.content || ""}`;
-  }).join("\n\n");
+  return results.slice(0, 5).map((item, index) => sanitizeSearchSource({
+    title: item.title || `Source ${index + 1}`,
+    url: item.url || "",
+    content: item.content || "",
+    publishedAt: item.published_date || item.published_at || ""
+  }, index));
 }
 
 async function searchWithDuckDuckGo(query) {
@@ -760,9 +1037,7 @@ async function searchWithDuckDuckGo(query) {
   if (!results.length) {
     throw new Error("No search results could be parsed.");
   }
-  return results.map((item, index) => {
-    return `${index + 1}. ${item.title}\nURL: ${item.url}\nSummary: ${item.snippet}`;
-  }).join("\n\n");
+  return results.map((item, index) => sanitizeSearchSource(item, index));
 }
 
 function parseCsvText(csvText) {
