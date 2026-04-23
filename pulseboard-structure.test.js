@@ -35,6 +35,9 @@ expect(/function syncHomeExplanationState\(/, "expected a home explanation colla
 expect(/homeTheme:\s*"light"/, "expected landing-page theme state to default to light");
 expect(/function toggleHomeTheme\(/, "expected a landing-page theme toggle handler");
 expect(/function syncHomeThemeUi\(/, "expected a home theme UI sync helper");
+expect(/\.hero-grid \{ grid-template-columns: minmax\(0,1\.42fr\) minmax\(300px,0\.58fr\); align-items: stretch; \}/, "expected landing hero desktop columns to widen the signal rail slightly while preserving the broader headline layout");
+expect(/\.hero-title \{ font-size: clamp\(34px, 5\.4vw, 58px\); line-height: 1\.04; max-width: 18ch; \}/, "expected hero headline width to be relaxed for wider desktop wrapping");
+expect(/\.hero-subtitle \{ margin: 14px 0 0; max-width: 60ch; color: var\(--text-secondary\); \}/, "expected hero subtitle measure to widen slightly with the broader headline block");
 assert.doesNotMatch(html, /id="homeThemeToggleButton"/, "expected the landing-page dark mode toggle button to be hidden for now");
 assert.doesNotMatch(html, /homeThemeToggleButton\?\.addEventListener\("click", toggleHomeTheme\)/, "expected the landing-page dark mode toggle click binding to be disabled for now");
 expect(/transition:\s*max-height\s+0\.35s\s+ease/i, "expected smooth home explanation collapse transition");
