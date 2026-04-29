@@ -16,6 +16,7 @@ function expectIn(text, pattern, description) {
 expectIn(server, /createServer|http\.createServer/, "expected a Node HTTP relay server");
 expectIn(server, /requestUrl\.pathname\.startsWith\("\/scripts\/"\).*endsWith\("\.js"\)/s, "expected relay to serve extracted frontend script files");
 expectIn(server, /\/api\/pulseboard\/run/, "expected relay run endpoint");
+expectIn(server, /\/api\/pulseboard\/scenario/, "expected relay scenario endpoint");
 expectIn(server, /\/api\/pulseboard\/validate-connection/, "expected relay validation endpoint");
 expectIn(server, /function runPulseBoardSession\(/, "expected runPulseBoardSession in relay");
 expectIn(server, /function searchTopicSignals\(/, "expected shared search pipeline in relay");
@@ -27,6 +28,20 @@ expectIn(server, /function buildBriefReliability\(/, "expected relay helper to s
 expectIn(server, /function normalizeMonitoringBriefScores\(/, "expected monitoring brief score normalization helper");
 expectIn(server, /function runMonitoringAgent\(/, "expected per-agent runner in relay");
 expectIn(server, /function runAggregator\(/, "expected aggregator runner in relay");
+expectIn(server, /function runScenarioFollowup\(/, "expected scenario follow-up runner in relay");
+expectIn(server, /function buildScenarioFollowupPrompt\(/, "expected scenario prompt builder in relay");
+expectIn(server, /Only set canAnswerFromBrief to true when the requested fact is explicitly supported by the supplied brief or agent outputs/i, "expected scenario brief pass to require explicit support before answering from brief");
+expectIn(server, /function isScenarioAbsenceStyleAnswer\(/, "expected scenario absence-answer detector for forced fresh search");
+expectIn(server, /briefAnswerSignalsMissingEvidence/, "expected scenario follow-up to detect absence-style brief answers");
+expectIn(server, /Boolean\(briefPass\?\.needsFreshSearch\) \|\| !canAnswerFromBrief \|\| briefAnswerSignalsMissingEvidence/, "expected scenario follow-up to force search when the brief pass admits missing evidence");
+expectIn(server, /function normalizeScenarioSignalCount\(/, "expected scenario signal count normalizer");
+expectIn(server, /function runCsvScenarioFollowup\(/, "expected CSV scenario follow-up runner in relay");
+expectIn(server, /function buildCsvScenarioPrompt\(/, "expected CSV scenario prompt builder in relay");
+expectIn(server, /function findCsvQuestionMatches\(/, "expected deterministic CSV row matching helper");
+expectIn(server, /function classifyCsvScenarioIntent\(/, "expected CSV scenario intent classifier");
+expectIn(server, /scenarioIntent === "lookup" && rowMatch\.shouldUseCsvData/, "expected direct CSV lookup questions to bypass the model");
+expectIn(server, /rowMatch\.rows\.slice\(0,\s*5\)/, "expected mixed CSV scenario context to cap model-bound rows to 5");
+expectIn(server, /function buildCsvScenarioModelRequest\(/, "expected compact CSV scenario request builder for large datasets");
 expectIn(server, /function runOpenAIJson\(/, "expected OpenAI adapter");
 expectIn(server, /function runAnthropicJson\(/, "expected Anthropic adapter");
 expectIn(server, /function runGeminiJson\(/, "expected Gemini adapter");
@@ -73,6 +88,9 @@ expectIn(server, /official company careers\/jobs page|up to 3 direct live job-po
 expectIn(server, /signalStrength must be an integer from 0 to 100/i, "expected news prompt to require a real signal-strength score");
 expectIn(server, /role:\s*String\(body\.role \|\| ""\)\.trim\(\)/, "expected run endpoint to parse optional interview role");
 expectIn(server, /if \(input\.mode === "interviewprep" && !input\.role\)/, "expected interview prep mode to require a role");
+expectIn(server, /if \(!SCENARIO_SUPPORTED_MODES\.has\(input\.mode\)\)/, "expected scenario endpoint to reject unsupported modes");
+expectIn(server, /scenarioType:\s*String\(body\.scenarioType \|\| "monitoring"\)/, "expected scenario endpoint to parse scenario type");
+expectIn(server, /input\.scenarioType === "csv_single"/, "expected scenario endpoint to branch into CSV handling");
 expectIn(server, /function getMonitoringAgentSpecs\(mode\)\s*\{[\s\S]*INTERVIEW_PREP_AGENT_SPECS[\s\S]*AGENT_SPECS/, "expected relay to switch agent specs by mode");
 expectIn(server, /INTERVIEW_PREP_AGENT_SPECS/, "expected dedicated interview prep agent specs");
 expectIn(server, /INTERVIEW_PREP_AGGREGATOR_PROMPT/, "expected dedicated interview prep synthesis prompt");
@@ -88,6 +106,12 @@ expectIn(server, /return \{\s*query,\s*sources,\s*sourceCount,\s*verifiedLinkCou
 expectIn(server, /async function handlePulseBoardRequest\(/, "expected shared relay request handler for local server and Vercel routes");
 expectIn(server, /if \(require\.main === module\)/, "expected local server startup to be gated for module reuse");
 expectIn(server, /module\.exports = \{[\s\S]*handlePulseBoardRequest/, "expected relay exports for Vercel API wrappers");
+expectIn(server, /sourceMode:\s*"brief"|sourceMode:\s*"live_followup"|sourceMode:\s*"mixed"/, "expected scenario responses to classify answer provenance");
+expectIn(server, /sourceMode:\s*"csv_data"|sourceMode:\s*"csv_brief"|sourceMode:\s*"mixed"/, "expected CSV scenario responses to classify CSV answer provenance");
+expectIn(server, /brief-first|current monitoring run|If the answer is already supported by the supplied brief/i, "expected scenario prompt to prefer the current monitoring run before fresh search");
+expectIn(server, /messages:\s*Array\.isArray\(body\.messages\)/, "expected scenario endpoint to parse existing per-run chat history");
+expectIn(server, /matchedRows|displayedRowCount|totalMatchingRows|hasMoreRows/, "expected CSV scenario responses to include row-display metadata");
+expectIn(server, /Math\.min\(5,\s*matchedRows\.length\)/, "expected CSV scenario row display to default to top 5 matches");
 
 expectIn(html, /runPulseBoardViaRelay\(/, "expected frontend relay execution helper");
 expectIn(html, /fetch\(["'`]\/api\/pulseboard\/run["'`]/, "expected frontend to call relay run endpoint");

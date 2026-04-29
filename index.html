@@ -1141,7 +1141,227 @@
       flex: 1 1 0;
     }
 
-    .connection-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .scenario-launcher {
+      position: fixed;
+      right: 24px;
+      bottom: 24px;
+      z-index: 32;
+      border-radius: 999px;
+      padding: 12px 18px;
+      box-shadow: 0 14px 30px rgba(26, 26, 46, 0.16);
+      background: rgba(255,255,255,0.96);
+    }
+    .scenario-window {
+      position: fixed;
+      z-index: 33;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      min-width: 320px;
+      min-height: 280px;
+      max-width: min(92vw, 560px);
+      max-height: min(82vh, 720px);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: rgba(255,255,255,0.98);
+      box-shadow: 0 22px 58px rgba(26, 26, 46, 0.16);
+      overflow: hidden;
+      backdrop-filter: blur(14px);
+    }
+    .scenario-window.minimized {
+      grid-template-rows: auto;
+      min-height: 0;
+      height: auto !important;
+    }
+    .scenario-window-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(26, 26, 46, 0.08);
+      cursor: move;
+      user-select: none;
+      background: linear-gradient(160deg, rgba(255,255,255,0.96), rgba(245,242,238,0.9));
+    }
+    .scenario-window-title {
+      display: grid;
+      gap: 2px;
+    }
+    .scenario-window-title strong {
+      font-size: 14px;
+      line-height: 1.2;
+    }
+    .scenario-window-title span {
+      color: var(--text-secondary);
+      font-size: 11px;
+      line-height: 1.3;
+    }
+    .scenario-window-actions {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .scenario-icon-button {
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      border: 1px solid rgba(26, 26, 46, 0.1);
+      background: rgba(255,255,255,0.88);
+      display: inline-grid;
+      place-items: center;
+      color: var(--ink);
+    }
+    .scenario-window-body {
+      display: grid;
+      grid-template-rows: 1fr auto;
+      min-height: 0;
+    }
+    .scenario-messages {
+      min-height: 0;
+      overflow: auto;
+      display: grid;
+      align-content: start;
+      gap: 12px;
+      padding: 16px;
+      background: rgba(245, 242, 238, 0.44);
+    }
+    .scenario-message {
+      max-width: 88%;
+      display: grid;
+      gap: 6px;
+    }
+    .scenario-message.user {
+      justify-self: end;
+    }
+    .scenario-message.assistant {
+      justify-self: start;
+    }
+    .scenario-bubble {
+      padding: 11px 13px;
+      border-radius: 10px;
+      border: 1px solid rgba(26, 26, 46, 0.08);
+      background: rgba(255,255,255,0.96);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+    .scenario-message.user .scenario-bubble {
+      background: rgba(26,26,46,0.94);
+      border-color: rgba(26,26,46,0.94);
+      color: #fff;
+    }
+    .scenario-meta-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+    .scenario-source-pill,
+    .scenario-link-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(26, 26, 46, 0.08);
+      background: rgba(255,255,255,0.82);
+      color: var(--text-secondary);
+      text-decoration: none;
+    }
+    .scenario-row-table-wrap {
+      margin-top: 8px;
+      overflow: auto;
+      border-radius: 10px;
+      border: 1px solid rgba(26, 26, 46, 0.08);
+      background: rgba(255,255,255,0.92);
+    }
+    .scenario-row-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      line-height: 1.35;
+    }
+    .scenario-row-table th,
+    .scenario-row-table td {
+      padding: 8px 10px;
+      border-bottom: 1px solid rgba(26, 26, 46, 0.08);
+      text-align: left;
+      vertical-align: top;
+      white-space: nowrap;
+    }
+    .scenario-row-table th {
+      position: sticky;
+      top: 0;
+      background: rgba(245,242,238,0.96);
+      font-weight: 700;
+    }
+    .scenario-row-table tr:last-child td {
+      border-bottom: 0;
+    }
+    .scenario-inline-action {
+      margin-top: 8px;
+      padding: 7px 11px;
+      border-radius: 10px;
+      border: 1px solid rgba(26, 26, 46, 0.1);
+      background: rgba(255,255,255,0.84);
+      color: var(--ink);
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .scenario-empty {
+      padding: 18px;
+      border-radius: 10px;
+      border: 1px dashed rgba(26, 26, 46, 0.14);
+      background: rgba(255,255,255,0.72);
+      color: var(--text-secondary);
+      font-size: 13px;
+    }
+    .scenario-form {
+      display: grid;
+      gap: 10px;
+      padding: 14px 16px 16px;
+      border-top: 1px solid rgba(26, 26, 46, 0.08);
+      background: rgba(255,255,255,0.98);
+    }
+    .scenario-textarea {
+      width: 100%;
+      min-height: 92px;
+      max-height: 180px;
+      resize: none;
+      border-radius: 10px;
+      border: 1px solid rgba(26, 26, 46, 0.14);
+      background: rgba(245,242,238,0.58);
+      padding: 12px 13px;
+      line-height: 1.45;
+    }
+    .scenario-form-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .scenario-form-status {
+      color: var(--text-secondary);
+      font-size: 11px;
+    }
+    .scenario-submit {
+      width: auto;
+      border-radius: 10px;
+      padding-inline: 16px;
+    }
+    .scenario-resize-handle {
+      position: absolute;
+      right: 0;
+      bottom: 0;
+      width: 18px;
+      height: 18px;
+      cursor: nwse-resize;
+      background:
+        linear-gradient(135deg, transparent 0 48%, rgba(26,26,46,0.18) 48% 54%, transparent 54% 100%);
+    }
+
+      .connection-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
     .connection-grid .field-span { grid-column: 1 / -1; }
     .field-group { display: grid; gap: 8px; }
     .field-help { color: var(--text-secondary); font-size: 12px; }
@@ -3670,6 +3890,31 @@
       <section class="brief-section csv-brief-section" id="csvResultSection" hidden aria-labelledby="csvResultHeading"></section>
     </main>
 
+    <button class="secondary-button scenario-launcher" id="scenarioLauncher" type="button" hidden>Ask PulseBoard</button>
+    <aside class="scenario-window" id="scenarioWindow" hidden aria-labelledby="scenarioWindowTitle">
+      <div class="scenario-window-header" id="scenarioWindowHeader">
+        <div class="scenario-window-title">
+          <strong id="scenarioWindowTitle">Scenario Simulator</strong>
+          <span id="scenarioWindowSubtitle">Ask follow-up questions about the current monitoring brief.</span>
+        </div>
+        <div class="scenario-window-actions">
+          <button class="scenario-icon-button" type="button" id="scenarioMinimizeButton" aria-label="Minimize scenario simulator">−</button>
+          <button class="scenario-icon-button" type="button" id="scenarioCloseButton" aria-label="Close scenario simulator">×</button>
+        </div>
+      </div>
+      <div class="scenario-window-body">
+        <div class="scenario-messages" id="scenarioMessages"></div>
+        <form class="scenario-form" id="scenarioForm">
+          <textarea class="scenario-textarea" id="scenarioQuestionInput" placeholder="Ask a follow-up question about this monitoring run."></textarea>
+          <div class="scenario-form-row">
+            <span class="scenario-form-status" id="scenarioFormStatus">Answers stay tied to this monitoring run.</span>
+            <button class="cta-button scenario-submit" type="submit" id="scenarioSubmitButton">Ask</button>
+          </div>
+        </form>
+      </div>
+      <div class="scenario-resize-handle" id="scenarioResizeHandle" aria-hidden="true"></div>
+    </aside>
+
     <p class="footnote muted">Session-only connection settings. No credentials are persisted across refreshes.</p>
   </div>
 
@@ -3917,20 +4162,34 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
       schemaExpanded: true,
       runCount: 0,
       activeRunId: 0,
-      runHistory: [],
-      selectedHistoryRunId: null,
-      runHistoryCollapsed: false,
-      homeExplanationCollapsed: false,
-      dashboardVisible: false,
-      briefVisible: false,
+        runHistory: [],
+        selectedHistoryRunId: null,
+        runHistoryCollapsed: false,
+        scenarioThreads: {},
+        scenarioWindow: {
+          open: false,
+          minimized: false,
+          width: 420,
+          height: 430,
+          x: null,
+          y: null,
+          loading: false,
+          input: "",
+          activeRunId: null
+        },
+        homeExplanationCollapsed: false,
+        dashboardVisible: false,
+        briefVisible: false,
       csvResultVisible: false,
       agentStatus: createInitialStatuses(),
       agentResults: createInitialResults()
     };
 
-    const elements = {};
-    const chartInstances = {};
-    let homeTransitionTimer = null;
+      const elements = {};
+      const chartInstances = {};
+      let homeTransitionTimer = null;
+      let scenarioDragState = null;
+      let scenarioResizeState = null;
 
     document.addEventListener("DOMContentLoaded", () => {
       cacheElements();
@@ -3962,12 +4221,13 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
           "topbarMonitoringLabel", "providerStatusBadge", "apiKeyButton", "guideButton", "newQueryButton", "brandHomeButton",
           "homePage", "homeExplanation", "guidePage", "apiKeyPage", "apiKeyHelpSection", "connectionStateMessage",
           "openCsvButton", "queryPage", "csvPage", "queryConnectionPrompt", "csvConnectionPrompt", "queryConnectButton", "csvConnectButton", "topicInput",
-        "modeSelect", "roleInput", "interviewRoleGroup", "queryForm", "runButton", "statusMessage", "runCounterBadge", "chipRow",
-        "runHistorySection",
-        "dashboard", "dashboardSubtitle", "dashboardModePill", "progressLabel", "progressFill",
-        "progressDetail", "aggregatorBanner", "agentGrid", "briefSection", "csvResultSection",
-        "connectionForm", "providerSelect", "providerHelpShortcut", "providerModelInput", "providerApiKeyInput",
-        "providerEndpointInput", "providerNotes", "connectionFormMessage", "closeConnectionButton",
+          "modeSelect", "roleInput", "interviewRoleGroup", "queryForm", "runButton", "statusMessage", "runCounterBadge", "chipRow",
+          "runHistorySection",
+          "dashboard", "dashboardSubtitle", "dashboardModePill", "progressLabel", "progressFill",
+          "progressDetail", "aggregatorBanner", "agentGrid", "briefSection", "csvResultSection",
+          "scenarioLauncher", "scenarioWindow", "scenarioWindowHeader", "scenarioWindowTitle", "scenarioWindowSubtitle", "scenarioMessages", "scenarioForm", "scenarioQuestionInput", "scenarioFormStatus", "scenarioSubmitButton", "scenarioMinimizeButton", "scenarioCloseButton", "scenarioResizeHandle",
+          "connectionForm", "providerSelect", "providerHelpShortcut", "providerModelInput", "providerApiKeyInput",
+          "providerEndpointInput", "providerNotes", "connectionFormMessage", "closeConnectionButton",
         "saveConnectionButton", "csvForm", "csvFileInput", "csvGoalInput", "compareCsvGoalInput",
         "runCsvButton", "compareRunCsvButton", "csvStatusMessage", "useSampleCsvButton", "csvInputHelper", "csvFileName", "qualityPreviewContainer", "singleCsvActionRow",
         "csvModeSingle", "csvModeCompare", "singleCsvSection", "compareCsvSection",
@@ -3999,10 +4259,22 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
       elements.clearCompareFileBButton.addEventListener("click", () => clearComparisonFileSelection("fileB"));
       elements.providerSelect.addEventListener("change", syncProviderForm);
       elements.modeSelect.addEventListener("change", syncQueryModeUi);
-      elements.connectionForm.addEventListener("submit", saveConnectionFromForm);
-      elements.queryForm.addEventListener("submit", handleRunSubmit);
-      elements.runHistorySection?.addEventListener("click", handleRunHistoryClick);
-      elements.csvForm.addEventListener("submit", handleCsvSubmit);
+        elements.connectionForm.addEventListener("submit", saveConnectionFromForm);
+        elements.queryForm.addEventListener("submit", handleRunSubmit);
+        elements.runHistorySection?.addEventListener("click", handleRunHistoryClick);
+        elements.scenarioLauncher?.addEventListener("click", openScenarioWindow);
+        elements.scenarioForm?.addEventListener("submit", submitScenarioQuestion);
+        elements.scenarioQuestionInput?.addEventListener("input", () => {
+          state.scenarioWindow.input = elements.scenarioQuestionInput.value;
+        });
+        elements.scenarioMessages?.addEventListener("click", handleScenarioMessagesClick);
+        elements.scenarioMinimizeButton?.addEventListener("click", toggleScenarioWindowMinimized);
+        elements.scenarioCloseButton?.addEventListener("click", closeScenarioWindow);
+        elements.scenarioWindowHeader?.addEventListener("pointerdown", handleScenarioWindowPointerDown);
+        elements.scenarioResizeHandle?.addEventListener("pointerdown", handleScenarioResizePointerDown);
+        window.addEventListener("pointermove", handleScenarioPointerMove);
+        window.addEventListener("pointerup", handleScenarioPointerUp);
+        elements.csvForm.addEventListener("submit", handleCsvSubmit);
       elements.qualityPreviewContainer.addEventListener("click", handleSinglePreviewInteraction);
       elements.qualityPreviewContainer.addEventListener("change", handleSinglePreviewInputChange);
       elements.csvResultSection.addEventListener("click", handleCsvResultClick);
@@ -4424,9 +4696,314 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
           </article>
         `).join("")}</div>` : history.length ? `<div class="history-empty">Saved monitoring runs are collapsed. Choose Expand to view them again.</div>` : `<div class="history-empty">No monitoring snapshots saved yet. Complete a New Query monitoring run and it will appear here automatically.</div>`}
       `;
-    }
+      }
 
-    function restoreMonitoringRunFromHistory(runId) {
+      function getCsvScenarioResultId() {
+        if (!(state.route === "csv" && state.csvResultVisible && state.csvExportMode === "single" && state.csvResult && state.csvChartPayload?.mode === "single")) return null;
+        const fileName = state.csvExportMeta?.filename || state.csvChartPayload?.sourceLabel || state.csvSourceLabel || "csv";
+        const rowCount = state.csvChartPayload?.parsedCsv?.records?.length || 0;
+        const columnCount = state.csvChartPayload?.parsedCsv?.headers?.length || 0;
+        return `csv-single-${String(fileName).toLowerCase()}-${rowCount}-${columnCount}`;
+      }
+
+      function getActiveScenarioContext() {
+        if (state.route === "query" && state.briefVisible && state.mode !== "interviewprep") {
+          return {
+            scenarioType: "monitoring",
+            contextKey: state.selectedHistoryRunId || `live-${state.activeRunId}`,
+            title: "Scenario Simulator",
+            subtitle: `Monitoring brief: ${state.topic}`
+          };
+        }
+        if (state.route === "csv" && state.csvResultVisible && state.csvExportMode === "single" && state.csvResult && state.csvChartPayload?.mode === "single") {
+          return {
+            scenarioType: "csv_single",
+            contextKey: getCsvScenarioResultId(),
+            title: "CSV Scenario Simulator",
+            subtitle: `CSV analysis: ${state.csvExportMeta?.filename || state.csvChartPayload?.sourceLabel || state.csvSourceLabel || "Uploaded CSV"}`
+          };
+        }
+        return null;
+      }
+
+      function getScenarioRunId() {
+        return getActiveScenarioContext()?.contextKey || null;
+      }
+
+      function getScenarioThread(runId) {
+        return Array.isArray(state.scenarioThreads[runId]) ? state.scenarioThreads[runId] : [];
+      }
+
+      function setScenarioThread(runId, messages) {
+        if (!runId) return;
+        state.scenarioThreads[runId] = Array.isArray(messages) ? messages : [];
+      }
+
+      function getScenarioSourceModeLabel(sourceMode) {
+        if (sourceMode === "csv_data") return "Answered from uploaded CSV data";
+        if (sourceMode === "csv_brief") return "Answered from current CSV brief";
+        if (sourceMode === "live_followup") return "Used fresh live follow-up signals";
+        if (sourceMode === "mixed") return "Used current brief + fresh follow-up";
+        return "Answered from current brief";
+      }
+
+      function hasScenarioSignalCount(signalCount) {
+        return typeof signalCount === "number" && Number.isFinite(signalCount);
+      }
+
+      function renderScenarioRowTable(message) {
+        const rows = Array.isArray(message.matchedRows) ? message.matchedRows : [];
+        if (!rows.length) return "";
+        const expanded = Boolean(message.expanded);
+        const displayedRows = expanded ? rows : rows.slice(0, Number(message.displayedRowCount || 5) || 5);
+        const headers = Array.isArray(message.rowHeaders) && message.rowHeaders.length
+          ? message.rowHeaders
+          : Object.keys(displayedRows[0] || {});
+        if (!headers.length) return "";
+        return `
+          <div class="scenario-row-table-wrap">
+            <table class="scenario-row-table">
+              <thead>
+                <tr>${headers.map((header) => `<th>${escapeHtml(header)}</th>`).join("")}</tr>
+              </thead>
+              <tbody>
+                ${displayedRows.map((row) => `<tr>${headers.map((header) => `<td>${escapeHtml(String(row?.[header] ?? ""))}</td>`).join("")}</tr>`).join("")}
+              </tbody>
+            </table>
+          </div>
+          ${message.hasMoreRows && !expanded ? `<button class="scenario-inline-action" type="button" data-scenario-action="show-all-rows" data-scenario-message-id="${escapeHtmlAttribute(message.messageId || "")}">See all rows (${escapeHtml(String(message.totalMatchingRows || rows.length))})</button>` : ""}
+        `;
+      }
+
+      function renderScenarioMessages(runId) {
+        const context = getActiveScenarioContext();
+        const messages = getScenarioThread(runId);
+        if (!messages.length) {
+          return `<div class="scenario-empty">${context?.scenarioType === "csv_single"
+            ? "Ask anything about this CSV analysis. PulseBoard can explain the brief or show exact matching rows and values from the uploaded dataset."
+            : "Ask anything about this monitoring brief. PulseBoard will answer from the current run first and only search for fresh signals if the brief does not already cover it."}</div>`;
+        }
+        return messages.map((message) => {
+          const sourceModeLabel = message.role === "assistant" ? getScenarioSourceModeLabel(message.sourceMode) : "";
+          const verifiedLinks = Array.isArray(message.verifiedLinks) ? message.verifiedLinks : [];
+          return `
+            <article class="scenario-message ${message.role === "assistant" ? "assistant" : "user"}">
+              <div class="scenario-bubble">${escapeHtml(message.content || "")}</div>
+              ${message.role === "assistant" ? renderScenarioRowTable(message) : ""}
+                ${message.role === "assistant" ? `<div class="scenario-meta-row">
+                <span class="scenario-source-pill" data-scenario-source="${escapeHtml(sourceModeLabel)}">${escapeHtml(sourceModeLabel)}</span>
+                ${message.freshnessLabel && message.freshnessLabel !== "Unknown" ? `<span class="scenario-source-pill">${escapeHtml(message.freshnessLabel)}</span>` : ""}
+                ${hasScenarioSignalCount(message.signalCount) ? `<span class="scenario-source-pill">Based on ${escapeHtml(String(message.signalCount))} signals</span>` : ""}
+                ${verifiedLinks.slice(0, 2).map((link) => `<a class="scenario-link-pill" href="${escapeHtmlAttribute(link.url)}" target="_blank" rel="noreferrer">${escapeHtml(link.title || "Verified link")}</a>`).join("")}
+              </div>` : ""}
+            </article>
+          `;
+        }).join("");
+      }
+
+      function applyScenarioWindowFrame() {
+        if (!elements.scenarioWindow) return;
+        const width = Math.max(320, Math.min(state.scenarioWindow.width || 420, Math.min(window.innerWidth - 20, 560)));
+        const height = Math.max(280, Math.min(state.scenarioWindow.height || 430, Math.min(window.innerHeight - 20, 720)));
+        if (state.scenarioWindow.x === null || state.scenarioWindow.y === null) {
+          state.scenarioWindow.x = Math.max(12, window.innerWidth - width - 28);
+          state.scenarioWindow.y = Math.max(12, window.innerHeight - height - 92);
+        }
+        state.scenarioWindow.width = width;
+        state.scenarioWindow.height = height;
+        state.scenarioWindow.x = Math.max(8, Math.min(state.scenarioWindow.x, window.innerWidth - width - 8));
+        state.scenarioWindow.y = Math.max(8, Math.min(state.scenarioWindow.y, window.innerHeight - (state.scenarioWindow.minimized ? 64 : height) - 8));
+        elements.scenarioWindow.style.width = `${width}px`;
+        elements.scenarioWindow.style.height = state.scenarioWindow.minimized ? "auto" : `${height}px`;
+        elements.scenarioWindow.style.left = `${state.scenarioWindow.x}px`;
+        elements.scenarioWindow.style.top = `${state.scenarioWindow.y}px`;
+      }
+
+      function renderScenarioWindow() {
+        if (!elements.scenarioWindow) return;
+        const context = getActiveScenarioContext();
+        const runId = context?.contextKey || null;
+        const visible = state.scenarioWindow.open && Boolean(runId);
+        elements.scenarioWindow.hidden = !visible;
+        if (!visible) return;
+        state.scenarioWindow.activeRunId = runId;
+        elements.scenarioWindow.classList.toggle("minimized", Boolean(state.scenarioWindow.minimized));
+        elements.scenarioMessages.innerHTML = renderScenarioMessages(runId);
+        elements.scenarioWindowTitle.textContent = context?.title || "Scenario Simulator";
+        elements.scenarioWindowSubtitle.textContent = context?.subtitle || "Ask follow-up questions.";
+        elements.scenarioQuestionInput.value = state.scenarioWindow.input || "";
+        elements.scenarioQuestionInput.disabled = Boolean(state.scenarioWindow.loading);
+        elements.scenarioSubmitButton.disabled = Boolean(state.scenarioWindow.loading);
+        elements.scenarioForm.hidden = Boolean(state.scenarioWindow.minimized);
+        const assistantMessages = getScenarioThread(runId).filter((message) => message.role === "assistant");
+        const latestAssistantMessage = assistantMessages[assistantMessages.length - 1];
+        elements.scenarioFormStatus.textContent = state.scenarioWindow.loading
+          ? "PulseBoard is checking the current brief and live follow-up signals."
+          : latestAssistantMessage?.sourceMode
+            ? getScenarioSourceModeLabel(latestAssistantMessage.sourceMode)
+            : "Answers stay tied to this monitoring run.";
+        applyScenarioWindowFrame();
+        elements.scenarioMessages.scrollTop = elements.scenarioMessages.scrollHeight;
+      }
+
+      function syncScenarioVisibility() {
+        if (!elements.scenarioLauncher || !elements.scenarioWindow) return;
+        const context = getActiveScenarioContext();
+        const runId = context?.contextKey || null;
+        const visible = Boolean(runId);
+        elements.scenarioLauncher.hidden = !visible;
+        if (!visible) {
+          state.scenarioWindow.open = false;
+          state.scenarioWindow.loading = false;
+          elements.scenarioWindow.hidden = true;
+          return;
+        }
+        if (state.scenarioWindow.activeRunId !== runId) {
+          state.scenarioWindow.activeRunId = runId;
+          state.scenarioWindow.input = "";
+        }
+        renderScenarioWindow();
+      }
+
+      function openScenarioWindow() {
+        const runId = getScenarioRunId();
+        if (!runId) return;
+        state.scenarioWindow.open = true;
+        state.scenarioWindow.minimized = false;
+        renderScenarioWindow();
+        window.setTimeout(() => elements.scenarioQuestionInput?.focus(), 0);
+      }
+
+      function closeScenarioWindow() {
+        state.scenarioWindow.open = false;
+        renderScenarioWindow();
+      }
+
+      function toggleScenarioWindowMinimized() {
+        state.scenarioWindow.minimized = !state.scenarioWindow.minimized;
+        renderScenarioWindow();
+      }
+
+      function handleScenarioWindowPointerDown(event) {
+        if (event.target.closest(".scenario-window-actions") || event.target.closest(".scenario-resize-handle")) return;
+        if (event.button !== 0 || !state.scenarioWindow.open) return;
+        scenarioDragState = {
+          offsetX: event.clientX - (state.scenarioWindow.x || 0),
+          offsetY: event.clientY - (state.scenarioWindow.y || 0)
+        };
+        event.preventDefault();
+      }
+
+      function handleScenarioResizePointerDown(event) {
+        if (event.button !== 0 || !state.scenarioWindow.open) return;
+        scenarioResizeState = {
+          startWidth: state.scenarioWindow.width,
+          startHeight: state.scenarioWindow.height,
+          startX: event.clientX,
+          startY: event.clientY
+        };
+        event.preventDefault();
+      }
+
+      function handleScenarioPointerMove(event) {
+        if (scenarioDragState) {
+          state.scenarioWindow.x = event.clientX - scenarioDragState.offsetX;
+          state.scenarioWindow.y = event.clientY - scenarioDragState.offsetY;
+          applyScenarioWindowFrame();
+        }
+        if (scenarioResizeState) {
+          state.scenarioWindow.width = scenarioResizeState.startWidth + (event.clientX - scenarioResizeState.startX);
+          state.scenarioWindow.height = scenarioResizeState.startHeight + (event.clientY - scenarioResizeState.startY);
+          applyScenarioWindowFrame();
+        }
+      }
+
+      function handleScenarioPointerUp() {
+        scenarioDragState = null;
+        scenarioResizeState = null;
+      }
+
+      async function submitScenarioQuestion(event) {
+        event.preventDefault();
+        const context = getActiveScenarioContext();
+        const runId = context?.contextKey || null;
+        const brief = state.agentResults.aggregator;
+        const question = elements.scenarioQuestionInput.value.trim();
+        if (!runId || !state.connection) return;
+        if (context?.scenarioType === "monitoring" && !brief) return;
+        if (context?.scenarioType === "csv_single" && !state.csvResult) return;
+        if (!question) {
+          elements.scenarioQuestionInput.focus();
+          return;
+        }
+        const existingMessages = getScenarioThread(runId);
+        const optimisticMessages = [...existingMessages, { role: "user", content: question }];
+        setScenarioThread(runId, optimisticMessages);
+        state.scenarioWindow.input = "";
+        state.scenarioWindow.loading = true;
+        renderScenarioWindow();
+        try {
+          const response = await fetch("/api/pulseboard/scenario", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              scenarioType: context?.scenarioType || "monitoring",
+              connection: state.connection,
+              topic: state.topic,
+              mode: state.mode,
+              runId,
+              brief,
+              agentResults: {
+                news: state.agentResults.news || null,
+                jobs: state.agentResults.jobs || null,
+                sentiment: state.agentResults.sentiment || null,
+                regulatory: state.agentResults.regulatory || null,
+                competitor: state.agentResults.competitor || null
+              },
+              reliability: brief?.reliability || null,
+              resultId: context?.scenarioType === "csv_single" ? runId : undefined,
+              csvResult: context?.scenarioType === "csv_single" ? state.csvResult : undefined,
+              parsedCsv: context?.scenarioType === "csv_single" ? state.csvChartPayload?.parsedCsv : undefined,
+              qualityReport: context?.scenarioType === "csv_single" ? state.csvQualityPreview?.quality || null : undefined,
+              schemaSummary: context?.scenarioType === "csv_single" ? state.csvSchemaPreview || null : undefined,
+              messages: existingMessages,
+              question
+            })
+          });
+          const payload = await response.json().catch(() => ({}));
+          if (!response.ok) {
+            throw new Error((payload.error && payload.error.message) || "Scenario follow-up failed.");
+          }
+          setScenarioThread(runId, Array.isArray(payload.messages) ? payload.messages : optimisticMessages);
+        } catch (error) {
+          setScenarioThread(runId, [
+            ...optimisticMessages,
+            { role: "assistant", content: error.message || "Scenario follow-up failed.", sourceMode: context?.scenarioType === "csv_single" ? "csv_brief" : "brief" }
+          ]);
+        } finally {
+          state.scenarioWindow.loading = false;
+          renderScenarioWindow();
+        }
+      }
+
+      function handleScenarioMessagesClick(event) {
+        const actionButton = event.target.closest("[data-scenario-action]");
+        if (!actionButton) return;
+        const action = actionButton.getAttribute("data-scenario-action");
+        if (action !== "show-all-rows") return;
+        const runId = getScenarioRunId();
+        const messageId = actionButton.getAttribute("data-scenario-message-id");
+        if (!runId || !messageId) return;
+        const nextMessages = getScenarioThread(runId).map((message) => (
+          message.messageId === messageId
+            ? { ...message, expanded: true }
+            : message
+        ));
+        setScenarioThread(runId, nextMessages);
+        renderScenarioWindow();
+      }
+
+      function restoreMonitoringRunFromHistory(runId) {
       const run = state.runHistory.find((item) => item.id === runId);
       if (!run) return;
       state.selectedHistoryRunId = run.id;
@@ -4462,14 +5039,15 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
         updateAgentStatus(agent.key, "waiting");
         setAgentCardVisibility(agent.key, false);
       }
-      elements.dashboardSubtitle.textContent = `Monitoring: "${run.topic}"`;
-      elements.dashboardModePill.textContent = `Mode: ${MODE_LABELS[run.mode] || run.mode}`;
-      elements.aggregatorBanner.classList.remove("visible");
-      setRunButtonIdleState();
-      renderBrief(run.brief);
-      renderRunHistorySection();
-      setStatusMessage(`Restored monitoring snapshot from ${formatHistoryTimestamp(run.timestamp)}.`, "complete");
-    }
+        elements.dashboardSubtitle.textContent = `Monitoring: "${run.topic}"`;
+        elements.dashboardModePill.textContent = `Mode: ${MODE_LABELS[run.mode] || run.mode}`;
+        elements.aggregatorBanner.classList.remove("visible");
+        setRunButtonIdleState();
+        renderBrief(run.brief);
+        syncScenarioVisibility();
+        renderRunHistorySection();
+        setStatusMessage(`Restored monitoring snapshot from ${formatHistoryTimestamp(run.timestamp)}.`, "complete");
+      }
 
     async function rerunMonitoringRunFromHistory(runId) {
       const run = state.runHistory.find((item) => item.id === runId);
@@ -5084,8 +5662,8 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
     }
 
       function applyRouteState() {
-        const showHome = state.route === "home";
-        const showGuide = state.route === "guide";
+          const showHome = state.route === "home";
+          const showGuide = state.route === "guide";
         const showQuery = state.route === "query";
         const showCsv = state.route === "csv";
         const showApiKey = state.route === "apiKey";
@@ -5101,11 +5679,12 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
         elements.dashboard.hidden = !(showQuery && state.dashboardVisible);
         elements.briefSection.hidden = !(showQuery && state.briefVisible);
         elements.csvResultSection.hidden = !(showCsv && state.csvResultVisible);
-        elements.queryConnectionPrompt.hidden = !showQuery || Boolean(state.connection);
-        elements.csvConnectionPrompt.hidden = !showCsv || Boolean(state.connection);
-        syncHomeThemeUi();
-        updateTopbarLabel();
-      }
+          elements.queryConnectionPrompt.hidden = !showQuery || Boolean(state.connection);
+          elements.csvConnectionPrompt.hidden = !showCsv || Boolean(state.connection);
+          syncHomeThemeUi();
+          syncScenarioVisibility();
+          updateTopbarLabel();
+        }
 
       function syncHomeExplanationState() {
         if (!elements.homeExplanation) return;
@@ -5171,15 +5750,16 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
       }
 
       state.topic = topic;
-      state.mode = mode;
-      state.role = role;
-      state.selectedHistoryRunId = null;
-      state.runCount += 1;
-      state.activeRunId += 1;
-      const runId = state.activeRunId;
+        state.mode = mode;
+        state.role = role;
+        state.selectedHistoryRunId = null;
+        state.runCount += 1;
+        state.activeRunId += 1;
+        const runId = state.activeRunId;
+        delete state.scenarioThreads[`live-${runId}`];
 
-      resetRunState();
-      state.dashboardVisible = true;
+        resetRunState();
+        state.dashboardVisible = true;
       state.briefVisible = false;
       navigateTo("query");
       renderAgentCards();
@@ -5215,14 +5795,19 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
     function resetRunState() {
       state.agentStatus = createInitialStatuses();
       state.agentResults = createInitialResults();
-      state.dashboardVisible = false;
-      state.briefVisible = false;
-      elements.briefSection.hidden = true;
-      elements.briefSection.innerHTML = "";
-      elements.aggregatorBanner.classList.remove("visible");
-      for (const agent of getActiveAgentConfigs()) updateAgentStatus(agent.key, "waiting");
-      renderProgress();
-    }
+        state.dashboardVisible = false;
+        state.briefVisible = false;
+        elements.briefSection.hidden = true;
+        elements.briefSection.innerHTML = "";
+        state.scenarioWindow.open = false;
+        state.scenarioWindow.minimized = false;
+        state.scenarioWindow.loading = false;
+        state.scenarioWindow.input = "";
+        elements.aggregatorBanner.classList.remove("visible");
+        for (const agent of getActiveAgentConfigs()) updateAgentStatus(agent.key, "waiting");
+        renderProgress();
+        syncScenarioVisibility();
+      }
 
     async function handleCsvSubmit(event) {
       event.preventDefault();
@@ -6205,12 +6790,13 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
         <div class="list-card" style="margin-top:20px;"><strong>Recommended actions</strong>${actions.length ? `<ol>${actions.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ol>` : "<p>No recommended actions returned.</p>"}<p><span class="meta-label">Monitoring cadence</span> ${escapeHtml(result.monitoringFrequency || "No cadence recommendation returned.")}</p></div>
         ${changeDetectionMarkup}
         ${renderMonitoringBriefActionBar()}
-      `;
-      const copyButton = document.getElementById("copyMonitoringBriefButton");
-      if (copyButton) copyButton.addEventListener("click", copyMonitoringBriefToClipboard);
-      document.getElementById("exportMonitoringBriefJsonButton").addEventListener("click", exportMonitoringBriefJSON);
-      document.getElementById("downloadMonitoringBriefButton").addEventListener("click", downloadBrief);
-    }
+        `;
+        const copyButton = document.getElementById("copyMonitoringBriefButton");
+        if (copyButton) copyButton.addEventListener("click", copyMonitoringBriefToClipboard);
+        document.getElementById("exportMonitoringBriefJsonButton").addEventListener("click", exportMonitoringBriefJSON);
+        document.getElementById("downloadMonitoringBriefButton").addEventListener("click", downloadBrief);
+        syncScenarioVisibility();
+      }
 
     function renderInterviewPrepBrief(result) {
       const rounds = Array.isArray(result.rounds) ? result.rounds : [];
@@ -6273,12 +6859,13 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
       return `<span class="tier-dot ${tone}" aria-hidden="true"></span>`;
     }
 
-    function renderBriefFailure(successCount, errorMessage) {
-      const friendlyMessage = extractRelayErrorInfo(errorMessage).message;
-      state.briefVisible = true;
-      elements.briefSection.hidden = false;
-      elements.briefSection.innerHTML = `<div class="brief-summary"><p class="one-line-summary">PulseBoard could not synthesize this run.</p><p class="section-subtitle">${successCount}/5 monitoring agents returned usable data.${friendlyMessage ? ` ${escapeHtml(friendlyMessage)}` : ""}</p></div>`;
-    }
+      function renderBriefFailure(successCount, errorMessage) {
+        const friendlyMessage = extractRelayErrorInfo(errorMessage).message;
+        state.briefVisible = true;
+        elements.briefSection.hidden = false;
+        elements.briefSection.innerHTML = `<div class="brief-summary"><p class="one-line-summary">PulseBoard could not synthesize this run.</p><p class="section-subtitle">${successCount}/5 monitoring agents returned usable data.${friendlyMessage ? ` ${escapeHtml(friendlyMessage)}` : ""}</p></div>`;
+        syncScenarioVisibility();
+      }
 
     async function copyBriefToClipboard() {
       if (!state.agentResults.aggregator) {
@@ -9418,6 +10005,7 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
       if (copyButton) copyButton.addEventListener("click", copyCsvSummaryToClipboard);
       renderCharts(state.csvChartPayload, chartRecommendations, "single");
       renderActiveCrossReferenceSection();
+      syncScenarioVisibility();
     }
 
     function renderCsvComparisonResult(result, meta) {
@@ -9535,6 +10123,7 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
       renderCharts(state.csvChartPayload, chartRecommendations, "compare");
       animateQualityCards(elements.csvResultSection);
       renderActiveCrossReferenceSection();
+      syncScenarioVisibility();
     }
 
     function renderCorrelationsSection(correlations) {

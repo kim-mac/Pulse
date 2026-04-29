@@ -43,6 +43,11 @@ assert.doesNotMatch(html, /homeThemeToggleButton\?\.addEventListener\("click", t
 expect(/transition:\s*max-height\s+0\.35s\s+ease/i, "expected smooth home explanation collapse transition");
 expect(/id="queryPage"/, "expected a dedicated query page section");
 expect(/id="runHistorySection"/, "expected a monitoring run history section on the New Query screen");
+expect(/id="scenarioLauncher"/, "expected a floating scenario simulator launcher");
+expect(/id="scenarioWindow"/, "expected a floating scenario simulator window shell");
+expect(/id="scenarioMessages"/, "expected a scenario chat message list");
+expect(/id="scenarioForm"/, "expected a scenario chat form");
+expect(/id="scenarioQuestionInput"/, "expected a scenario question input");
 expect(/id="csvPage"/, "expected a dedicated csv page section");
 expect(/<option value="interviewprep">Interview Prep<\/option>/, "expected interview prep mode in the query mode dropdown");
 expect(/id="interviewRoleGroup"/, "expected an interview role input group");
@@ -58,6 +63,8 @@ expect(/function saveConnectionFromForm\(/, "expected a saveConnectionFromForm f
 expect(/runHistory:\s*\[\]/, "expected monitoring run history state");
 expect(/selectedHistoryRunId:\s*null/, "expected selected history run state");
 expect(/runHistoryCollapsed:\s*false/, "expected run history collapse state to default to expanded");
+expect(/scenarioThreads:\s*\{\}/, "expected per-run scenario thread state");
+expect(/scenarioWindow:\s*\{[\s\S]*open:\s*false[\s\S]*minimized:\s*false[\s\S]*width:\s*\d+[\s\S]*height:\s*\d+/i, "expected scenario window UI state");
 expect(/function serializeMonitoringRunForHistory\(/, "expected helper to serialize monitoring runs for history");
 expect(/function loadRunHistory\(/, "expected helper to load monitoring history from localStorage");
 expect(/function saveRunHistory\(/, "expected helper to persist monitoring history");
@@ -65,6 +72,14 @@ expect(/function getPreviousComparableRun\(/, "expected helper to find the previ
 expect(/function buildChangeDetectionSummary\(/, "expected helper to compute change detection");
 expect(/function renderRunHistorySection\(/, "expected helper to render monitoring history");
 expect(/function restoreMonitoringRunFromHistory\(/, "expected helper to restore a saved monitoring run");
+expect(/function getScenarioRunId\(/, "expected active scenario run helper");
+expect(/function getCsvScenarioResultId\(/, "expected CSV scenario result helper");
+expect(/function getActiveScenarioContext\(/, "expected shared scenario context helper");
+expect(/function syncScenarioVisibility\(/, "expected scenario launcher visibility helper");
+expect(/function renderScenarioWindow\(/, "expected scenario window renderer");
+expect(/function submitScenarioQuestion\(/, "expected scenario question submit handler");
+expect(/function handleScenarioMessagesClick\(/, "expected scenario inline action handler");
+expect(/function hasScenarioSignalCount\(signalCount\)/, "expected scenario signal-count helper");
 expect(/localStorage/i, "expected monitoring history to use browser localStorage");
 expect(/What Changed Since Last Run/i, "expected a change-detection panel title");
 expect(/function renderFreshnessPill\(/, "expected freshness tag renderer for live intelligence surfaces");
@@ -146,6 +161,16 @@ expect(/function renderInterviewPrepBrief\(result\) \{[\s\S]*brief-header[\s\S]*
 expect(/function renderInterviewPrepBrief\(result\) \{[\s\S]*csv-action-bar action-bar[\s\S]*Copy Summary[\s\S]*Download Brief/i, "expected interview prep brief to use the bottom action bar pattern");
 assert.doesNotMatch(html, /function renderInterviewPrepBrief\(result\) \{[\s\S]*<div class="brief-actions"><button class="secondary-button" type="button" id="copyBriefButton">Copy to Clipboard<\/button><button class="secondary-button" type="button" id="downloadBriefButton">Download Brief<\/button>/, "expected interview prep brief to remove the old top-right brief-actions button row");
 assert.doesNotMatch(html, /function renderInterviewPrepBrief\(result\) \{[\s\S]*<div class="score-card"><div class="score-label">Confidence<\/div>/, "expected interview prep brief to remove the confidence score card");
+expect(/state\.route === "csv" && state\.csvResultVisible && state\.csvExportMode === "single"/, "expected scenario context to support single-file CSV analysis results");
+expect(/showQuery && state\.briefVisible && state\.mode !== "interviewprep"|state\.csvResultVisible && state\.csvExportMode === "single"/, "expected scenario launcher visibility to support monitoring briefs and single-file CSV analysis only");
+expect(/function renderCsvAnalysisResult\(result, sourceLabel\) \{[\s\S]*syncScenarioVisibility\(\);/s, "expected single-file CSV rendering to recompute scenario launcher visibility");
+expect(/fetch\(["'`]\/api\/pulseboard\/scenario["'`]/, "expected frontend to call the scenario relay endpoint");
+expect(/reliability:\s*brief\?\.reliability\s*\|\|\s*null/, "expected scenario payload building to guard reliability access when CSV mode has no monitoring brief");
+expect(/\.scenario-window\s*\{[\s\S]*position:\s*fixed/i, "expected a fixed-position scenario window style");
+expect(/\.scenario-resize-handle\s*\{[\s\S]*cursor:\s*nwse-resize/i, "expected a visible resize handle for the scenario window");
+expect(/data-scenario-source="\$\{escapeHtml\(sourceModeLabel\)\}"/, "expected scenario messages to carry provenance labels");
+expect(/hasScenarioSignalCount\(message\.signalCount\) \? `<span class="scenario-source-pill">Based on \$\{escapeHtml\(String\(message\.signalCount\)\)\} signals<\/span>` : ""/, "expected scenario signal pill to render only for valid numeric counts");
+expect(/scenario-row-table|scenario-inline-action|See all rows/i, "expected CSV scenario chat to support inline row tables and expansion actions");
 expect(/icon:\s*"news"|icon:\s*"jobs"|icon:\s*"sentiment"|icon:\s*"regulatory"|icon:\s*"competitor"/, "expected agent configs to use semantic icon names");
 assert.doesNotMatch(html, /â—Œ|ðŸ|âš¡/, "expected broken mojibake icon glyphs to be removed from the monitoring UI");
 

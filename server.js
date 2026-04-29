@@ -25,6 +25,8 @@ const MODE_MODIFIERS = {
   interviewprep: "Build a company-specific interview roadmap for the target role using the latest reported interview signals, role expectations, and prep resources."
 };
 
+const SCENARIO_SUPPORTED_MODES = new Set(["general", "company", "jobmarket", "esg", "industry"]);
+
 const PROVIDER_PRESETS = {
   openai: {
     label: "OpenAI",
@@ -321,9 +323,9 @@ async function handlePulseBoardRequest(req, res, options = {}) {
       const validation = await validateConnection(connection);
       return sendJson(res, validation.ok ? 200 : 400, validation);
     }
-    if (req.method === "POST" && requestUrl.pathname === "/api/pulseboard/run") {
-      const body = await readJson(req);
-      const connection = normalizeConnection(body.connection);
+      if (req.method === "POST" && requestUrl.pathname === "/api/pulseboard/run") {
+        const body = await readJson(req);
+        const connection = normalizeConnection(body.connection);
       const input = {
         connection,
         topic: String(body.topic || "").trim(),
@@ -342,15 +344,60 @@ async function handlePulseBoardRequest(req, res, options = {}) {
         "Connection": "keep-alive",
         "Access-Control-Allow-Origin": "*"
       });
-      await runPulseBoardSession(input, (event) => {
-        res.write(`${JSON.stringify(event)}\n`);
-      });
-      res.end();
-      return;
-    }
-    if (req.method === "POST" && requestUrl.pathname === "/api/pulseboard/analyze-csv") {
-      const body = await readJson(req);
-      const connection = normalizeConnection(body.connection);
+        await runPulseBoardSession(input, (event) => {
+          res.write(`${JSON.stringify(event)}\n`);
+        });
+        res.end();
+        return;
+      }
+      if (req.method === "POST" && requestUrl.pathname === "/api/pulseboard/scenario") {
+        const body = await readJson(req);
+        const connection = normalizeConnection(body.connection);
+        const input = {
+          scenarioType: String(body.scenarioType || "monitoring").trim(),
+          connection,
+          topic: String(body.topic || "").trim(),
+          mode: String(body.mode || "general").trim(),
+          runId: String(body.runId || "").trim(),
+          brief: body.brief && typeof body.brief === "object" ? body.brief : null,
+          agentResults: body.agentResults && typeof body.agentResults === "object" ? body.agentResults : {},
+          reliability: body.reliability && typeof body.reliability === "object" ? body.reliability : null,
+          resultId: String(body.resultId || "").trim(),
+          csvResult: body.csvResult && typeof body.csvResult === "object" ? body.csvResult : null,
+          parsedCsv: body.parsedCsv && typeof body.parsedCsv === "object" ? body.parsedCsv : null,
+          qualityReport: body.qualityReport && typeof body.qualityReport === "object" ? body.qualityReport : null,
+          schemaSummary: body.schemaSummary || null,
+          messages: Array.isArray(body.messages) ? body.messages : [],
+          question: String(body.question || "").trim()
+        };
+        if (input.scenarioType === "csv_single") {
+          if (!input.csvResult || !input.parsedCsv?.headers || !input.parsedCsv?.records) {
+            return sendJson(res, 400, { error: { message: "A completed single-file CSV analysis is required before asking CSV scenario questions." } });
+          }
+          if (!input.question) {
+            return sendJson(res, 400, { error: { message: "Enter a CSV scenario question before asking PulseBoard." } });
+          }
+          const result = await runCsvScenarioFollowup(input);
+          return sendJson(res, 200, result);
+        }
+        if (!input.topic) {
+          return sendJson(res, 400, { error: { message: "Topic is required for scenario follow-up." } });
+        }
+        if (!SCENARIO_SUPPORTED_MODES.has(input.mode)) {
+          return sendJson(res, 400, { error: { message: "Scenario Simulator currently supports monitoring briefs only." } });
+        }
+        if (!input.brief) {
+          return sendJson(res, 400, { error: { message: "A completed monitoring brief is required before asking a scenario question." } });
+        }
+        if (!input.question) {
+          return sendJson(res, 400, { error: { message: "Enter a scenario question before asking PulseBoard." } });
+        }
+        const result = await runScenarioFollowup(input);
+        return sendJson(res, 200, result);
+      }
+      if (req.method === "POST" && requestUrl.pathname === "/api/pulseboard/analyze-csv") {
+        const body = await readJson(req);
+        const connection = normalizeConnection(body.connection);
       const csvText = String(body.csvText || "");
       const analysisGoal = String(body.analysisGoal || "").trim();
       const qualityReport = body.qualityReport && typeof body.qualityReport === "object" ? body.qualityReport : null;
@@ -870,6 +917,510 @@ async function runAggregator(providerConfig, topic, mode, byAgent, role = "") {
   return {
     ...normalizedResult,
     reliability
+  };
+}
+
+function normalizeScenarioMessages(messages) {
+  if (!Array.isArray(messages)) return [];
+  return messages
+    .map((message) => {
+      const role = message?.role === "assistant" ? "assistant" : "user";
+      const content = String(message?.content || "").trim();
+      if (!content) return null;
+      return {
+        role,
+        content,
+        sourceMode: message?.sourceMode === "brief" || message?.sourceMode === "live_followup" || message?.sourceMode === "mixed"
+          ? message.sourceMode
+          : undefined
+      };
+    })
+    .filter(Boolean)
+    .slice(-8);
+}
+
+function buildScenarioFollowupPrompt(stage = "brief") {
+  const baseRules = [
+    "You are PulseBoard's scenario simulator for monitoring briefs.",
+    "Answer in brief, direct prose with no bullet list unless the user explicitly asks for one.",
+    "Keep answers operational and to the point.",
+    "brief-first: If the answer is already supported by the supplied brief and agent outputs, answer from the current monitoring run.",
+    "Only set canAnswerFromBrief to true when the requested fact is explicitly supported by the supplied brief or agent outputs.",
+    "If the answer is already supported by the supplied brief and agent outputs, do not ask for fresh search.",
+    "If the requested fact is missing, ambiguous, or would require wording like may, might, likely, there is no explicit evidence, not in the brief, or would need to confirm, set canAnswerFromBrief to false and needsFreshSearch to true.",
+    "For concrete company-detail questions like remote work, team size, internship hiring, compensation, location, founders, funding, or role availability, require fresh search unless the fact is directly present in the supplied brief or agent outputs.",
+    "Only rely on live follow-up evidence when the brief does not already answer the question well enough.",
+    "Return ONLY valid JSON."
+  ];
+  if (stage === "brief") {
+    return `${baseRules.join("\n")}\nReturn JSON with this exact shape:\n{"answer":"string","canAnswerFromBrief":true,"needsFreshSearch":false,"followupQuery":"string"}`;
+  }
+  return `${baseRules.join("\n")}\nYou are now answering with fresh follow-up evidence in addition to the current monitoring run.\nReturn JSON with this exact shape:\n{"answer":"string","sourceMode":"brief|live_followup|mixed"}`;
+}
+
+function buildCsvScenarioPrompt(stage = "brief") {
+  const baseRules = [
+    "You are PulseBoard's scenario simulator for single-file CSV analysis.",
+    "Answer in brief, direct prose with no bullet list unless the user explicitly asks for one.",
+    "Use exact uploaded CSV data when it has already been deterministically retrieved.",
+    "Do not invent row values, counts, or table entries.",
+    "If deterministic CSV matches are provided, explain them briefly and stay close to the data.",
+    "Return ONLY valid JSON."
+  ];
+  if (stage === "brief") {
+    return `${baseRules.join("\n")}\nReturn JSON with this exact shape:\n{"answer":"string","shouldUseCsvData":false}`;
+  }
+  return `${baseRules.join("\n")}\nReturn JSON with this exact shape:\n{"answer":"string","sourceMode":"csv_data|csv_brief|mixed"}`;
+}
+
+function truncateScenarioText(value, maxLength = 600) {
+  const text = String(value || "").trim();
+  if (!text) return "";
+  if (text.length <= maxLength) return text;
+  return `${text.slice(0, Math.max(0, maxLength - 1)).trimEnd()}…`;
+}
+
+function buildCompactCsvScenarioContext(input, options = {}) {
+  const compact = options.compact !== false;
+  const maxHistoryMessages = Number.isFinite(Number(options.maxHistoryMessages)) ? Number(options.maxHistoryMessages) : 4;
+  const maxListItems = Number.isFinite(Number(options.maxListItems)) ? Number(options.maxListItems) : 4;
+  const maxHeaders = Number.isFinite(Number(options.maxHeaders)) ? Number(options.maxHeaders) : 18;
+  const includeQualityReport = options.includeQualityReport !== false;
+  const includeSchemaSummary = options.includeSchemaSummary !== false;
+  const messages = normalizeScenarioMessages(input.messages);
+  const trimmedMessages = compact ? messages.slice(-maxHistoryMessages) : messages;
+  const brief = {
+    datasetSummary: input.csvResult?.datasetSummary || {},
+    oneLineSummary: truncateScenarioText(input.csvResult?.oneLineSummary || "", compact ? 320 : 1200),
+    keyFindings: Array.isArray(input.csvResult?.keyFindings) ? input.csvResult.keyFindings.slice(0, maxListItems) : [],
+    risks: Array.isArray(input.csvResult?.risks) ? input.csvResult.risks.slice(0, maxListItems) : [],
+    opportunities: Array.isArray(input.csvResult?.opportunities) ? input.csvResult.opportunities.slice(0, maxListItems) : [],
+    recommendedActions: Array.isArray(input.csvResult?.recommendedActions) ? input.csvResult.recommendedActions.slice(0, maxListItems) : []
+  };
+  const schema = {
+    headers: Array.isArray(input.parsedCsv?.headers)
+      ? (compact ? input.parsedCsv.headers.slice(0, maxHeaders) : input.parsedCsv.headers)
+      : [],
+    qualityReport: includeQualityReport ? input.qualityReport || null : null,
+    schemaSummary: includeSchemaSummary ? truncateScenarioText(input.schemaSummary || "", compact ? 450 : 1500) : null
+  };
+  return {
+    priorMessages: trimmedMessages
+      .map((message) => `${message.role === "assistant" ? "Assistant" : "User"}: ${truncateScenarioText(message.content, compact ? 220 : 1000)}`)
+      .join("\n"),
+    brief,
+    schema
+  };
+}
+
+function buildScenarioFollowupUserContent(input, options = {}) {
+  const priorMessages = normalizeScenarioMessages(input.messages)
+    .map((message) => `${message.role === "assistant" ? "Assistant" : "User"}: ${message.content}`)
+    .join("\n");
+  const briefPayload = {
+    oneLineSummary: input.brief?.oneLineSummary || "",
+    subjectSummary: input.brief?.subjectSummary || "",
+    overallRiskScore: input.brief?.overallRiskScore,
+    overallOpportunityScore: input.brief?.overallOpportunityScore,
+    urgent: Array.isArray(input.brief?.urgent) ? input.brief.urgent : [],
+    notable: Array.isArray(input.brief?.notable) ? input.brief.notable : [],
+    fyi: Array.isArray(input.brief?.fyi) ? input.brief.fyi : [],
+    recommendedActions: Array.isArray(input.brief?.recommendedActions) ? input.brief.recommendedActions : [],
+    monitoringFrequency: input.brief?.monitoringFrequency || "",
+    reliability: input.reliability || input.brief?.reliability || null
+  };
+  const sections = [
+    `Topic: ${input.topic}`,
+    `Monitoring mode: ${MODE_LABELS[input.mode] || input.mode}`,
+    `User question: ${input.question}`,
+    "",
+    "Current monitoring brief:",
+    JSON.stringify(briefPayload, null, 2),
+    "",
+    "Current agent outputs:",
+    JSON.stringify({
+      news: input.agentResults?.news || null,
+      jobs: input.agentResults?.jobs || null,
+      sentiment: input.agentResults?.sentiment || null,
+      regulatory: input.agentResults?.regulatory || null,
+      competitor: input.agentResults?.competitor || null
+    }, null, 2)
+  ];
+  if (priorMessages) {
+    sections.push("", "Recent scenario chat thread:", priorMessages);
+  }
+  if (options.liveEvidence) {
+    sections.push(
+      "",
+      `Fresh follow-up search query: ${options.liveEvidence.query}`,
+      `Fresh signal count: ${options.liveEvidence.sourceCount}`,
+      `Verified link count: ${options.liveEvidence.verifiedLinkCount}`,
+      "Fresh live evidence:",
+      options.liveEvidence.evidenceText
+    );
+  }
+  return sections.filter(Boolean).join("\n");
+}
+
+function normalizeScenarioSourceMode(value) {
+  if (value === "mixed") return { sourceMode: "mixed" }.sourceMode;
+  if (value === "live_followup") return { sourceMode: "live_followup" }.sourceMode;
+  if (value === "csv_data") return { sourceMode: "csv_data" }.sourceMode;
+  if (value === "csv_brief") return { sourceMode: "csv_brief" }.sourceMode;
+  return { sourceMode: "brief" }.sourceMode;
+}
+
+function isScenarioAbsenceStyleAnswer(answer) {
+  const text = String(answer || "").toLowerCase();
+  if (!text) return false;
+  return /(no explicit evidence|does not provide explicit evidence|not in the brief|not in (?:the )?agent outputs|would need to confirm|need to confirm directly|does not contain a specific figure|do not contain a specific figure|does not contain a figure|not enough information in the brief|not mentioned in the brief|not mentioned in the agent outputs|the available brief.*do not contain|the brief does not say|the brief doesn't say|there is no evidence in the brief|may consider|might consider|you would need to confirm)/i.test(text);
+}
+
+function normalizeScenarioSignalCount(value) {
+  if (typeof value !== "number") return null;
+  return Number.isFinite(value) ? value : null;
+}
+
+function buildCsvScenarioUserContent(input, options = {}) {
+  const context = buildCompactCsvScenarioContext(input, options);
+  const sections = [
+    `Dataset label: ${input.resultId || "Uploaded CSV"}`,
+    `User question: ${input.question}`,
+    "",
+    "CSV analysis brief:",
+    JSON.stringify(context.brief, null, 2),
+    "",
+    "Dataset schema:",
+    JSON.stringify(context.schema, null, 2)
+  ];
+  if (context.priorMessages) {
+    sections.push("", "Recent scenario chat thread:", context.priorMessages);
+  }
+  if (options.rowMatch) {
+    sections.push(
+      "",
+      "Deterministic CSV row matches:",
+      JSON.stringify({
+        matchedHeaders: options.rowMatch.matchedHeaders || [],
+        totalMatchingRows: options.rowMatch.totalMatchingRows || 0,
+        matchedRows: options.rowMatch.rows || []
+      }, null, 2)
+    );
+  }
+  return sections.filter(Boolean).join("\n");
+}
+
+function normalizeCsvCell(value) {
+  return String(value ?? "").trim();
+}
+
+function tokenizeScenarioQuestion(question) {
+  return String(question || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9_.%-]+/g, " ")
+    .split(/\s+/)
+    .filter((token) => token.length >= 2);
+}
+
+function buildCsvDistinctValues(records, header, limit = 250) {
+  const seen = new Set();
+  const values = [];
+  for (const record of records || []) {
+    const normalized = normalizeCsvCell(record?.[header]).toLowerCase();
+    if (!normalized || seen.has(normalized)) continue;
+    seen.add(normalized);
+    values.push(normalized);
+    if (values.length >= limit) break;
+  }
+  return values;
+}
+
+function findCsvQuestionMatches(parsedCsv, question) {
+  const headers = Array.isArray(parsedCsv?.headers) ? parsedCsv.headers : [];
+  const records = Array.isArray(parsedCsv?.records) ? parsedCsv.records : [];
+  const questionText = String(question || "").toLowerCase();
+  const tokens = tokenizeScenarioQuestion(question);
+  const quotedPhrases = [...questionText.matchAll(/"([^"]+)"/g)].map((match) => match[1].trim()).filter(Boolean);
+  const matchedHeaders = headers.filter((header) => questionText.includes(String(header || "").toLowerCase()));
+  const filters = [];
+
+  for (const header of matchedHeaders) {
+    const distinctValues = buildCsvDistinctValues(records, header);
+    const matchedValue = distinctValues.find((value) => value && questionText.includes(value));
+    if (matchedValue) {
+      filters.push({ header, value: matchedValue });
+    }
+  }
+
+  const valueNeedle = quotedPhrases[0] || filters[0]?.value || "";
+  const useDataIntent = /(show|list|rows?|records?|values?|entries?|which|what is|what are|find|give me|see all)/i.test(questionText) || filters.length > 0 || quotedPhrases.length > 0;
+
+  const scoredRows = records.map((record, index) => {
+    let score = 0;
+    if (filters.length) {
+      for (const filter of filters) {
+        const cellValue = normalizeCsvCell(record?.[filter.header]).toLowerCase();
+        if (cellValue === filter.value || cellValue.includes(filter.value)) score += 5;
+      }
+    }
+    for (const phrase of quotedPhrases) {
+      for (const header of headers) {
+        const cellValue = normalizeCsvCell(record?.[header]).toLowerCase();
+        if (cellValue.includes(phrase.toLowerCase())) score += 4;
+      }
+    }
+    for (const token of tokens) {
+      for (const header of headers) {
+        if (String(header || "").toLowerCase() === token) score += 1;
+        const cellValue = normalizeCsvCell(record?.[header]).toLowerCase();
+        if (token.length >= 3 && cellValue === token) score += 3;
+      }
+    }
+    return { record, rowIndex: index + 1, score };
+  }).filter((entry) => entry.score > 0);
+
+  const matchedRows = scoredRows
+    .sort((a, b) => b.score - a.score || a.rowIndex - b.rowIndex)
+    .map((entry) => ({ rowIndex: entry.rowIndex, ...entry.record }));
+
+  const rowHeaders = ["rowIndex", ...headers];
+  return {
+    shouldUseCsvData: useDataIntent && matchedRows.length > 0,
+    matchedHeaders,
+    matchedValue: valueNeedle,
+    totalMatchingRows: matchedRows.length,
+    rows: matchedRows,
+    rowHeaders
+  };
+}
+
+function normalizeCsvScenarioRows(rows, rowHeaders) {
+  return (Array.isArray(rows) ? rows : []).map((row) => {
+    const normalized = {};
+    for (const header of rowHeaders) {
+      normalized[header] = normalizeCsvCell(row?.[header]);
+    }
+    return normalized;
+  });
+}
+
+function classifyCsvScenarioIntent(question, rowMatch) {
+  const questionText = String(question || "").toLowerCase();
+  const asksForRows = /(show|list|find|which|give me|see all|return|display).{0,24}(rows?|records?|entries?|values?)/i.test(questionText)
+    || /rows?\s+where/i.test(questionText)
+    || /what\s+are\s+the\s+rows?/i.test(questionText);
+  const asksForExplanation = /(why|explain|what does this mean|what stands out|summari[sz]e|insight|suggest|pattern|risky|opportunit)/i.test(questionText);
+
+  if (rowMatch?.shouldUseCsvData && asksForRows && asksForExplanation) return "mixed";
+  if (rowMatch?.shouldUseCsvData && asksForRows) return "lookup";
+  if (asksForExplanation) return "interpretive";
+  if (rowMatch?.shouldUseCsvData) return "lookup";
+  return "interpretive";
+}
+
+function buildDirectCsvScenarioAnswer(question, totalMatchingRows) {
+  const questionText = String(question || "").toLowerCase();
+  if (/what\s+is|what\s+are|which/i.test(questionText)) {
+    return `I found ${totalMatchingRows} matching row${totalMatchingRows === 1 ? "" : "s"} in the uploaded CSV.`;
+  }
+  return `Here ${totalMatchingRows === 1 ? "is" : "are"} ${totalMatchingRows} matching row${totalMatchingRows === 1 ? "" : "s"} from the uploaded CSV.`;
+}
+
+function buildCsvScenarioModelRequest(input, options = {}) {
+  const compactOptions = {
+    compact: true,
+    maxHistoryMessages: 4,
+    maxListItems: 4,
+    maxHeaders: 18,
+    includeQualityReport: true,
+    includeSchemaSummary: true,
+    ...options
+  };
+  let userContent = buildCsvScenarioUserContent(input, compactOptions);
+  if (userContent.length > 14000) {
+    userContent = buildCsvScenarioUserContent(input, {
+      ...compactOptions,
+      maxHistoryMessages: 2,
+      maxListItems: 3,
+      maxHeaders: 12,
+      includeQualityReport: false,
+      includeSchemaSummary: true
+    });
+  }
+  if (userContent.length > 9000) {
+    userContent = buildCsvScenarioUserContent(input, {
+      ...compactOptions,
+      maxHistoryMessages: 0,
+      maxListItems: 2,
+      maxHeaders: 10,
+      includeQualityReport: false,
+      includeSchemaSummary: false
+    });
+  }
+  return userContent;
+}
+
+async function runScenarioFollowup(input) {
+  const normalizedMessages = normalizeScenarioMessages(input.messages);
+  const briefPass = await runModelJson({
+    providerConfig: input.connection,
+    systemPrompt: buildScenarioFollowupPrompt("brief"),
+    userContent: buildScenarioFollowupUserContent(input)
+  });
+
+  const baseAnswer = String(briefPass?.answer || "").trim();
+  const briefAnswerSignalsMissingEvidence = isScenarioAbsenceStyleAnswer(baseAnswer);
+  const canAnswerFromBrief = Boolean(briefPass?.canAnswerFromBrief) && Boolean(baseAnswer) && !briefAnswerSignalsMissingEvidence;
+  const needsFreshSearch = Boolean(briefPass?.needsFreshSearch) || !canAnswerFromBrief || briefAnswerSignalsMissingEvidence;
+  const followupQuery = String(briefPass?.followupQuery || `${input.topic} ${input.question} latest updates`).trim();
+
+  let finalAnswer = baseAnswer;
+  let sourceMode = normalizeScenarioSourceMode("brief");
+  let freshnessLabel = null;
+  let signalCount = null;
+  let verifiedLinks = [];
+
+  if (needsFreshSearch) {
+    const liveEvidence = await searchTopicSignals(input.topic, input.mode, {
+      searchQuery: () => followupQuery || `${input.topic} ${input.question} latest updates`
+    });
+    const livePass = await runModelJson({
+      providerConfig: input.connection,
+      systemPrompt: buildScenarioFollowupPrompt("live"),
+      userContent: buildScenarioFollowupUserContent(input, { liveEvidence })
+    });
+    finalAnswer = String(livePass?.answer || "").trim() || finalAnswer || "PulseBoard could not find enough evidence to answer that scenario cleanly.";
+    sourceMode = livePass?.sourceMode === "mixed" || (baseAnswer && canAnswerFromBrief)
+      ? normalizeScenarioSourceMode("mixed")
+      : normalizeScenarioSourceMode("live_followup");
+    if (livePass?.sourceMode === "brief" && !canAnswerFromBrief) {
+      sourceMode = normalizeScenarioSourceMode("live_followup");
+    }
+    freshnessLabel = liveEvidence.freshnessLabel || null;
+    signalCount = normalizeScenarioSignalCount(liveEvidence.sourceCount);
+    verifiedLinks = Array.isArray(liveEvidence.sources)
+      ? liveEvidence.sources
+        .filter((source) => source.verified)
+        .slice(0, 4)
+        .map((source) => ({
+          title: source.title,
+          url: source.url,
+          freshnessLabel: source.freshnessLabel
+        }))
+      : [];
+  }
+
+  if (!finalAnswer) {
+    finalAnswer = "PulseBoard could not answer that scenario from the current monitoring run.";
+  }
+
+  const nextMessages = [
+    ...normalizedMessages,
+    { role: "user", content: input.question },
+    { role: "assistant", content: finalAnswer, sourceMode: normalizeScenarioSourceMode(sourceMode), freshnessLabel, signalCount, verifiedLinks }
+  ];
+
+  return {
+    answer: finalAnswer,
+    sourceMode,
+    freshnessLabel,
+    signalCount,
+    verifiedLinks,
+    messages: nextMessages
+  };
+}
+
+async function runCsvScenarioFollowup(input) {
+  const normalizedMessages = normalizeScenarioMessages(input.messages);
+  const rowMatch = findCsvQuestionMatches(input.parsedCsv, input.question);
+  const matchedRows = rowMatch.shouldUseCsvData ? normalizeCsvScenarioRows(rowMatch.rows, rowMatch.rowHeaders) : [];
+  const displayedRowCount = Math.min(5, matchedRows.length);
+  const totalMatchingRows = matchedRows.length;
+  const hasMoreRows = totalMatchingRows > displayedRowCount;
+  const scenarioIntent = classifyCsvScenarioIntent(input.question, rowMatch);
+
+  if (scenarioIntent === "lookup" && rowMatch.shouldUseCsvData) {
+    const answer = buildDirectCsvScenarioAnswer(input.question, totalMatchingRows);
+    const sourceMode = normalizeScenarioSourceMode("csv_data");
+    const nextMessages = [
+      ...normalizedMessages,
+      { role: "user", content: input.question },
+      {
+        role: "assistant",
+        content: answer,
+        sourceMode,
+        matchedRows,
+        rowHeaders: rowMatch.rowHeaders,
+        displayedRowCount,
+        totalMatchingRows,
+        hasMoreRows,
+        messageId: `csv-scenario-${Date.now()}-${normalizedMessages.length}`
+      }
+    ];
+
+    return {
+      answer,
+      sourceMode,
+      matchedRows,
+      rowHeaders: rowMatch.rowHeaders,
+      displayedRowCount,
+      totalMatchingRows,
+      hasMoreRows,
+      messages: nextMessages
+    };
+  }
+
+  const sampledRowMatch = rowMatch.shouldUseCsvData
+    ? { ...rowMatch, rows: rowMatch.rows.slice(0, 5) }
+    : null;
+  const briefPass = await runModelJson({
+    providerConfig: input.connection,
+    systemPrompt: buildCsvScenarioPrompt(scenarioIntent === "mixed" ? "live" : "brief"),
+    userContent: buildCsvScenarioModelRequest(
+      input,
+      scenarioIntent === "mixed" && sampledRowMatch
+        ? { rowMatch: sampledRowMatch }
+        : {}
+    )
+  });
+
+  const sourceMode = normalizeScenarioSourceMode(
+    scenarioIntent === "mixed"
+      ? "mixed"
+      : rowMatch.shouldUseCsvData
+        ? "csv_data"
+        : "csv_brief"
+  );
+  const answer = String(briefPass?.answer || "").trim() || (
+    rowMatch.shouldUseCsvData
+      ? `I found ${totalMatchingRows} matching row${totalMatchingRows === 1 ? "" : "s"} in the uploaded CSV.`
+      : "PulseBoard could not find an exact row match, so this answer comes from the current CSV brief."
+  );
+  const nextMessages = [
+    ...normalizedMessages,
+    { role: "user", content: input.question },
+    {
+      role: "assistant",
+      content: answer,
+      sourceMode,
+      matchedRows,
+      rowHeaders: rowMatch.rowHeaders,
+      displayedRowCount,
+      totalMatchingRows,
+      hasMoreRows,
+      messageId: `csv-scenario-${Date.now()}-${normalizedMessages.length}`
+    }
+  ];
+
+  return {
+    answer,
+    sourceMode,
+    matchedRows,
+    rowHeaders: rowMatch.rowHeaders,
+    displayedRowCount,
+    totalMatchingRows,
+    hasMoreRows,
+    messages: nextMessages
   };
 }
 
@@ -2338,6 +2889,7 @@ module.exports = {
   server,
   handlePulseBoardRequest,
   runPulseBoardSession,
+  runScenarioFollowup,
   analyzeCsvSession,
   compareCsvSession,
   crossReferenceSession,
