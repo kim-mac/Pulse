@@ -29,6 +29,11 @@ expect(/5 agents fire simultaneously/i, "expected home explainer content below t
 expect(/PulseBoard turns scattered market signals and internal data into decision-ready briefs\./i, "expected sharper landing-page value proposition copy");
 expect(/Built for students, analysts, and operators/i, "expected sharper landing-page audience framing");
 expect(/How to Use PulseBoard/i, "expected guide-page practical walkthrough heading");
+expect(/Ask PulseBoard/i, "expected guide page to include the Ask PulseBoard walkthrough");
+expect(/floating follow-up chat/i, "expected guide page to describe Ask PulseBoard as a floating chat");
+expect(/uses fresh live follow-up search when it is not/i, "expected guide page to explain monitoring follow-up search escalation");
+expect(/exact matching rows inline/i, "expected guide page to explain CSV row retrieval in Ask PulseBoard");
+expect(/See all rows/i, "expected guide page to mention CSV row expansion behavior in the guide");
 expect(/Recent Monitoring Runs/i, "expected guide page to include monitoring history walkthrough");
 expect(/Cross-Reference Internal and External Signals/i, "expected guide page to include the CSV cross-reference workflow");
 expect(/function syncHomeExplanationState\(/, "expected a home explanation collapse helper");
@@ -171,6 +176,8 @@ expect(/\.scenario-resize-handle\s*\{[\s\S]*cursor:\s*nwse-resize/i, "expected a
 expect(/data-scenario-source="\$\{escapeHtml\(sourceModeLabel\)\}"/, "expected scenario messages to carry provenance labels");
 expect(/hasScenarioSignalCount\(message\.signalCount\) \? `<span class="scenario-source-pill">Based on \$\{escapeHtml\(String\(message\.signalCount\)\)\} signals<\/span>` : ""/, "expected scenario signal pill to render only for valid numeric counts");
 expect(/scenario-row-table|scenario-inline-action|See all rows/i, "expected CSV scenario chat to support inline row tables and expansion actions");
+expect(/restored context for Ask PulseBoard when you reopen a saved monitoring snapshot/i, "expected guide page to explain Ask PulseBoard context restoration for saved monitoring runs");
+expect(/follow-up chat through Ask PulseBoard after the first analysis is complete/i, "expected guide page to explain CSV Analyst follow-up chat coverage");
 expect(/icon:\s*"news"|icon:\s*"jobs"|icon:\s*"sentiment"|icon:\s*"regulatory"|icon:\s*"competitor"/, "expected agent configs to use semantic icon names");
 assert.doesNotMatch(html, /â—Œ|ðŸ|âš¡/, "expected broken mojibake icon glyphs to be removed from the monitoring UI");
 
