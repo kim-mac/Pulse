@@ -1531,6 +1531,100 @@
       flex: 1 1 auto;
     }
 
+    .csv-demo-picker {
+      display: grid;
+      gap: 12px;
+      margin-top: 16px;
+      padding: 16px 18px;
+      border-radius: 18px;
+      border: 1px solid rgba(26,26,46,0.08);
+      background: rgba(255,255,255,0.74);
+    }
+
+    .csv-demo-picker[hidden] {
+      display: none;
+    }
+
+    .csv-demo-picker-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .csv-demo-picker-copy {
+      margin: 4px 0 0;
+      font-size: 12px;
+      color: rgba(26,26,46,0.54);
+      line-height: 1.5;
+    }
+
+    .csv-demo-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .csv-demo-card {
+      display: grid;
+      gap: 8px;
+      padding: 14px 14px 13px;
+      border-radius: 16px;
+      border: 1px solid rgba(26,26,46,0.08);
+      background: #ffffff;
+      text-align: left;
+      cursor: pointer;
+      transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    .csv-demo-card:hover {
+      transform: translateY(-1px);
+      border-color: rgba(26,26,46,0.16);
+      box-shadow: 0 12px 22px rgba(26,26,46,0.08);
+    }
+
+    .csv-demo-card.active {
+      border-color: rgba(26,26,46,0.24);
+      box-shadow: 0 12px 24px rgba(26,26,46,0.10);
+      background: rgba(255,255,255,0.96);
+    }
+
+    .csv-demo-card-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .csv-demo-file {
+      margin: 0;
+      font-size: 13px;
+      font-weight: 700;
+      color: #1a1a2e;
+      line-height: 1.4;
+    }
+
+    .csv-demo-description {
+      margin: 0;
+      font-size: 12px;
+      color: rgba(26,26,46,0.62);
+      line-height: 1.55;
+    }
+
+    .csv-demo-badge {
+      display: inline-flex;
+      align-items: center;
+      white-space: nowrap;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      background: rgba(26,26,46,0.06);
+      color: rgba(26,26,46,0.60);
+    }
+
     .compare-upload-grid,
     .file-overview-grid,
     .schema-grid,
@@ -3334,7 +3428,7 @@
 
     @media (max-width: 960px) {
       .hero-grid, .query-form-row, .brief-columns, .score-grid, .connection-grid, .how-it-works-grid, .provider-help-grid { grid-template-columns: 1fr; }
-      .csv-upload-grid, .csv-insight-grid, .csv-metric-grid, .compare-upload-grid, .file-overview-grid, .schema-grid, .change-columns-grid, .pattern-grid, .anomaly-grid, .cross-ref-risk-row { grid-template-columns: 1fr; }
+      .csv-upload-grid, .csv-insight-grid, .csv-metric-grid, .compare-upload-grid, .file-overview-grid, .schema-grid, .change-columns-grid, .pattern-grid, .anomaly-grid, .cross-ref-risk-row, .csv-demo-grid { grid-template-columns: 1fr; }
       .agent-grid { grid-template-columns: 1fr; }
       .agent-card.full-span { grid-column: auto; }
       .quality-inline-main { flex-direction: column; align-items: flex-start; }
@@ -3821,9 +3915,18 @@
                 <input class="csv-file-input" id="csvFileInput" name="csvFile" type="file" accept=".csv" />
                 <span class="csv-file-name" id="csvFileName">No file chosen</span>
                 <button class="csv-file-clear" id="clearCsvFileButton" type="button" aria-label="Remove selected CSV file" hidden>x</button>
-                <button class="csv-sample-link" id="useSampleCsvButton" type="button">Use sample CSV</button>
               </div>
               <p class="csv-upload-description" id="csvInputHelper">Upload any CSV - sales data, survey results, financial reports, or any tabular dataset.</p>
+              <section class="csv-demo-picker" id="csvDemoPicker" aria-labelledby="csvDemoTitle">
+                <div class="csv-demo-picker-head">
+                  <div>
+                    <h3 class="csv-demo-title" id="csvDemoTitle">Demo files</h3>
+                    <p class="csv-demo-picker-copy">Load a judge-ready dataset instantly. One demo is tuned for charts, one for Ask PulseBoard row retrieval, and one for Cross-Reference with live intelligence.</p>
+                  </div>
+                  <span class="badge">Single-file only</span>
+                </div>
+                <div class="csv-demo-grid" id="csvDemoGrid"></div>
+              </section>
               <div class="quality-preview-container" id="qualityPreviewContainer" hidden></div>
               <div class="field-group" style="margin-top:16px;">
                 <label class="query-label" for="csvGoalInput">Analysis Goal</label>
@@ -3927,19 +4030,91 @@
   </div>
 
   <script>
-    const SAMPLE_CSV_TEXT = `month,region,revenue,active_customers,churn_rate,pipeline_value,nps
-2026-01,North America,182000,1480,0.041,235000,49
-2026-01,Europe,126500,1015,0.038,168000,52
-2026-01,APAC,98500,870,0.054,142000,44
-2026-02,North America,194500,1535,0.039,248500,51
-2026-02,Europe,131000,1048,0.036,174000,54
-2026-02,APAC,103000,905,0.05,151500,46
-2026-03,North America,205000,1598,0.034,261000,56
-2026-03,Europe,137500,1092,0.033,181500,57
-2026-03,APAC,111500,948,0.047,160000,48
-2026-04,North America,214000,1644,0.031,273000,58
-2026-04,Europe,143000,1125,0.032,188500,59
-2026-04,APAC,118500,990,0.043,169500,50`;
+    const CSV_DEMO_CATALOG = [
+      {
+        id: "saas-board-metrics",
+        fileName: "saas_board_metrics.csv",
+        description: "Quarterly SaaS revenue, churn, pipeline, and NPS trends for a fast chart-friendly walkthrough.",
+        recommendedUse: "Best for Charts",
+        analysisGoal: "Summarize performance trends, flag risks, and identify growth opportunities for leadership.",
+        csvText: `quarter,region,revenue,active_customers,churn_rate,pipeline_value,nps
+2025-Q3,North America,182000,1480,0.041,235000,49
+2025-Q3,Europe,126500,1015,0.038,168000,52
+2025-Q3,APAC,98500,870,0.054,142000,44
+2025-Q4,North America,194500,1535,0.039,248500,51
+2025-Q4,Europe,131000,1048,0.036,174000,54
+2025-Q4,APAC,103000,905,0.05,151500,46
+2026-Q1,North America,205000,1598,0.034,261000,56
+2026-Q1,Europe,137500,1092,0.033,181500,57
+2026-Q1,APAC,111500,948,0.047,160000,48
+2026-Q2,North America,214000,1644,0.031,273000,58
+2026-Q2,Europe,143000,1125,0.032,188500,59
+2026-Q2,APAC,118500,990,0.043,169500,50`
+      },
+      {
+        id: "payments-mix-demo",
+        fileName: "payments_mix_demo.csv",
+        description: "Checkout payment trends with clear categories so Ask PulseBoard can retrieve exact rows cleanly.",
+        recommendedUse: "Best for Ask PulseBoard",
+        analysisGoal: "Spot payment behavior shifts, flag risks, and be ready for row-level follow-up questions.",
+        csvText: `week,region,channel,payment_method,orders,gross_revenue,refund_rate,conversion_rate
+2026-W21,North America,Web,Credit Card,1840,241900,0.021,0.058
+2026-W21,North America,Web,PayPal,690,81200,0.018,0.052
+2026-W21,North America,Web,Crypto,142,22900,0.041,0.031
+2026-W21,North America,Mobile,Apple Pay,920,110400,0.015,0.064
+2026-W21,Europe,Web,Credit Card,1310,165800,0.019,0.055
+2026-W21,Europe,Web,Klarna,410,47200,0.028,0.049
+2026-W21,Europe,Web,Crypto,96,14800,0.037,0.029
+2026-W22,North America,Web,Credit Card,1885,247600,0.02,0.059
+2026-W22,North America,Web,PayPal,705,83600,0.017,0.053
+2026-W22,North America,Web,Crypto,155,24800,0.043,0.032
+2026-W22,North America,Mobile,Apple Pay,948,113900,0.014,0.065
+2026-W22,Europe,Web,Credit Card,1342,169100,0.018,0.056
+2026-W22,Europe,Web,Klarna,428,49100,0.027,0.05
+2026-W22,Europe,Web,Crypto,104,16100,0.038,0.03`
+      },
+      {
+        id: "uber-marketplace-public-style",
+        fileName: "uber_marketplace_public_style.csv",
+        description: "A realistic public-style Uber marketplace dataset designed to pair naturally with Cross-Reference.",
+        recommendedUse: "Best for Cross-Reference",
+        analysisGoal: "Summarize demand, supply, and marketplace efficiency trends, then connect them to live Uber signals with Cross-Reference.",
+        crossReferenceTopic: "Uber",
+        csvText: `month,company,market,courier_signup_growth,rider_demand_index,merchant_activation_rate,airport_trip_share,average_wait_minutes,driver_incentive_spend
+2026-01,Uber,New York,0.082,74,0.41,0.18,5.6,1820000
+2026-01,Uber,Los Angeles,0.076,71,0.38,0.12,6.1,1695000
+2026-01,Uber,Chicago,0.069,68,0.35,0.1,6.4,1240000
+2026-02,Uber,New York,0.088,77,0.43,0.19,5.4,1855000
+2026-02,Uber,Los Angeles,0.079,73,0.39,0.13,5.9,1712000
+2026-02,Uber,Chicago,0.072,69,0.36,0.11,6.3,1268000
+2026-03,Uber,New York,0.093,79,0.45,0.21,5.1,1890000
+2026-03,Uber,Los Angeles,0.083,75,0.41,0.14,5.7,1734000
+2026-03,Uber,Chicago,0.075,71,0.38,0.12,6,1289000
+2026-04,Uber,New York,0.097,82,0.46,0.22,4.9,1913000
+2026-04,Uber,Los Angeles,0.086,78,0.42,0.15,5.5,1761000
+2026-04,Uber,Chicago,0.078,73,0.39,0.13,5.8,1312000`
+      },
+      {
+        id: "support-ops-demo",
+        fileName: "support_ops_demo.csv",
+        description: "Customer-support operations data for a straightforward business-ops analysis and clean quality signals.",
+        recommendedUse: "Best for General Analysis",
+        analysisGoal: "Summarize service performance, identify bottlenecks, and highlight where operations need attention.",
+        csvText: `month,team,region,tickets_opened,tickets_resolved,first_response_minutes,csat,escalation_rate
+2026-01,Support A,North America,1820,1765,18,4.5,0.072
+2026-01,Support B,Europe,1340,1294,22,4.6,0.061
+2026-01,Support C,APAC,1195,1138,27,4.2,0.089
+2026-02,Support A,North America,1888,1827,17,4.6,0.068
+2026-02,Support B,Europe,1385,1336,21,4.6,0.059
+2026-02,Support C,APAC,1232,1170,25,4.3,0.083
+2026-03,Support A,North America,1915,1864,16,4.6,0.066
+2026-03,Support B,Europe,1410,1362,20,4.7,0.057
+2026-03,Support C,APAC,1264,1209,24,4.3,0.08
+2026-04,Support A,North America,1982,1916,15,4.7,0.063
+2026-04,Support B,Europe,1452,1404,18,4.7,0.054
+2026-04,Support C,APAC,1298,1245,22,4.4,0.076`
+      }
+    ];
     const MAX_CSV_UPLOAD_BYTES = 10 * 1024 * 1024;
     const CSV_ALLOWED_MIME_TYPES = ["text/csv", "application/csv", "application/vnd.ms-excel", "text/plain"];
     const { schema: csvSchemaApi = {}, ingestion: csvIngestionApi = {}, cleaning: csvCleaningApi = {}, quality: csvQualityApi = {}, analytics: csvAnalyticsApi = {}, logging: csvLoggingApi = {} } = window.PulseBoardCsv || {};
@@ -4155,6 +4330,7 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
       csvComparison: null,
       csvChartPayload: null,
       csvIngestion: null,
+      csvActiveDemoId: "",
       csvSourceLabel: "",
       csvExportMode: null,
       csvExportMeta: null,
@@ -4237,7 +4413,7 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
           "connectionForm", "providerSelect", "providerHelpShortcut", "providerModelInput", "providerApiKeyInput",
           "providerEndpointInput", "providerNotes", "connectionFormMessage", "closeConnectionButton",
         "saveConnectionButton", "csvForm", "csvFileInput", "csvGoalInput", "compareCsvGoalInput",
-        "runCsvButton", "compareRunCsvButton", "csvStatusMessage", "useSampleCsvButton", "csvInputHelper", "csvFileName", "qualityPreviewContainer", "singleCsvActionRow",
+        "runCsvButton", "compareRunCsvButton", "csvStatusMessage", "csvInputHelper", "csvFileName", "qualityPreviewContainer", "singleCsvActionRow", "csvDemoPicker", "csvDemoGrid",
         "csvModeSingle", "csvModeCompare", "singleCsvSection", "compareCsvSection",
         "compareFileAInput", "compareFileBInput", "compareLabelAInput", "compareLabelBInput", "compareFileAName", "compareFileBName",
         "clearCsvFileButton", "clearCompareFileAButton", "clearCompareFileBButton"
@@ -4256,7 +4432,7 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
         elements.queryConnectButton.addEventListener("click", () => navigateTo("apiKey"));
         elements.csvConnectButton.addEventListener("click", () => navigateTo("apiKey"));
       elements.providerHelpShortcut?.addEventListener("click", handleProviderHelpShortcutClick);
-      elements.useSampleCsvButton.addEventListener("click", applySampleCsv);
+      elements.csvDemoGrid?.addEventListener("click", handleCsvDemoPickerClick);
       elements.csvModeSingle.addEventListener("click", () => setCsvMode("single"));
       elements.csvModeCompare.addEventListener("click", () => setCsvMode("compare"));
       elements.csvFileInput.addEventListener("change", handleSingleCsvInputChange);
@@ -5141,6 +5317,8 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
 
     async function ingestSingleCsvFile(file) {
       elements.csvFileName.textContent = file.name || "Uploaded CSV";
+      state.csvActiveDemoId = "";
+      renderCsvDemoPicker();
       logCsvPipelineEvent("ingestion", "started", {
         fileName: file?.name || "unknown",
         fileSize: Number(file?.size || 0)
@@ -5155,6 +5333,7 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
           reason: fileResult.error || "unknown"
         });
         state.csvIngestion = null;
+        state.csvActiveDemoId = "";
         state.csvSourceLabel = "";
         state.csvQualityPreview = null;
         state.csvSchemaPreview = null;
@@ -5164,6 +5343,7 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
         elements.csvFileName.textContent = "No file chosen";
         elements.csvInputHelper.hidden = false;
         elements.csvInputHelper.textContent = "Upload any CSV - sales data, survey results, financial reports, or any tabular dataset.";
+        renderCsvDemoPicker();
         renderSingleQualityPreview();
         syncCsvFileClearButtons();
         setCsvStatusMessage(fileResult.error || "CSV ingestion failed.", "error");
@@ -5179,11 +5359,13 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
           reason: error.message || "CSV parsing failed."
         });
         state.csvIngestion = null;
+        state.csvActiveDemoId = "";
         state.csvSourceLabel = "";
         state.csvQualityPreview = null;
         state.csvSchemaPreview = null;
         state.csvCleaningPreview = createInitialCleaningPreview();
         state.schemaExpanded = true;
+        renderCsvDemoPicker();
         renderSingleQualityPreview();
         syncCsvFileClearButtons();
         setCsvStatusMessage(error.message || "CSV parsing failed.", "error");
@@ -5233,6 +5415,39 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
         });
         elements.chipRow.appendChild(chip);
       }
+    }
+
+    function getCsvDemoById(demoId) {
+      return CSV_DEMO_CATALOG.find((item) => item.id === demoId) || null;
+    }
+
+    function renderCsvDemoPicker() {
+      if (!elements.csvDemoPicker || !elements.csvDemoGrid) return;
+      const showPicker = state.csvMode === "single";
+      elements.csvDemoPicker.hidden = !showPicker;
+      if (!showPicker) return;
+      elements.csvDemoGrid.innerHTML = CSV_DEMO_CATALOG.map((demo) => `
+        <button
+          class="csv-demo-card ${state.csvActiveDemoId === demo.id ? "active" : ""}"
+          type="button"
+          data-csv-demo-id="${escapeHtmlAttribute(demo.id)}"
+          aria-pressed="${state.csvActiveDemoId === demo.id ? "true" : "false"}"
+        >
+          <div class="csv-demo-card-head">
+            <p class="csv-demo-file">${escapeHtml(demo.fileName)}</p>
+            <span class="csv-demo-badge">${escapeHtml(demo.recommendedUse)}</span>
+          </div>
+          <p class="csv-demo-description">${escapeHtml(demo.description)}</p>
+        </button>
+      `).join("");
+    }
+
+    function handleCsvDemoPickerClick(event) {
+      const button = event.target.closest("[data-csv-demo-id]");
+      if (!button) return;
+      const demoId = button.getAttribute("data-csv-demo-id");
+      if (!demoId) return;
+      loadCsvDemo(demoId);
     }
 
     function renderAgentCards() {
@@ -5418,6 +5633,7 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
       state.csvComparison = null;
       state.csvChartPayload = null;
       state.csvIngestion = null;
+      state.csvActiveDemoId = "";
       state.csvSourceLabel = "";
       state.csvExportMode = null;
       state.csvExportMeta = null;
@@ -5449,19 +5665,22 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
       navigateTo("csv", { collapseHomeInfo: true });
     }
 
-    function applySampleCsv() {
-      state.csvSourceLabel = "sample_saas_data.csv";
+    function loadCsvDemo(demoId) {
+      const demo = getCsvDemoById(demoId);
+      if (!demo) return;
+      state.csvActiveDemoId = demo.id;
+      state.csvSourceLabel = demo.fileName;
       elements.csvFileInput.value = "";
-      elements.csvGoalInput.value = "Summarize performance trends, flag risks, and identify growth opportunities for leadership.";
-      elements.compareCsvGoalInput.value = "Summarize performance trends, flag risks, and identify growth opportunities for leadership.";
-      elements.csvFileName.textContent = "sample_saas_data.csv";
+      elements.csvGoalInput.value = demo.analysisGoal || "";
+      elements.compareCsvGoalInput.value = demo.analysisGoal || "";
+      elements.csvFileName.textContent = demo.fileName;
       elements.csvInputHelper.hidden = true;
-      const parsedCsv = parseCsvText(SAMPLE_CSV_TEXT);
-      const preview = buildSingleCsvPreviewState(parsedCsv, "sample_saas_data.csv");
+      const parsedCsv = parseCsvText(demo.csvText);
+      const preview = buildSingleCsvPreviewState(parsedCsv, demo.fileName);
       const ingestion = {
         ok: true,
-        fileName: "sample_saas_data.csv",
-        text: SAMPLE_CSV_TEXT,
+        fileName: demo.fileName,
+        text: demo.csvText,
         sanitizedText: serializeParsedCsv(preview.parsedCsv),
         encoding: "UTF-8",
         warnings: [],
@@ -5470,7 +5689,8 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
       };
       syncSingleFilePreviewState(preview, { ingestion, preserveInputHelper: false });
       syncCsvFileClearButtons();
-      setCsvStatusMessage(buildCleaningStatusMessage(preview) || "Sample CSV is ready. Run the analyst to generate a polished demo brief.", "complete");
+      renderCsvDemoPicker();
+      setCsvStatusMessage(buildCleaningStatusMessage(preview) || `${demo.fileName} is ready. ${demo.recommendedUse}. Run the analyst to generate a polished demo brief.`, "complete");
     }
 
     function setCsvMode(mode) {
@@ -5490,8 +5710,10 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
       elements.runCsvButton.textContent = "Analyze CSV ->";
       if (elements.compareRunCsvButton) elements.compareRunCsvButton.textContent = "Analyze Files ->";
       if (single) {
+        renderCsvDemoPicker();
         renderSingleQualityPreview();
       } else {
+        if (elements.csvDemoPicker) elements.csvDemoPicker.hidden = true;
         elements.qualityPreviewContainer.hidden = true;
         elements.qualityPreviewContainer.innerHTML = "";
         elements.singleCsvActionRow.hidden = true;
@@ -5528,6 +5750,7 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
     function clearSingleCsvSelection() {
       elements.csvFileInput.value = "";
       state.csvIngestion = null;
+      state.csvActiveDemoId = "";
       state.csvSourceLabel = "";
       state.csvQualityPreview = null;
       state.csvSchemaPreview = null;
@@ -5536,6 +5759,7 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
       elements.csvFileName.textContent = "No file chosen";
       elements.csvInputHelper.hidden = false;
       elements.csvInputHelper.textContent = "Upload any CSV - sales data, survey results, financial reports, or any tabular dataset.";
+      renderCsvDemoPicker();
       renderSingleQualityPreview();
       syncCsvFileClearButtons();
       setCsvStatusMessage("", "ready");
@@ -5834,20 +6058,12 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
         ingestion = state.csvIngestion && state.csvIngestion.fileName === file.name
           ? state.csvIngestion
           : await ingestSingleCsvFile(file);
-      } else if (state.csvSourceLabel === "sample_saas_data.csv") {
-        ingestion = state.csvIngestion || {
-          ok: true,
-          fileName: "sample_saas_data.csv",
-          text: SAMPLE_CSV_TEXT,
-          sanitizedText: SAMPLE_CSV_TEXT,
-          encoding: "UTF-8",
-          warnings: [],
-          parsed: parseCsvText(SAMPLE_CSV_TEXT)
-        };
+      } else if (state.csvIngestion?.ok) {
+        ingestion = state.csvIngestion;
         state.csvIngestion = ingestion;
       }
       if (!ingestion || !ingestion.ok) {
-        setCsvStatusMessage("Choose a CSV file or use the sample dataset before starting analysis.", "error");
+        setCsvStatusMessage("Choose a CSV file or load one of the demo datasets before starting analysis.", "error");
         logCsvPipelineEvent("analysis", "blocked", { reason: "missing_ingestion" });
         return;
       }
@@ -5903,7 +6119,7 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
           transformationLogSummary
         });
         state.csvResult = { ...result, correlations, segmentSummaries };
-        primeCrossReferenceState("single", state.csvResult, parsedCsv.headers, parsedCsv.records);
+        primeCrossReferenceState("single", state.csvResult, parsedCsv.headers, parsedCsv.records, { topicOverride: getCsvDemoById(state.csvActiveDemoId)?.crossReferenceTopic || "" });
         renderCsvAnalysisResult(state.csvResult, sourceLabel || "Uploaded CSV");
         setCsvStatusMessage(`CSV analysis complete for ${sourceLabel || "your dataset"}.`, "complete");
         logCsvPipelineEvent("analysis", "completed", {
@@ -9751,8 +9967,8 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
       return findings.length ? findings.join("\n") : "Internal dataset analyzed - no specific findings context available.";
     }
 
-    function primeCrossReferenceState(mode, agentResult, headers, rows) {
-      const inferredTopic = inferTopicFromCSV(agentResult, headers, (rows || []).slice(0, 20));
+    function primeCrossReferenceState(mode, agentResult, headers, rows, options = {}) {
+      const inferredTopic = String(options.topicOverride || "").trim() || inferTopicFromCSV(agentResult, headers, (rows || []).slice(0, 20));
       state.crossReference = {
         ...createInitialCrossReferenceState(),
         mode,
