@@ -167,8 +167,13 @@ expect(/function renderInterviewPrepBrief\(result\) \{[\s\S]*csv-action-bar acti
 assert.doesNotMatch(html, /function renderInterviewPrepBrief\(result\) \{[\s\S]*<div class="brief-actions"><button class="secondary-button" type="button" id="copyBriefButton">Copy to Clipboard<\/button><button class="secondary-button" type="button" id="downloadBriefButton">Download Brief<\/button>/, "expected interview prep brief to remove the old top-right brief-actions button row");
 assert.doesNotMatch(html, /function renderInterviewPrepBrief\(result\) \{[\s\S]*<div class="score-card"><div class="score-label">Confidence<\/div>/, "expected interview prep brief to remove the confidence score card");
 expect(/state\.route === "csv" && state\.csvResultVisible && state\.csvExportMode === "single"/, "expected scenario context to support single-file CSV analysis results");
-expect(/showQuery && state\.briefVisible && state\.mode !== "interviewprep"|state\.csvResultVisible && state\.csvExportMode === "single"/, "expected scenario launcher visibility to support monitoring briefs and single-file CSV analysis only");
+expect(/scenarioType:\s*"interview_prep"/, "expected Ask PulseBoard to define a dedicated interview prep scenario context");
+expect(/Interview prep: \$\{state\.topic\}\$\{state\.role \? ` - \$\{state\.role\}` : ""\}/, "expected Interview Prep scenario subtitle to include the company and target role");
+expect(/Ask anything about this interview-prep brief\./, "expected scenario empty state copy for interview prep follow-up questions");
+expect(/Answers stay tied to this interview prep run\./, "expected scenario status copy for interview prep runs");
+expect(/context\?\.scenarioType === "interview_prep" \? state\.role : undefined/, "expected scenario payload building to send the target role for interview prep follow-ups");
 expect(/function renderCsvAnalysisResult\(result, sourceLabel\) \{[\s\S]*syncScenarioVisibility\(\);/s, "expected single-file CSV rendering to recompute scenario launcher visibility");
+expect(/function renderInterviewPrepBrief\(result\) \{[\s\S]*syncScenarioVisibility\(\);/s, "expected interview prep rendering to recompute scenario launcher visibility");
 expect(/fetch\(["'`]\/api\/pulseboard\/scenario["'`]/, "expected frontend to call the scenario relay endpoint");
 expect(/reliability:\s*brief\?\.reliability\s*\|\|\s*null/, "expected scenario payload building to guard reliability access when CSV mode has no monitoring brief");
 expect(/\.scenario-window\s*\{[\s\S]*position:\s*fixed/i, "expected a fixed-position scenario window style");

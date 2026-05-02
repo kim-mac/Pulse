@@ -1590,6 +1590,66 @@
       background: rgba(255,255,255,0.96);
     }
 
+    .compare-demo-picker {
+      grid-column: 1 / -1;
+      display: grid;
+      gap: 12px;
+      padding: 16px 18px;
+      border-radius: 18px;
+      border: 1px solid rgba(26,26,46,0.08);
+      background: rgba(255,255,255,0.74);
+    }
+
+    .compare-demo-picker[hidden] {
+      display: none;
+    }
+
+    .compare-demo-card {
+      display: grid;
+      gap: 10px;
+      padding: 14px 16px;
+      border-radius: 16px;
+      border: 1px solid rgba(26,26,46,0.08);
+      background: #ffffff;
+    }
+
+    .compare-demo-card.active {
+      border-color: rgba(26,26,46,0.24);
+      box-shadow: 0 12px 24px rgba(26,26,46,0.10);
+    }
+
+    .compare-demo-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .compare-demo-story {
+      margin: 0;
+      font-size: 12px;
+      color: rgba(26,26,46,0.62);
+      line-height: 1.55;
+    }
+
+    .compare-demo-files {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .compare-demo-file-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 9px;
+      border-radius: 999px;
+      font-size: 10px;
+      font-weight: 700;
+      background: rgba(26,26,46,0.06);
+      color: rgba(26,26,46,0.58);
+    }
+
     .csv-demo-card-head {
       display: flex;
       align-items: flex-start;
@@ -3939,6 +3999,16 @@
             </section>
           </div>
           <div class="compare-upload-grid" id="compareCsvSection" hidden>
+            <section class="compare-demo-picker" id="compareDemoPicker" aria-labelledby="compareDemoTitle">
+              <div class="csv-demo-picker-head">
+                <div>
+                  <h3 class="csv-demo-title" id="compareDemoTitle">Demo pair</h3>
+                  <p class="csv-demo-picker-copy">Load one recommended before-vs-after dataset pair for a strong comparison brief, charts, anomalies, and cross-reference follow-up.</p>
+                </div>
+                <span class="badge">Best for judges</span>
+              </div>
+              <div id="compareDemoMount"></div>
+            </section>
             <section class="compare-file-card file-a">
               <div class="field-group">
                 <div class="compare-file-row">
@@ -4113,6 +4183,59 @@
 2026-04,Support A,North America,1982,1916,15,4.7,0.063
 2026-04,Support B,Europe,1452,1404,18,4.7,0.054
 2026-04,Support C,APAC,1298,1245,22,4.4,0.076`
+      },
+      {
+        id: "messy-ops-cleaning-demo",
+        fileName: "messy_ops_cleaning_demo.csv",
+        description: "Messy order-ops data with missing values, inconsistent categories, and formatted numbers built to demonstrate Data Cleaning.",
+        recommendedUse: "Best for Data Cleaning",
+        analysisGoal: "Review dataset quality issues, demonstrate cleaning decisions, and surface operational patterns after cleanup.",
+        initialCleaningMode: "raw",
+        csvText: `week,team,region,channel,priority,orders_processed,revenue_usd,refund_rate,qa_score,owner,status
+2026-W18,Ops Alpha,North America,web,Urgent,"1,240","$18,400",4.2%,91,Maya,Closed
+2026-W18,Ops Alpha,North America, Web ,urgent,1185,"17,950",,89,maya,closed
+2026-W18,Ops Beta,Europe,Partner,High,980,"$14,120",3.8%,,Luca,In Progress
+2026-W18,Ops Beta,Europe,partner,HIGH,965,14120,3.8%,87,luca,in progress
+2026-W18,Ops Gamma,APAC,Mobile,Medium,,12840,5.1%,84,Asha,Open
+2026-W18,Ops Gamma,APAC,mobile, medium ,910,"12,840",5.1%,84,asha, open
+2026-W19,Ops Alpha,North America,Web,Low,1275,$19,220,4.0%,93,Maya,Closed
+2026-W19,Ops Alpha,North America,web,LOW,1275,"19,220",4.0%,93,maya,Closed
+2026-W19,Ops Beta,Europe,Partner,High,1004,"$14,980",N/A,88,Luca,Escalated
+2026-W19,Ops Beta,Europe, Partner ,high,1004,14980,,88,luca,escalated
+2026-W19,Ops Gamma,APAC,Mobile,Medium,944,"13,110",5.0%,85,,Open
+2026-W19,Ops Gamma,APAC,mobile,Medium,944,13110,5.0%,85,Asha,open`
+      }
+    ];
+    const CSV_COMPARE_DEMO_CATALOG = [
+      {
+        id: "uber-marketplace-qoq",
+        fileNameA: "uber_marketplace_q1.csv",
+        fileNameB: "uber_marketplace_q2.csv",
+        labelA: "Q1 Baseline",
+        labelB: "Q2 Expansion",
+        description: "A before-vs-after Uber marketplace story showing higher rider demand, faster courier signup growth, and improving wait times across major markets.",
+        analysisGoal: "Compare marketplace performance between Q1 and Q2, highlight the most important operational changes, and surface the clearest business implication.",
+        crossReferenceTopic: "Uber",
+        csvTextA: `month,company,market,courier_signup_growth,rider_demand_index,merchant_activation_rate,airport_trip_share,average_wait_minutes,driver_incentive_spend
+2026-01,Uber,New York,0.082,74,0.41,0.18,5.6,1820000
+2026-01,Uber,Los Angeles,0.076,71,0.38,0.12,6.1,1695000
+2026-01,Uber,Chicago,0.069,68,0.35,0.1,6.4,1240000
+2026-02,Uber,New York,0.088,77,0.43,0.19,5.4,1855000
+2026-02,Uber,Los Angeles,0.079,73,0.39,0.13,5.9,1712000
+2026-02,Uber,Chicago,0.072,69,0.36,0.11,6.3,1268000
+2026-03,Uber,New York,0.093,79,0.45,0.21,5.1,1890000
+2026-03,Uber,Los Angeles,0.083,75,0.41,0.14,5.7,1734000
+2026-03,Uber,Chicago,0.075,71,0.38,0.12,6,1289000`,
+        csvTextB: `month,company,market,courier_signup_growth,rider_demand_index,merchant_activation_rate,airport_trip_share,average_wait_minutes,driver_incentive_spend
+2026-04,Uber,New York,0.097,82,0.46,0.22,4.9,1913000
+2026-04,Uber,Los Angeles,0.086,78,0.42,0.15,5.5,1761000
+2026-04,Uber,Chicago,0.078,73,0.39,0.13,5.8,1312000
+2026-05,Uber,New York,0.101,84,0.47,0.23,4.8,1938000
+2026-05,Uber,Los Angeles,0.089,80,0.43,0.16,5.3,1789000
+2026-05,Uber,Chicago,0.081,75,0.4,0.14,5.6,1335000
+2026-06,Uber,New York,0.105,87,0.49,0.24,4.6,1962000
+2026-06,Uber,Los Angeles,0.092,82,0.45,0.17,5.1,1814000
+2026-06,Uber,Chicago,0.084,77,0.42,0.15,5.4,1361000`
       }
     ];
     const MAX_CSV_UPLOAD_BYTES = 10 * 1024 * 1024;
@@ -4331,6 +4454,8 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
       csvChartPayload: null,
       csvIngestion: null,
       csvActiveDemoId: "",
+      csvCompareActiveDemoId: "",
+      csvCompareDemoIngestion: null,
       csvSourceLabel: "",
       csvExportMode: null,
       csvExportMeta: null,
@@ -4413,7 +4538,7 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
           "connectionForm", "providerSelect", "providerHelpShortcut", "providerModelInput", "providerApiKeyInput",
           "providerEndpointInput", "providerNotes", "connectionFormMessage", "closeConnectionButton",
         "saveConnectionButton", "csvForm", "csvFileInput", "csvGoalInput", "compareCsvGoalInput",
-        "runCsvButton", "compareRunCsvButton", "csvStatusMessage", "csvInputHelper", "csvFileName", "qualityPreviewContainer", "singleCsvActionRow", "csvDemoPicker", "csvDemoGrid",
+        "runCsvButton", "compareRunCsvButton", "csvStatusMessage", "csvInputHelper", "csvFileName", "qualityPreviewContainer", "singleCsvActionRow", "csvDemoPicker", "csvDemoGrid", "compareDemoPicker", "compareDemoMount",
         "csvModeSingle", "csvModeCompare", "singleCsvSection", "compareCsvSection",
         "compareFileAInput", "compareFileBInput", "compareLabelAInput", "compareLabelBInput", "compareFileAName", "compareFileBName",
         "clearCsvFileButton", "clearCompareFileAButton", "clearCompareFileBButton"
@@ -4433,6 +4558,7 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
         elements.csvConnectButton.addEventListener("click", () => navigateTo("apiKey"));
       elements.providerHelpShortcut?.addEventListener("click", handleProviderHelpShortcutClick);
       elements.csvDemoGrid?.addEventListener("click", handleCsvDemoPickerClick);
+      elements.compareDemoMount?.addEventListener("click", handleCompareDemoClick);
       elements.csvModeSingle.addEventListener("click", () => setCsvMode("single"));
       elements.csvModeCompare.addEventListener("click", () => setCsvMode("compare"));
       elements.csvFileInput.addEventListener("change", handleSingleCsvInputChange);
@@ -4891,13 +5017,20 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
       }
 
       function getActiveScenarioContext() {
-        if (state.route === "query" && state.briefVisible && state.mode !== "interviewprep") {
-          return {
-            scenarioType: "monitoring",
-            contextKey: state.selectedHistoryRunId || `live-${state.activeRunId}`,
-            title: "Scenario Simulator",
-            subtitle: `Monitoring brief: ${state.topic}`
-          };
+        if (state.route === "query" && state.briefVisible) {
+          return state.mode === "interviewprep"
+            ? {
+              scenarioType: "interview_prep",
+              contextKey: state.selectedHistoryRunId || `live-${state.activeRunId}`,
+              title: "Ask PulseBoard",
+              subtitle: `Interview prep: ${state.topic}${state.role ? ` - ${state.role}` : ""}`
+            }
+            : {
+              scenarioType: "monitoring",
+              contextKey: state.selectedHistoryRunId || `live-${state.activeRunId}`,
+              title: "Scenario Simulator",
+              subtitle: `Monitoring brief: ${state.topic}`
+            };
         }
         if (state.route === "csv" && state.csvResultVisible && state.csvExportMode === "single" && state.csvResult && state.csvChartPayload?.mode === "single") {
           return {
@@ -4965,7 +5098,9 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
         if (!messages.length) {
           return `<div class="scenario-empty">${context?.scenarioType === "csv_single"
             ? "Ask anything about this CSV analysis. PulseBoard can explain the brief or show exact matching rows and values from the uploaded dataset."
-            : "Ask anything about this monitoring brief. PulseBoard will answer from the current run first and only search for fresh signals if the brief does not already cover it."}</div>`;
+            : context?.scenarioType === "interview_prep"
+              ? "Ask anything about this interview-prep brief. PulseBoard will answer from the current run first and only search for fresh signals when the company, role, rounds, or hiring detail is not already covered."
+              : "Ask anything about this monitoring brief. PulseBoard will answer from the current run first and only search for fresh signals if the brief does not already cover it."}</div>`;
         }
         return messages.map((message) => {
           const sourceModeLabel = message.role === "assistant" ? getScenarioSourceModeLabel(message.sourceMode) : "";
@@ -5025,7 +5160,11 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
           ? "PulseBoard is checking the current brief and live follow-up signals."
           : latestAssistantMessage?.sourceMode
             ? getScenarioSourceModeLabel(latestAssistantMessage.sourceMode)
-            : "Answers stay tied to this monitoring run.";
+            : context?.scenarioType === "csv_single"
+              ? "Answers stay tied to this CSV analysis."
+              : context?.scenarioType === "interview_prep"
+                ? "Answers stay tied to this interview prep run."
+                : "Answers stay tied to this monitoring run.";
         applyScenarioWindowFrame();
         elements.scenarioMessages.scrollTop = elements.scenarioMessages.scrollHeight;
       }
@@ -5114,7 +5253,7 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
         const brief = state.agentResults.aggregator;
         const question = elements.scenarioQuestionInput.value.trim();
         if (!runId || !state.connection) return;
-        if (context?.scenarioType === "monitoring" && !brief) return;
+        if ((context?.scenarioType === "monitoring" || context?.scenarioType === "interview_prep") && !brief) return;
         if (context?.scenarioType === "csv_single" && !state.csvResult) return;
         if (!question) {
           elements.scenarioQuestionInput.focus();
@@ -5135,6 +5274,7 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
               connection: state.connection,
               topic: state.topic,
               mode: state.mode,
+              role: context?.scenarioType === "interview_prep" ? state.role : undefined,
               runId,
               brief,
               agentResults: {
@@ -5311,8 +5451,8 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
 
     function syncCsvFileClearButtons() {
       if (elements.clearCsvFileButton) elements.clearCsvFileButton.hidden = !(elements.csvFileInput.files && elements.csvFileInput.files[0]);
-      if (elements.clearCompareFileAButton) elements.clearCompareFileAButton.hidden = !(elements.compareFileAInput.files && elements.compareFileAInput.files[0]);
-      if (elements.clearCompareFileBButton) elements.clearCompareFileBButton.hidden = !(elements.compareFileBInput.files && elements.compareFileBInput.files[0]);
+      if (elements.clearCompareFileAButton) elements.clearCompareFileAButton.hidden = !((elements.compareFileAInput.files && elements.compareFileAInput.files[0]) || state.csvCompareActiveDemoId);
+      if (elements.clearCompareFileBButton) elements.clearCompareFileBButton.hidden = !((elements.compareFileBInput.files && elements.compareFileBInput.files[0]) || state.csvCompareActiveDemoId);
     }
 
     async function ingestSingleCsvFile(file) {
@@ -5448,6 +5588,45 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
       const demoId = button.getAttribute("data-csv-demo-id");
       if (!demoId) return;
       loadCsvDemo(demoId);
+    }
+
+    function getCsvCompareDemoById(demoId) {
+      return CSV_COMPARE_DEMO_CATALOG.find((item) => item.id === demoId) || null;
+    }
+
+    function renderCompareDemoPicker() {
+      if (!elements.compareDemoPicker || !elements.compareDemoMount) return;
+      const showPicker = state.csvMode === "compare";
+      elements.compareDemoPicker.hidden = !showPicker;
+      if (!showPicker) return;
+      const demo = CSV_COMPARE_DEMO_CATALOG[0];
+      if (!demo) {
+        elements.compareDemoMount.innerHTML = "";
+        return;
+      }
+      elements.compareDemoMount.innerHTML = `
+        <article class="compare-demo-card ${state.csvCompareActiveDemoId === demo.id ? "active" : ""}">
+          <div class="compare-demo-row">
+            <div>
+              <p class="csv-demo-file" style="margin:0;">Marketplace change over time</p>
+              <p class="compare-demo-story">${escapeHtml(demo.description)}</p>
+            </div>
+            <button class="secondary-button" type="button" data-compare-demo-id="${escapeHtmlAttribute(demo.id)}">Load demo pair</button>
+          </div>
+          <div class="compare-demo-files">
+            <span class="compare-demo-file-pill">${escapeHtml(demo.fileNameA)}</span>
+            <span class="compare-demo-file-pill">${escapeHtml(demo.fileNameB)}</span>
+          </div>
+        </article>
+      `;
+    }
+
+    function handleCompareDemoClick(event) {
+      const button = event.target.closest("[data-compare-demo-id]");
+      if (!button) return;
+      const demoId = button.getAttribute("data-compare-demo-id");
+      if (!demoId) return;
+      loadCompareDemoPair(demoId);
     }
 
     function renderAgentCards() {
@@ -5634,6 +5813,8 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
       state.csvChartPayload = null;
       state.csvIngestion = null;
       state.csvActiveDemoId = "";
+      state.csvCompareActiveDemoId = "";
+      state.csvCompareDemoIngestion = null;
       state.csvSourceLabel = "";
       state.csvExportMode = null;
       state.csvExportMeta = null;
@@ -5658,6 +5839,8 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
       elements.csvFileInput.value = "";
       elements.compareFileAInput.value = "";
       elements.compareFileBInput.value = "";
+      elements.compareLabelAInput.value = "";
+      elements.compareLabelBInput.value = "";
       elements.compareCsvGoalInput.value = "";
       syncCsvFileClearButtons();
       renderCsvMode();
@@ -5676,7 +5859,10 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
       elements.csvFileName.textContent = demo.fileName;
       elements.csvInputHelper.hidden = true;
       const parsedCsv = parseCsvText(demo.csvText);
-      const preview = buildSingleCsvPreviewState(parsedCsv, demo.fileName);
+      const initialCleaningConfig = demo.initialCleaningMode === "raw"
+        ? { ...createDefaultCleaningConfig(), mode: "raw" }
+        : createDefaultCleaningConfig();
+      const preview = buildSingleCsvPreviewState(parsedCsv, demo.fileName, initialCleaningConfig);
       const ingestion = {
         ok: true,
         fileName: demo.fileName,
@@ -5691,6 +5877,38 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
       syncCsvFileClearButtons();
       renderCsvDemoPicker();
       setCsvStatusMessage(buildCleaningStatusMessage(preview) || `${demo.fileName} is ready. ${demo.recommendedUse}. Run the analyst to generate a polished demo brief.`, "complete");
+    }
+
+    function loadCompareDemoPair(demoId) {
+      const demo = getCsvCompareDemoById(demoId);
+      if (!demo) return;
+      state.csvCompareActiveDemoId = demo.id;
+      state.csvCompareDemoIngestion = {
+        demoId: demo.id,
+        fileA: {
+          fileName: demo.fileNameA,
+          text: demo.csvTextA,
+          parsed: parseCsvTextForQuality(demo.csvTextA)
+        },
+        fileB: {
+          fileName: demo.fileNameB,
+          text: demo.csvTextB,
+          parsed: parseCsvTextForQuality(demo.csvTextB)
+        },
+        crossReferenceTopic: demo.crossReferenceTopic || ""
+      };
+      elements.compareFileAInput.value = "";
+      elements.compareFileBInput.value = "";
+      elements.compareFileAName.textContent = demo.fileNameA;
+      elements.compareFileBName.textContent = demo.fileNameB;
+      elements.compareLabelAInput.value = demo.labelA || "File A";
+      elements.compareLabelBInput.value = demo.labelB || "File B";
+      elements.compareCsvGoalInput.value = demo.analysisGoal || "";
+      state.csvComparisonQuality.fileA = buildQualityPreviewState(state.csvCompareDemoIngestion.fileA.parsed, demo.fileNameA);
+      state.csvComparisonQuality.fileB = buildQualityPreviewState(state.csvCompareDemoIngestion.fileB.parsed, demo.fileNameB);
+      syncCsvFileClearButtons();
+      renderCompareDemoPicker();
+      setCsvStatusMessage(`${demo.fileNameA} and ${demo.fileNameB} are ready. Recommended demo pair loaded for judges.`, "complete");
     }
 
     function setCsvMode(mode) {
@@ -5714,6 +5932,7 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
         renderSingleQualityPreview();
       } else {
         if (elements.csvDemoPicker) elements.csvDemoPicker.hidden = true;
+        renderCompareDemoPicker();
         elements.qualityPreviewContainer.hidden = true;
         elements.qualityPreviewContainer.innerHTML = "";
         elements.singleCsvActionRow.hidden = true;
@@ -5732,6 +5951,9 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
     async function handleComparisonFileChange(fileKey) {
       const input = fileKey === "fileA" ? elements.compareFileAInput : elements.compareFileBInput;
       const file = input.files && input.files[0];
+      state.csvCompareActiveDemoId = "";
+      state.csvCompareDemoIngestion = null;
+      renderCompareDemoPicker();
       if (!file) {
         state.csvComparisonQuality[fileKey] = null;
         if (fileKey === "fileA" && elements.compareFileAName) elements.compareFileAName.textContent = "No file chosen";
@@ -5769,9 +5991,23 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
       const isFileA = fileKey === "fileA";
       const input = isFileA ? elements.compareFileAInput : elements.compareFileBInput;
       const nameEl = isFileA ? elements.compareFileAName : elements.compareFileBName;
+      const clearingCompareDemo = Boolean(state.csvCompareActiveDemoId);
       input.value = "";
+      state.csvCompareActiveDemoId = "";
+      state.csvCompareDemoIngestion = null;
       state.csvComparisonQuality[fileKey] = null;
-      if (nameEl) nameEl.textContent = "No file chosen";
+      if (clearingCompareDemo) {
+        if (elements.compareFileAName) elements.compareFileAName.textContent = "No file chosen";
+        if (elements.compareFileBName) elements.compareFileBName.textContent = "No file chosen";
+        elements.compareLabelAInput.value = "";
+        elements.compareLabelBInput.value = "";
+        elements.compareCsvGoalInput.value = "";
+        state.csvComparisonQuality.fileA = null;
+        state.csvComparisonQuality.fileB = null;
+      } else if (nameEl) {
+        nameEl.textContent = "No file chosen";
+      }
+      renderCompareDemoPicker();
       syncCsvFileClearButtons();
       setCsvStatusMessage("", "ready");
     }
@@ -6144,17 +6380,18 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
     async function handleCsvComparisonSubmit() {
       const fileA = elements.compareFileAInput.files && elements.compareFileAInput.files[0];
       const fileB = elements.compareFileBInput.files && elements.compareFileBInput.files[0];
-      if (!fileA) {
-        setCsvStatusMessage("Choose a CSV for File A before running comparison.", "error");
+      const demoIngestion = state.csvCompareDemoIngestion;
+      if (!fileA && !demoIngestion?.fileA) {
+        setCsvStatusMessage("Choose a CSV for File A or load the demo pair before running comparison.", "error");
         return;
       }
-      if (!fileB) {
-        setCsvStatusMessage("Choose a CSV for File B before running comparison.", "error");
+      if (!fileB && !demoIngestion?.fileB) {
+        setCsvStatusMessage("Choose a CSV for File B or load the demo pair before running comparison.", "error");
         return;
       }
 
-      const csvTextA = await fileA.text();
-      const csvTextB = await fileB.text();
+      const csvTextA = fileA ? await fileA.text() : demoIngestion.fileA.text;
+      const csvTextB = fileB ? await fileB.text() : demoIngestion.fileB.text;
       if (!csvTextA.trim()) {
         setCsvStatusMessage("File A is empty. Upload a populated CSV to continue.", "error");
         return;
@@ -6166,6 +6403,8 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
 
       const labelA = elements.compareLabelAInput.value.trim() || "File A";
       const labelB = elements.compareLabelBInput.value.trim() || "File B";
+      const fileNameA = fileA?.name || demoIngestion?.fileA?.fileName || "File A";
+      const fileNameB = fileB?.name || demoIngestion?.fileB?.fileName || "File B";
 
       elements.runCsvButton.disabled = true;
       elements.runCsvButton.textContent = "Analyzing...";
@@ -6176,8 +6415,8 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
       setCsvStatusMessage(`Comparing ${labelA} and ${labelB} through the relay...`, "warning");
       const parsedA = parseCsvText(csvTextA);
       const parsedB = parseCsvText(csvTextB);
-      const qualityA = state.csvComparisonQuality.fileA || buildQualityPreviewState(parsedA, fileA.name);
-      const qualityB = state.csvComparisonQuality.fileB || buildQualityPreviewState(parsedB, fileB.name);
+      const qualityA = state.csvComparisonQuality.fileA || buildQualityPreviewState(parsedA, fileNameA);
+      const qualityB = state.csvComparisonQuality.fileB || buildQualityPreviewState(parsedB, fileNameB);
       state.crossReference = createInitialCrossReferenceState();
       state.csvChartFilters = null;
       state.csvComparisonQuality.fileA = qualityA;
@@ -6188,8 +6427,8 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
         parsedB,
         labelA,
         labelB,
-        fileNameA: fileA.name,
-        fileNameB: fileB.name,
+        fileNameA,
+        fileNameB,
         qualityA,
         qualityB
       };
@@ -6206,8 +6445,8 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
           qualityReportB: qualityB.quality
         });
         state.csvComparison = result;
-        primeCrossReferenceState("compare", result, Array.from(new Set([...parsedA.headers, ...parsedB.headers])), parsedA.records.concat(parsedB.records));
-        renderCsvComparisonResult(result, { labelA, labelB, fileNameA: fileA.name, fileNameB: fileB.name });
+        primeCrossReferenceState("compare", result, Array.from(new Set([...parsedA.headers, ...parsedB.headers])), parsedA.records.concat(parsedB.records), { topicOverride: demoIngestion?.crossReferenceTopic || "" });
+        renderCsvComparisonResult(result, { labelA, labelB, fileNameA, fileNameB });
         setCsvStatusMessage(`Comparison complete for ${labelA} and ${labelB}.`, "complete");
       } catch (error) {
         setCsvStatusMessage(error.message || "CSV comparison failed.", "error");
@@ -7064,6 +7303,7 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
       const copyButton = document.getElementById("copyInterviewPrepBriefButton");
       if (copyButton) copyButton.addEventListener("click", copyBriefToClipboard);
       document.getElementById("downloadInterviewPrepBriefButton").addEventListener("click", downloadBrief);
+      syncScenarioVisibility();
     }
 
     function renderInterviewRoundCard(round, index) {

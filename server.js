@@ -25,7 +25,7 @@ const MODE_MODIFIERS = {
   interviewprep: "Build a company-specific interview roadmap for the target role using the latest reported interview signals, role expectations, and prep resources."
 };
 
-const SCENARIO_SUPPORTED_MODES = new Set(["general", "company", "jobmarket", "esg", "industry"]);
+const SCENARIO_SUPPORTED_MODES = new Set(["general", "company", "jobmarket", "esg", "industry", "interviewprep"]);
 
 const PROVIDER_PRESETS = {
   openai: {
@@ -358,6 +358,7 @@ async function handlePulseBoardRequest(req, res, options = {}) {
           connection,
           topic: String(body.topic || "").trim(),
           mode: String(body.mode || "general").trim(),
+          role: String(body.role || "").trim(),
           runId: String(body.runId || "").trim(),
           brief: body.brief && typeof body.brief === "object" ? body.brief : null,
           agentResults: body.agentResults && typeof body.agentResults === "object" ? body.agentResults : {},
@@ -384,10 +385,13 @@ async function handlePulseBoardRequest(req, res, options = {}) {
           return sendJson(res, 400, { error: { message: "Topic is required for scenario follow-up." } });
         }
         if (!SCENARIO_SUPPORTED_MODES.has(input.mode)) {
-          return sendJson(res, 400, { error: { message: "Scenario Simulator currently supports monitoring briefs only." } });
+          return sendJson(res, 400, { error: { message: "Scenario Simulator currently supports monitoring and Interview Prep briefs only." } });
+        }
+        if (input.scenarioType === "interview_prep" && !input.role) {
+          return sendJson(res, 400, { error: { message: "A target role is required before asking Interview Prep follow-up questions." } });
         }
         if (!input.brief) {
-          return sendJson(res, 400, { error: { message: "A completed monitoring brief is required before asking a scenario question." } });
+          return sendJson(res, 400, { error: { message: input.scenarioType === "interview_prep" ? "A completed Interview Prep brief is required before asking PulseBoard a follow-up question." : "A completed monitoring brief is required before asking a scenario question." } });
         }
         if (!input.question) {
           return sendJson(res, 400, { error: { message: "Enter a scenario question before asking PulseBoard." } });
@@ -939,23 +943,36 @@ function normalizeScenarioMessages(messages) {
     .slice(-8);
 }
 
-function buildScenarioFollowupPrompt(stage = "brief") {
+function isInterviewPrepScenario(inputOrType) {
+  const scenarioType = typeof inputOrType === "string" ? inputOrType : inputOrType?.scenarioType;
+  const mode = typeof inputOrType === "object" ? inputOrType?.mode : "";
+  return scenarioType === "interview_prep" || mode === "interviewprep";
+}
+
+function buildScenarioFollowupPrompt(stage = "brief", scenarioType = "monitoring") {
+  const interviewPrep = isInterviewPrepScenario(scenarioType);
   const baseRules = [
-    "You are PulseBoard's scenario simulator for monitoring briefs.",
+    interviewPrep
+      ? "You are PulseBoard's scenario simulator for interview-prep briefs."
+      : "You are PulseBoard's scenario simulator for monitoring briefs.",
     "Answer in brief, direct prose with no bullet list unless the user explicitly asks for one.",
     "Keep answers operational and to the point.",
-    "brief-first: If the answer is already supported by the supplied brief and agent outputs, answer from the current monitoring run.",
+    interviewPrep
+      ? "brief-first: If the answer is already supported by the supplied interview-prep brief and agent outputs, answer from the current interview-prep run."
+      : "brief-first: If the answer is already supported by the supplied brief and agent outputs, answer from the current monitoring run.",
     "Only set canAnswerFromBrief to true when the requested fact is explicitly supported by the supplied brief or agent outputs.",
     "If the answer is already supported by the supplied brief and agent outputs, do not ask for fresh search.",
     "If the requested fact is missing, ambiguous, or would require wording like may, might, likely, there is no explicit evidence, not in the brief, or would need to confirm, set canAnswerFromBrief to false and needsFreshSearch to true.",
-    "For concrete company-detail questions like remote work, team size, internship hiring, compensation, location, founders, funding, or role availability, require fresh search unless the fact is directly present in the supplied brief or agent outputs.",
+    interviewPrep
+      ? "For concrete company or role-detail questions like hiring status, intern availability, remote work, team size, compensation, interview rounds, process expectations, role scope, location, founders, or funding, require fresh search unless the fact is directly present in the supplied brief or agent outputs."
+      : "For concrete company-detail questions like remote work, team size, internship hiring, compensation, location, founders, funding, or role availability, require fresh search unless the fact is directly present in the supplied brief or agent outputs.",
     "Only rely on live follow-up evidence when the brief does not already answer the question well enough.",
     "Return ONLY valid JSON."
   ];
   if (stage === "brief") {
     return `${baseRules.join("\n")}\nReturn JSON with this exact shape:\n{"answer":"string","canAnswerFromBrief":true,"needsFreshSearch":false,"followupQuery":"string"}`;
   }
-  return `${baseRules.join("\n")}\nYou are now answering with fresh follow-up evidence in addition to the current monitoring run.\nReturn JSON with this exact shape:\n{"answer":"string","sourceMode":"brief|live_followup|mixed"}`;
+  return `${baseRules.join("\n")}\nYou are now answering with fresh follow-up evidence in addition to the current ${interviewPrep ? "interview-prep" : "monitoring"} run.\nReturn JSON with this exact shape:\n{"answer":"string","sourceMode":"brief|live_followup|mixed"}`;
 }
 
 function buildCsvScenarioPrompt(stage = "brief") {
@@ -1014,37 +1031,59 @@ function buildCompactCsvScenarioContext(input, options = {}) {
 }
 
 function buildScenarioFollowupUserContent(input, options = {}) {
+  const interviewPrep = isInterviewPrepScenario(input);
   const priorMessages = normalizeScenarioMessages(input.messages)
     .map((message) => `${message.role === "assistant" ? "Assistant" : "User"}: ${message.content}`)
     .join("\n");
-  const briefPayload = {
-    oneLineSummary: input.brief?.oneLineSummary || "",
-    subjectSummary: input.brief?.subjectSummary || "",
-    overallRiskScore: input.brief?.overallRiskScore,
-    overallOpportunityScore: input.brief?.overallOpportunityScore,
-    urgent: Array.isArray(input.brief?.urgent) ? input.brief.urgent : [],
-    notable: Array.isArray(input.brief?.notable) ? input.brief.notable : [],
-    fyi: Array.isArray(input.brief?.fyi) ? input.brief.fyi : [],
-    recommendedActions: Array.isArray(input.brief?.recommendedActions) ? input.brief.recommendedActions : [],
-    monitoringFrequency: input.brief?.monitoringFrequency || "",
-    reliability: input.reliability || input.brief?.reliability || null
-  };
+  const briefPayload = interviewPrep
+    ? {
+      oneLineSummary: input.brief?.oneLineSummary || "",
+      reportedRoundCount: input.brief?.reportedRoundCount || "",
+      roadmapSummary: input.brief?.roadmapSummary || "",
+      confidenceLabel: input.brief?.confidenceLabel || "",
+      rounds: Array.isArray(input.brief?.rounds) ? input.brief.rounds : [],
+      prepPlan: Array.isArray(input.brief?.prepPlan) ? input.brief.prepPlan : [],
+      keyWarnings: Array.isArray(input.brief?.keyWarnings) ? input.brief.keyWarnings : [],
+      sourceNotes: Array.isArray(input.brief?.sourceNotes) ? input.brief.sourceNotes : [],
+      reliability: input.reliability || input.brief?.reliability || null
+    }
+    : {
+      oneLineSummary: input.brief?.oneLineSummary || "",
+      subjectSummary: input.brief?.subjectSummary || "",
+      overallRiskScore: input.brief?.overallRiskScore,
+      overallOpportunityScore: input.brief?.overallOpportunityScore,
+      urgent: Array.isArray(input.brief?.urgent) ? input.brief.urgent : [],
+      notable: Array.isArray(input.brief?.notable) ? input.brief.notable : [],
+      fyi: Array.isArray(input.brief?.fyi) ? input.brief.fyi : [],
+      recommendedActions: Array.isArray(input.brief?.recommendedActions) ? input.brief.recommendedActions : [],
+      monitoringFrequency: input.brief?.monitoringFrequency || "",
+      reliability: input.reliability || input.brief?.reliability || null
+    };
   const sections = [
     `Topic: ${input.topic}`,
     `Monitoring mode: ${MODE_LABELS[input.mode] || input.mode}`,
+    interviewPrep ? `Target role: ${input.role || "Target role not provided"}` : "",
     `User question: ${input.question}`,
     "",
-    "Current monitoring brief:",
+    interviewPrep ? "Current interview-prep brief:" : "Current monitoring brief:",
     JSON.stringify(briefPayload, null, 2),
     "",
     "Current agent outputs:",
-    JSON.stringify({
-      news: input.agentResults?.news || null,
-      jobs: input.agentResults?.jobs || null,
-      sentiment: input.agentResults?.sentiment || null,
-      regulatory: input.agentResults?.regulatory || null,
-      competitor: input.agentResults?.competitor || null
-    }, null, 2)
+    JSON.stringify(interviewPrep
+      ? {
+        interviewSignals: input.agentResults?.news || null,
+        roleExpectations: input.agentResults?.jobs || null,
+        candidateExperience: input.agentResults?.sentiment || null,
+        processAndPolicy: input.agentResults?.regulatory || null,
+        peerCalibration: input.agentResults?.competitor || null
+      }
+      : {
+        news: input.agentResults?.news || null,
+        jobs: input.agentResults?.jobs || null,
+        sentiment: input.agentResults?.sentiment || null,
+        regulatory: input.agentResults?.regulatory || null,
+        competitor: input.agentResults?.competitor || null
+      }, null, 2)
   ];
   if (priorMessages) {
     sections.push("", "Recent scenario chat thread:", priorMessages);
@@ -1264,7 +1303,7 @@ async function runScenarioFollowup(input) {
   const normalizedMessages = normalizeScenarioMessages(input.messages);
   const briefPass = await runModelJson({
     providerConfig: input.connection,
-    systemPrompt: buildScenarioFollowupPrompt("brief"),
+    systemPrompt: buildScenarioFollowupPrompt("brief", input.scenarioType),
     userContent: buildScenarioFollowupUserContent(input)
   });
 
@@ -1272,7 +1311,7 @@ async function runScenarioFollowup(input) {
   const briefAnswerSignalsMissingEvidence = isScenarioAbsenceStyleAnswer(baseAnswer);
   const canAnswerFromBrief = Boolean(briefPass?.canAnswerFromBrief) && Boolean(baseAnswer) && !briefAnswerSignalsMissingEvidence;
   const needsFreshSearch = Boolean(briefPass?.needsFreshSearch) || !canAnswerFromBrief || briefAnswerSignalsMissingEvidence;
-  const followupQuery = String(briefPass?.followupQuery || `${input.topic} ${input.question} latest updates`).trim();
+  const followupQuery = String(briefPass?.followupQuery || `${input.topic} ${input.role || ""} ${input.question} latest updates`).trim();
 
   let finalAnswer = baseAnswer;
   let sourceMode = normalizeScenarioSourceMode("brief");
@@ -1282,11 +1321,11 @@ async function runScenarioFollowup(input) {
 
   if (needsFreshSearch) {
     const liveEvidence = await searchTopicSignals(input.topic, input.mode, {
-      searchQuery: () => followupQuery || `${input.topic} ${input.question} latest updates`
+      searchQuery: () => followupQuery || `${input.topic} ${input.role || ""} ${input.question} latest updates`
     });
     const livePass = await runModelJson({
       providerConfig: input.connection,
-      systemPrompt: buildScenarioFollowupPrompt("live"),
+      systemPrompt: buildScenarioFollowupPrompt("live", input.scenarioType),
       userContent: buildScenarioFollowupUserContent(input, { liveEvidence })
     });
     finalAnswer = String(livePass?.answer || "").trim() || finalAnswer || "PulseBoard could not find enough evidence to answer that scenario cleanly.";
@@ -1311,7 +1350,9 @@ async function runScenarioFollowup(input) {
   }
 
   if (!finalAnswer) {
-    finalAnswer = "PulseBoard could not answer that scenario from the current monitoring run.";
+    finalAnswer = isInterviewPrepScenario(input)
+      ? "PulseBoard could not answer that interview-prep question from the current run."
+      : "PulseBoard could not answer that scenario from the current monitoring run.";
   }
 
   const nextMessages = [
