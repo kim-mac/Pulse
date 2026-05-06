@@ -6,9 +6,7 @@ This project was built independently from end to end, including product design, 
 
 ## Try It Live
 
-- Live app: `Add your Vercel URL here`
-- Demo video / walkthrough: `Add your demo link here`
-- Screenshots: `Add screenshots or a GIF here`
+- Live app: https://pulse-iota-steel.vercel.app/
 
 Recommended reviewer path:
 
