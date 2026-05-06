@@ -229,6 +229,20 @@
       letter-spacing: 0.12em;
       text-transform: uppercase;
     }
+    .badge.connected {
+      color: var(--success);
+      background: var(--success-bg);
+      border-color: rgba(59,109,17,0.22);
+    }
+    .badge.connected::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+      display: inline-block;
+      box-shadow: 0 0 0 3px rgba(59,109,17,0.12);
+    }
 
     .status-badge.complete { color: var(--success); background: var(--success-bg); }
     .status-badge.analyzing { color: var(--ink); background: rgba(26,26,46,0.08); }
@@ -3624,8 +3638,8 @@
         </div>
         </button>
         <div class="topbar-actions">
-          <span class="badge" id="providerStatusBadge">Not connected</span>
-  <button class="ghost-button" type="button" id="apiKeyButton">Add API Key</button>
+        <span class="badge" id="providerStatusBadge">Not connected</span>
+        <button class="ghost-button" type="button" id="apiKeyButton">Connection</button>
           <button class="ghost-button" type="button" id="guideButton">Guide</button>
           <button class="ghost-button" type="button" id="newQueryButton">New Query</button>
           <button class="ghost-button" type="button" id="openCsvButton">Analyze CSV</button>
@@ -3776,9 +3790,9 @@
           <article class="guide-card">
             <p class="query-label">Provider Setup</p>
             <ul>
-              <li><strong>What it does:</strong> Lets you connect OpenAI, Anthropic, Gemini, or NVIDIA for the current tab session.</li>
-              <li><strong>When to use it:</strong> Before any live monitoring or CSV analysis.</li>
-              <li><strong>What you get:</strong> A session-only connection that clears on refresh and powers the rest of the app without permanently storing credentials.</li>
+              <li><strong>What it does:</strong> Shows whether PulseBoard is using a built-in demo connection or your own provider override for this tab.</li>
+              <li><strong>When to use it:</strong> When you want to verify the current connection or swap from the demo provider to your own key.</li>
+              <li><strong>What you get:</strong> A demo-ready default when available, plus a session-only override flow that clears on refresh and never permanently stores your credentials.</li>
             </ul>
           </article>
         </div>
@@ -3787,8 +3801,8 @@
       <section class="connection-card" id="apiKeyPage" aria-labelledby="connectionTitle" hidden>
         <div class="section-intro">
           <div>
-            <h2 class="connection-title" id="connectionTitle">Choose a provider and add credentials for this tab.</h2>
-            <p class="section-subtitle">Keys stay in memory only for this tab and clear on refresh.</p>
+            <h2 class="connection-title" id="connectionTitle">Use the demo connection or add your own credentials for this tab.</h2>
+            <p class="section-subtitle">If a built-in demo provider is available, PulseBoard will use it automatically. Your own key can override it for this session.</p>
           </div>
         </div>
         <form id="connectionForm">
@@ -3803,7 +3817,7 @@
               </select>
             </div>
             <div class="field-group">
-              <label class="query-label" for="providerApiKeyInput">API Key <a class="provider-help-shortcut" id="providerHelpShortcut" href="#apiKeyHelpSection">(No API keys? Get here)</a></label>
+              <label class="query-label" for="providerApiKeyInput">Override API Key <a class="provider-help-shortcut" id="providerHelpShortcut" href="#apiKeyHelpSection">(Need your own key? Get here)</a></label>
               <input class="field-input" id="providerApiKeyInput" name="apiKey" type="password" placeholder="Enter API key" autocomplete="off" />
             </div>
             <div class="field-group field-span">
@@ -3824,10 +3838,11 @@
               </div>
             </details>
           </div>
-          <div class="inline-alert" id="connectionFormMessage">PulseBoard will validate this provider through the local relay before saving the session.</div>
+          <div class="inline-alert" id="connectionFormMessage">PulseBoard will validate your override through the local relay before using it for this session.</div>
           <div class="modal-actions">
             <button class="secondary-button" type="button" id="closeConnectionButton">Back Home</button>
-            <button class="cta-button" type="submit" id="saveConnectionButton">Save API Key</button>
+            <button class="secondary-button" type="button" id="useDemoConnectionButton" hidden>Use Demo Connection</button>
+            <button class="cta-button" type="submit" id="saveConnectionButton">Save Override Key</button>
           </div>
         </form>
         <div class="inline-alert" id="connectionStateMessage" style="margin-top:16px;" hidden></div>
@@ -4445,6 +4460,15 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
       route: "home",
       homeTheme: "light",
       connection: null,
+      demoConnectionStatus: {
+        available: false,
+        connectionSource: "none",
+        provider: "",
+        model: "",
+        endpoint: "",
+        fallbackActive: false,
+        statusLabel: "Not connected"
+      },
       topic: "",
       mode: "general",
       role: "",
@@ -4514,6 +4538,7 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
       state.route = getRouteFromLocation();
       applyRouteState();
       renderConnectionSummary();
+      hydrateDemoConnectionStatus();
       setStatusMessage("Configure a provider session to begin.", "warning");
     });
 
@@ -4536,7 +4561,7 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
           "progressDetail", "aggregatorBanner", "agentGrid", "briefSection", "csvResultSection",
           "scenarioLauncher", "scenarioWindow", "scenarioWindowHeader", "scenarioWindowTitle", "scenarioWindowSubtitle", "scenarioMessages", "scenarioForm", "scenarioQuestionInput", "scenarioFormStatus", "scenarioSubmitButton", "scenarioMinimizeButton", "scenarioCloseButton", "scenarioResizeHandle",
           "connectionForm", "providerSelect", "providerHelpShortcut", "providerModelInput", "providerApiKeyInput",
-          "providerEndpointInput", "providerNotes", "connectionFormMessage", "closeConnectionButton",
+          "providerEndpointInput", "providerNotes", "connectionFormMessage", "closeConnectionButton", "useDemoConnectionButton",
         "saveConnectionButton", "csvForm", "csvFileInput", "csvGoalInput", "compareCsvGoalInput",
         "runCsvButton", "compareRunCsvButton", "csvStatusMessage", "csvInputHelper", "csvFileName", "qualityPreviewContainer", "singleCsvActionRow", "csvDemoPicker", "csvDemoGrid", "compareDemoPicker", "compareDemoMount",
         "csvModeSingle", "csvModeCompare", "singleCsvSection", "compareCsvSection",
@@ -4552,6 +4577,7 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
         elements.apiKeyButton.addEventListener("click", openConnectionModal);
         elements.guideButton.addEventListener("click", () => navigateTo("guide"));
         if (elements.closeConnectionButton) elements.closeConnectionButton.addEventListener("click", closeConnectionModal);
+        if (elements.useDemoConnectionButton) elements.useDemoConnectionButton.addEventListener("click", useBuiltInDemoConnection);
         elements.newQueryButton.addEventListener("click", handleNewQueryClick);
         elements.openCsvButton.addEventListener("click", handleCsvEntryClick);
         elements.queryConnectButton.addEventListener("click", () => navigateTo("apiKey"));
@@ -5271,7 +5297,7 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               scenarioType: context?.scenarioType || "monitoring",
-              connection: state.connection,
+              connection: serializeConnectionForRelay(state.connection),
               topic: state.topic,
               mode: state.mode,
               role: context?.scenarioType === "interview_prep" ? state.role : undefined,
@@ -5298,6 +5324,7 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
           if (!response.ok) {
             throw new Error((payload.error && payload.error.message) || "Scenario follow-up failed.");
           }
+          if (payload.connectionStatus) applyConnectionStatus(payload.connectionStatus, { preserveUserOverride: true });
           setScenarioThread(runId, Array.isArray(payload.messages) ? payload.messages : optimisticMessages);
         } catch (error) {
           setScenarioThread(runId, [
@@ -5668,6 +5695,85 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
       setConnectionFormMessage(message, "success");
     }
 
+    function isUserOverrideConnection(connection) {
+      return Boolean(connection && connection.source === "user_override" && connection.apiKey);
+    }
+
+    function isBuiltInDemoConnection(connection) {
+      return Boolean(connection && connection.source === "built_in");
+    }
+
+    function serializeConnectionForRelay(connection) {
+      if (!isUserOverrideConnection(connection)) return null;
+      return {
+        provider: connection.provider,
+        apiKey: connection.apiKey,
+        model: connection.model,
+        endpoint: connection.endpoint
+      };
+    }
+
+    function buildVirtualBuiltInConnection(status) {
+      if (!status?.available) return null;
+      const preset = PROVIDER_PRESETS[status.provider];
+      if (!preset) return null;
+      return {
+        provider: status.provider,
+        model: status.model || preset.defaultModel,
+        endpoint: status.endpoint || preset.defaultEndpoint,
+        supportsWebSearch: preset.supportsWebSearch,
+        supportsPulseboard: preset.supportsPulseboard,
+        source: "built_in",
+        fallbackActive: Boolean(status.fallbackActive)
+      };
+    }
+
+    function applyConnectionStatus(status, options = {}) {
+      if (!status || typeof status !== "object") return;
+      state.demoConnectionStatus = {
+        available: Boolean(status.available),
+        connectionSource: status.connectionSource || (status.available ? "built_in" : "none"),
+        provider: status.provider || "",
+        model: status.model || "",
+        endpoint: status.endpoint || "",
+        fallbackActive: Boolean(status.fallbackActive),
+        statusLabel: status.statusLabel || (status.available ? "Connected" : "Not connected")
+      };
+      const preserveUserOverride = options.preserveUserOverride !== false;
+      if (preserveUserOverride && isUserOverrideConnection(state.connection)) {
+        renderConnectionSummary();
+        applyRouteState();
+        return;
+      }
+      state.connection = state.demoConnectionStatus.available ? buildVirtualBuiltInConnection(state.demoConnectionStatus) : null;
+      renderConnectionSummary();
+      applyRouteState();
+      if (state.demoConnectionStatus.available) {
+        setStatusMessage(state.demoConnectionStatus.statusLabel || "Built-in demo connection ready.", "complete");
+      }
+    }
+
+    async function hydrateDemoConnectionStatus() {
+      let response;
+      try {
+        response = await fetch("/api/pulseboard/connection-status");
+      } catch (error) {
+        return;
+      }
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) return;
+      applyConnectionStatus(payload, { preserveUserOverride: true });
+    }
+
+    function useBuiltInDemoConnection() {
+      if (!state.demoConnectionStatus.available) return;
+      state.connection = buildVirtualBuiltInConnection(state.demoConnectionStatus);
+      if (elements.providerApiKeyInput) elements.providerApiKeyInput.value = "";
+      renderConnectionSummary();
+      navigateTo("query");
+      setStatusMessage(state.demoConnectionStatus.statusLabel || "Demo connection restored.", "complete");
+    }
+
     function handleProviderHelpShortcutClick(event) {
       event.preventDefault();
       elements.apiKeyHelpSection?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -5726,7 +5832,7 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
         elements.providerModelInput.dataset.autofill = "false";
         elements.providerEndpointInput.value = endpoint;
         elements.providerEndpointInput.dataset.autofill = "false";
-        elements.providerApiKeyInput.value = apiKey;
+        elements.providerApiKeyInput.value = isUserOverrideConnection(state.connection) ? apiKey : "";
       }
       syncProviderForm();
       navigateTo("apiKey", { collapseHomeInfo: true });
@@ -5766,7 +5872,8 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
         model,
         endpoint,
         supportsWebSearch: PROVIDER_PRESETS[provider].supportsWebSearch,
-        supportsPulseboard: PROVIDER_PRESETS[provider].supportsPulseboard
+        supportsPulseboard: PROVIDER_PRESETS[provider].supportsPulseboard,
+        source: "user_override"
       };
 
       renderConnectionSummary();
@@ -5775,15 +5882,29 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
     }
 
     function renderConnectionSummary() {
+      const usingUserOverride = isUserOverrideConnection(state.connection);
+      const usingBuiltInDemo = isBuiltInDemoConnection(state.connection);
       if (!state.connection) {
         elements.providerStatusBadge.textContent = "Not connected";
-        elements.connectionStateMessage.textContent = "No active provider session yet. Save a provider key to unlock monitoring and CSV analysis.";
+        elements.providerStatusBadge.className = "badge";
+        elements.connectionStateMessage.hidden = false;
+        elements.connectionStateMessage.textContent = state.demoConnectionStatus.available
+          ? "PulseBoard found a built-in demo connection and can use it automatically."
+          : "No active provider session yet. Add your own provider key to unlock monitoring and CSV analysis.";
+        if (elements.useDemoConnectionButton) elements.useDemoConnectionButton.hidden = !state.demoConnectionStatus.available;
         return;
       }
 
       const preset = PROVIDER_PRESETS[state.connection.provider];
-      elements.providerStatusBadge.textContent = `Connected: ${preset.label} - ${state.connection.model}`;
-      elements.connectionStateMessage.textContent = `${preset.label} is ready for a full Phase 1 monitoring run in this tab via the local relay.`;
+      elements.providerStatusBadge.textContent = usingBuiltInDemo
+        ? `Connected: Demo ${preset.label}${state.connection.fallbackActive ? " (fallback active)" : ""}`
+        : `Connected: Your ${preset.label} key`;
+      elements.providerStatusBadge.className = "badge connected";
+      elements.connectionStateMessage.hidden = false;
+      elements.connectionStateMessage.textContent = usingBuiltInDemo
+        ? `PulseBoard is ready using the built-in demo connection for ${preset.label}${state.connection.fallbackActive ? ", with a fallback provider currently active" : ""}. Add your own key below if you want to override it for this tab.`
+        : `${preset.label} is active as your override for this tab. Use the demo connection button if you want to switch back to the built-in setup.`;
+      if (elements.useDemoConnectionButton) elements.useDemoConnectionButton.hidden = !(state.demoConnectionStatus.available && usingUserOverride);
     }
 
     function handleNewQueryClick() {
@@ -6184,7 +6305,7 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
         return;
       }
       if (state.route === "apiKey") {
-        elements.topbarMonitoringLabel.textContent = "Add API Key";
+        elements.topbarMonitoringLabel.textContent = "Connection";
         return;
       }
       if (state.route === "query" && state.dashboardVisible && state.topic) {
@@ -6466,7 +6587,7 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
         response = await fetch("/api/pulseboard/run", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ connection, topic, mode, role })
+          body: JSON.stringify({ connection: serializeConnectionForRelay(connection), topic, mode, role })
         });
       } catch (error) {
         throw new Error("The local PulseBoard relay could not be reached. Start the Node server and open the app over http://localhost:3000.");
@@ -6506,7 +6627,7 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
         response = await fetch("/api/pulseboard/analyze-csv", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ connection, csvText, analysisGoal, qualityReport, schemaSummary, correlationSummary, segmentSummary, cleaningSummary, transformationLogSummary })
+          body: JSON.stringify({ connection: serializeConnectionForRelay(connection), csvText, analysisGoal, qualityReport, schemaSummary, correlationSummary, segmentSummary, cleaningSummary, transformationLogSummary })
         });
       } catch (error) {
         logCsvPipelineEvent("analysis", "relay_request_failed", {
@@ -6522,6 +6643,7 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
         });
         throw new Error((payload.error && payload.error.message) || payload.message || "CSV analysis failed.");
       }
+      if (payload.connectionStatus) applyConnectionStatus(payload.connectionStatus, { preserveUserOverride: true });
       logCsvPipelineEvent("analysis", "relay_request_succeeded", {
         status: response.status
       });
@@ -6534,7 +6656,7 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
         response = await fetch("/api/pulseboard/compare-csv", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ connection, csvTextA, csvTextB, labelA, labelB, analysisGoal, qualityReportA, qualityReportB })
+          body: JSON.stringify({ connection: serializeConnectionForRelay(connection), csvTextA, csvTextB, labelA, labelB, analysisGoal, qualityReportA, qualityReportB })
         });
       } catch (error) {
         throw new Error("The local PulseBoard relay could not be reached for CSV comparison. Start the Node server and open the app over http://localhost:3000.");
@@ -6543,6 +6665,7 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
       if (!response.ok) {
         throw new Error((payload.error && payload.error.message) || payload.message || "CSV comparison failed.");
       }
+      if (payload.connectionStatus) applyConnectionStatus(payload.connectionStatus, { preserveUserOverride: true });
       return payload.result || payload;
     }
 
@@ -6552,7 +6675,7 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
         response = await fetch("/api/pulseboard/cross-reference", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ connection, topic, csvContext, csvResults })
+          body: JSON.stringify({ connection: serializeConnectionForRelay(connection), topic, csvContext, csvResults })
         });
       } catch (error) {
         throw new Error("The local PulseBoard relay could not be reached for cross-reference. Start the Node server and open the app over http://localhost:3000.");
@@ -6612,6 +6735,9 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
     function handleRelayEvent(event, runId) {
       if (runId !== state.activeRunId) return;
       switch (event.type) {
+        case "connection_status":
+          if (event.connectionStatus) applyConnectionStatus(event.connectionStatus, { preserveUserOverride: true });
+          break;
         case "agent_result":
           state.agentResults[event.agent] = event.result;
           updateAgentStatus(event.agent, "complete");
@@ -6661,6 +6787,9 @@ Do not leave signalStrength at 0 unless there is effectively no meaningful recen
 
     function handleCrossReferenceEvent(event) {
       switch (event.type) {
+        case "connection_status":
+          if (event.connectionStatus) applyConnectionStatus(event.connectionStatus, { preserveUserOverride: true });
+          break;
         case "agent_started":
           state.crossReference.agentStatus[event.agent] = "analyzing";
           break;

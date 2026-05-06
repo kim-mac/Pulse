@@ -18,6 +18,14 @@ expectIn(server, /requestUrl\.pathname\.startsWith\("\/scripts\/"\).*endsWith\("
 expectIn(server, /\/api\/pulseboard\/run/, "expected relay run endpoint");
 expectIn(server, /\/api\/pulseboard\/scenario/, "expected relay scenario endpoint");
 expectIn(server, /\/api\/pulseboard\/validate-connection/, "expected relay validation endpoint");
+expectIn(server, /\/api\/pulseboard\/connection-status/, "expected relay connection-status endpoint");
+expectIn(server, /function normalizeOptionalConnection\(/, "expected optional client connection normalizer");
+expectIn(server, /function buildDemoConnectionFromEnv\(/, "expected server-side demo connection env loader");
+expectIn(server, /function getBuiltInDemoConnections\(/, "expected built-in demo connection catalog helper");
+expectIn(server, /function resolveRequestConnection\(/, "expected connection resolver for user override and built-in demo access");
+expectIn(server, /function withBuiltInConnectionFallback\(/, "expected built-in provider fallback executor");
+expectIn(server, /function buildConnectionStatus\(/, "expected safe frontend connection-status serializer");
+expectIn(server, /PULSEBOARD_DEMO_FALLBACK_1|PULSEBOARD_DEMO_FALLBACK_2/, "expected support for up to two built-in fallback provider configs");
 expectIn(server, /function runPulseBoardSession\(/, "expected runPulseBoardSession in relay");
 expectIn(server, /function searchTopicSignals\(/, "expected shared search pipeline in relay");
 expectIn(server, /function classifySourceFreshness\(/, "expected source freshness classifier in relay");
@@ -63,6 +71,7 @@ expectIn(server, /function buildProviderError\(/, "expected centralized provider
 expectIn(server, /function normalizeProviderError\(/, "expected provider error classifier");
 expectIn(server, /function normalizeOperationalError\(/, "expected monitoring\/validation error normalizer");
 expectIn(server, /function serializePulseBoardError\(/, "expected serialized relay error payload helper");
+expectIn(server, /BUILT_IN_CONNECTION_RETRY_KINDS/, "expected explicit built-in fallback retry kinds");
 expectIn(server, /kind:\s*"quota"|kind:\s*"auth"|kind:\s*"model_access"|kind:\s*"not_found"|kind:\s*"bad_request"/, "expected normalized provider error kinds");
 expectIn(server, /could not verify this API key|may not have access to the selected model/i, "expected OpenAI-specific validation messaging");
 expectIn(server, /Google Gemini quota exceeded|quota exceeded\. Monitoring may be incomplete/i, "expected friendly quota messaging");
@@ -90,6 +99,9 @@ expectIn(server, /official company careers\/jobs page|up to 3 direct live job-po
 expectIn(server, /signalStrength must be an integer from 0 to 100/i, "expected news prompt to require a real signal-strength score");
 expectIn(server, /role:\s*String\(body\.role \|\| ""\)\.trim\(\)/, "expected run endpoint to parse optional interview role");
 expectIn(server, /if \(input\.mode === "interviewprep" && !input\.role\)/, "expected interview prep mode to require a role");
+expectIn(server, /resolveRequestConnection\(body\.connection\)/, "expected runtime relay endpoints to resolve built-in demo access when no user override is supplied");
+expectIn(server, /type:\s*"connection_status",\s*connectionStatus:/, "expected streaming relay flows to emit safe connection-status metadata");
+expectIn(server, /connectionStatus:\s*buildConnectionStatus\(connection\)|connectionStatus:\s*buildConnectionStatus\(input\.connection\)/, "expected relay responses to include safe connection-status metadata");
 expectIn(server, /const SCENARIO_SUPPORTED_MODES = new Set\(\["general", "company", "jobmarket", "esg", "industry", "interviewprep"\]\);/, "expected scenario endpoint to support interview prep mode");
 expectIn(server, /if \(!SCENARIO_SUPPORTED_MODES\.has\(input\.mode\)\)/, "expected scenario endpoint to reject unsupported modes");
 expectIn(server, /scenarioType:\s*String\(body\.scenarioType \|\| "monitoring"\)/, "expected scenario endpoint to parse scenario type");
@@ -126,11 +138,12 @@ expectIn(html, /runPulseBoardViaRelay\(/, "expected frontend relay execution hel
 expectIn(html, /fetch\(["'`]\/api\/pulseboard\/run["'`]/, "expected frontend to call relay run endpoint");
 expectIn(html, /fetch\(["'`]\/api\/pulseboard\/validate-connection["'`]/, "expected frontend to call relay validation endpoint");
 expectIn(html, /supportsWebSearch[\s\S]{0,120}true[\s\S]{0,120}false/, "expected provider metadata to remain present");
-expectIn(html, /body:\s*JSON\.stringify\(\{\s*connection,\s*topic,\s*mode,\s*role\s*\}\)/, "expected frontend to send role with monitoring runs");
+expectIn(html, /body:\s*JSON\.stringify\(\{\s*connection:\s*serializeConnectionForRelay\(connection\),\s*topic,\s*mode,\s*role\s*\}\)/, "expected frontend to send role with monitoring runs while serializing user override connections safely");
 expectIn(vercelConfig, /"source": "\/query", "destination": "\/index\.html"/, "expected Vercel rewrite for query route");
 expectIn(vercelConfig, /"source": "\/csv", "destination": "\/index\.html"/, "expected Vercel rewrite for csv route");
 expectIn(vercelConfig, /"source": "\/api-key", "destination": "\/index\.html"/, "expected Vercel rewrite for api-key route");
 assert.ok(fs.existsSync("C:/Users/kim16/Videos/Pulseboard/api/pulseboard/run.js"), "expected Vercel API route for monitoring runs");
+assert.ok(fs.existsSync("C:/Users/kim16/Videos/Pulseboard/api/pulseboard/connection-status.js"), "expected Vercel API route for safe connection status");
 assert.ok(fs.existsSync("C:/Users/kim16/Videos/Pulseboard/api/pulseboard/validate-connection.js"), "expected Vercel API route for provider validation");
 assert.ok(fs.existsSync("C:/Users/kim16/Videos/Pulseboard/api/pulseboard/analyze-csv.js"), "expected Vercel API route for CSV analysis");
 assert.ok(fs.existsSync("C:/Users/kim16/Videos/Pulseboard/api/pulseboard/compare-csv.js"), "expected Vercel API route for CSV comparison");

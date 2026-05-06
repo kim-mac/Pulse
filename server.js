@@ -58,6 +58,8 @@ const PROVIDER_PRESETS = {
   }
 };
 
+const BUILT_IN_CONNECTION_RETRY_KINDS = new Set(["auth", "quota", "model_access", "not_found", "bad_request", "provider_unavailable"]);
+
 const AGENT_SPECS = [
   {
     key: "news",
@@ -317,21 +319,27 @@ async function handlePulseBoardRequest(req, res, options = {}) {
       const scriptName = path.basename(requestUrl.pathname);
       return serveFile(res, path.join(__dirname, "scripts", scriptName), "text/javascript; charset=utf-8");
     }
+    if (req.method === "GET" && requestUrl.pathname === "/api/pulseboard/connection-status") {
+      return sendJson(res, 200, buildConnectionStatus(resolveRequestConnection(null)));
+    }
     if (req.method === "POST" && requestUrl.pathname === "/api/pulseboard/validate-connection") {
       const body = await readJson(req);
-      const connection = normalizeConnection(body.connection);
+      const connection = normalizeOptionalConnection(body.connection);
       const validation = await validateConnection(connection);
       return sendJson(res, validation.ok ? 200 : 400, validation);
     }
       if (req.method === "POST" && requestUrl.pathname === "/api/pulseboard/run") {
         const body = await readJson(req);
-        const connection = normalizeConnection(body.connection);
+        const connection = resolveRequestConnection(body.connection);
       const input = {
         connection,
         topic: String(body.topic || "").trim(),
         mode: String(body.mode || "general").trim(),
         role: String(body.role || "").trim()
       };
+      if (!input.connection) {
+        return sendJson(res, 400, { error: { message: "No demo connection is configured, so add your own API key to continue." }, connectionStatus: buildConnectionStatus(null) });
+      }
       if (!input.topic) {
         return sendJson(res, 400, { error: { message: "Topic is required." } });
       }
@@ -344,6 +352,7 @@ async function handlePulseBoardRequest(req, res, options = {}) {
         "Connection": "keep-alive",
         "Access-Control-Allow-Origin": "*"
       });
+        res.write(`${JSON.stringify({ type: "connection_status", connectionStatus: buildConnectionStatus(input.connection) })}\n`);
         await runPulseBoardSession(input, (event) => {
           res.write(`${JSON.stringify(event)}\n`);
         });
@@ -352,7 +361,7 @@ async function handlePulseBoardRequest(req, res, options = {}) {
       }
       if (req.method === "POST" && requestUrl.pathname === "/api/pulseboard/scenario") {
         const body = await readJson(req);
-        const connection = normalizeConnection(body.connection);
+        const connection = resolveRequestConnection(body.connection);
         const input = {
           scenarioType: String(body.scenarioType || "monitoring").trim(),
           connection,
@@ -371,6 +380,9 @@ async function handlePulseBoardRequest(req, res, options = {}) {
           messages: Array.isArray(body.messages) ? body.messages : [],
           question: String(body.question || "").trim()
         };
+        if (!input.connection) {
+          return sendJson(res, 400, { error: { message: "No demo connection is configured, so add your own API key before asking PulseBoard a follow-up question." }, connectionStatus: buildConnectionStatus(null) });
+        }
         if (input.scenarioType === "csv_single") {
           if (!input.csvResult || !input.parsedCsv?.headers || !input.parsedCsv?.records) {
             return sendJson(res, 400, { error: { message: "A completed single-file CSV analysis is required before asking CSV scenario questions." } });
@@ -379,7 +391,7 @@ async function handlePulseBoardRequest(req, res, options = {}) {
             return sendJson(res, 400, { error: { message: "Enter a CSV scenario question before asking PulseBoard." } });
           }
           const result = await runCsvScenarioFollowup(input);
-          return sendJson(res, 200, result);
+          return sendJson(res, 200, { ...result, connectionStatus: buildConnectionStatus(input.connection) });
         }
         if (!input.topic) {
           return sendJson(res, 400, { error: { message: "Topic is required for scenario follow-up." } });
@@ -397,11 +409,11 @@ async function handlePulseBoardRequest(req, res, options = {}) {
           return sendJson(res, 400, { error: { message: "Enter a scenario question before asking PulseBoard." } });
         }
         const result = await runScenarioFollowup(input);
-        return sendJson(res, 200, result);
+        return sendJson(res, 200, { ...result, connectionStatus: buildConnectionStatus(input.connection) });
       }
       if (req.method === "POST" && requestUrl.pathname === "/api/pulseboard/analyze-csv") {
         const body = await readJson(req);
-        const connection = normalizeConnection(body.connection);
+        const connection = resolveRequestConnection(body.connection);
       const csvText = String(body.csvText || "");
       const analysisGoal = String(body.analysisGoal || "").trim();
       const qualityReport = body.qualityReport && typeof body.qualityReport === "object" ? body.qualityReport : null;
@@ -410,15 +422,18 @@ async function handlePulseBoardRequest(req, res, options = {}) {
       const segmentSummary = String(body.segmentSummary || "").trim();
       const cleaningSummary = body.cleaningSummary && typeof body.cleaningSummary === "object" ? body.cleaningSummary : null;
       const transformationLogSummary = Array.isArray(body.transformationLogSummary) ? body.transformationLogSummary : [];
+      if (!connection) {
+        return sendJson(res, 400, { error: { message: "No demo connection is configured, so add your own API key before running CSV analysis." }, connectionStatus: buildConnectionStatus(null) });
+      }
       if (!csvText.trim()) {
         return sendJson(res, 400, { error: { message: "CSV text is required." } });
       }
       const result = await analyzeCsvSession({ connection, csvText, analysisGoal, qualityReport, schemaSummary, correlationSummary, segmentSummary, cleaningSummary, transformationLogSummary });
-      return sendJson(res, 200, { result });
+      return sendJson(res, 200, { result, connectionStatus: buildConnectionStatus(connection) });
     }
     if (req.method === "POST" && requestUrl.pathname === "/api/pulseboard/compare-csv") {
       const body = await readJson(req);
-      const connection = normalizeConnection(body.connection);
+      const connection = resolveRequestConnection(body.connection);
       const csvTextA = String(body.csvTextA || "");
       const csvTextB = String(body.csvTextB || "");
       const labelA = String(body.labelA || "File A").trim() || "File A";
@@ -426,6 +441,9 @@ async function handlePulseBoardRequest(req, res, options = {}) {
       const analysisGoal = String(body.analysisGoal || "").trim();
       const qualityReportA = body.qualityReportA && typeof body.qualityReportA === "object" ? body.qualityReportA : null;
       const qualityReportB = body.qualityReportB && typeof body.qualityReportB === "object" ? body.qualityReportB : null;
+      if (!connection) {
+        return sendJson(res, 400, { error: { message: "No demo connection is configured, so add your own API key before comparing CSV files." }, connectionStatus: buildConnectionStatus(null) });
+      }
       if (!csvTextA.trim()) {
         return sendJson(res, 400, { error: { message: "CSV text is required for File A." } });
       }
@@ -433,14 +451,17 @@ async function handlePulseBoardRequest(req, res, options = {}) {
         return sendJson(res, 400, { error: { message: "CSV text is required for File B." } });
       }
       const result = await compareCsvSession({ connection, csvTextA, csvTextB, labelA, labelB, analysisGoal, qualityReportA, qualityReportB });
-      return sendJson(res, 200, { result });
+      return sendJson(res, 200, { result, connectionStatus: buildConnectionStatus(connection) });
     }
     if (req.method === "POST" && requestUrl.pathname === "/api/pulseboard/cross-reference") {
       const body = await readJson(req);
-      const connection = normalizeConnection(body.connection);
+      const connection = resolveRequestConnection(body.connection);
       const topic = String(body.topic || "").trim();
       const csvContext = String(body.csvContext || "").trim();
       const csvResults = body.csvResults && typeof body.csvResults === "object" ? body.csvResults : {};
+      if (!connection) {
+        return sendJson(res, 400, { error: { message: "No demo connection is configured, so add your own API key before running Cross-Reference." }, connectionStatus: buildConnectionStatus(null) });
+      }
       if (!topic) {
         return sendJson(res, 400, { error: { message: "Cross-reference topic is required." } });
       }
@@ -450,6 +471,7 @@ async function handlePulseBoardRequest(req, res, options = {}) {
         "Connection": "keep-alive",
         "Access-Control-Allow-Origin": "*"
       });
+      res.write(`${JSON.stringify({ type: "connection_status", connectionStatus: buildConnectionStatus(connection) })}\n`);
       await crossReferenceSession({ connection, topic, csvContext, csvResults }, (event) => {
         res.write(`${JSON.stringify(event)}\n`);
       });
@@ -525,50 +547,173 @@ function normalizeConnection(connection) {
   };
 }
 
-async function validateConnection(connection) {
-  if (!connection.apiKey) {
-    return { ok: false, message: "API key is required." };
+function normalizeOptionalConnection(connection) {
+  if (!connection || !PROVIDER_PRESETS[connection.provider]) return null;
+  return normalizeConnection(connection);
+}
+
+function buildDemoConnectionFromEnv(prefix, fallbackIndex = 0) {
+  const rawApiKey = String(process.env[`${prefix}_API_KEY`] || "").trim();
+  if (!rawApiKey) return null;
+  const rawProvider = String(process.env[`${prefix}_PROVIDER`] || "nvidia").trim().toLowerCase();
+  if (!PROVIDER_PRESETS[rawProvider]) return null;
+  const preset = PROVIDER_PRESETS[rawProvider];
+  return {
+    provider: rawProvider,
+    apiKey: rawApiKey,
+    model: String(process.env[`${prefix}_MODEL`] || preset.defaultModel).trim() || preset.defaultModel,
+    endpoint: String(process.env[`${prefix}_ENDPOINT`] || preset.defaultEndpoint).trim() || preset.defaultEndpoint,
+    __connectionSource: "built_in",
+    __fallbackIndex: fallbackIndex
+  };
+}
+
+function getBuiltInDemoConnections() {
+  return [
+    buildDemoConnectionFromEnv("PULSEBOARD_DEMO", 0),
+    buildDemoConnectionFromEnv("PULSEBOARD_DEMO_FALLBACK_1", 1),
+    buildDemoConnectionFromEnv("PULSEBOARD_DEMO_FALLBACK_2", 2)
+  ].filter(Boolean);
+}
+
+function annotateBuiltInConnection(connection, allCandidates) {
+  if (!connection) return null;
+  return {
+    ...connection,
+    __connectionSource: "built_in",
+    __demoCandidates: Array.isArray(allCandidates) ? allCandidates.map((candidate) => ({ ...candidate })) : [{ ...connection }],
+    __activeDemoIndex: Number(connection.__fallbackIndex || 0),
+    __fallbackActive: Number(connection.__fallbackIndex || 0) > 0
+  };
+}
+
+function resolveRequestConnection(connection) {
+  const userConnection = normalizeOptionalConnection(connection);
+  if (userConnection && userConnection.apiKey) {
+    return {
+      ...userConnection,
+      __connectionSource: "user_override",
+      __fallbackActive: false
+    };
   }
-  if (!/^https?:\/\//i.test(connection.endpoint)) {
-    return { ok: false, message: "Endpoint must start with http:// or https://." };
+  const demoCandidates = getBuiltInDemoConnections();
+  if (!demoCandidates.length) return null;
+  return annotateBuiltInConnection(demoCandidates[0], demoCandidates);
+}
+
+function shouldRetryBuiltInConnection(error) {
+  return Boolean(error && BUILT_IN_CONNECTION_RETRY_KINDS.has(error.kind || ""));
+}
+
+function syncBuiltInConnectionToCandidate(providerConfig, nextCandidate, nextIndex) {
+  providerConfig.provider = nextCandidate.provider;
+  providerConfig.apiKey = nextCandidate.apiKey;
+  providerConfig.model = nextCandidate.model;
+  providerConfig.endpoint = nextCandidate.endpoint;
+  providerConfig.__activeDemoIndex = nextIndex;
+  providerConfig.__fallbackActive = nextIndex > 0;
+}
+
+async function withBuiltInConnectionFallback(providerConfig, runner) {
+  try {
+    return await runner(providerConfig);
+  } catch (error) {
+    if (providerConfig?.__connectionSource !== "built_in" || !shouldRetryBuiltInConnection(error)) {
+      throw error;
+    }
+    const candidates = Array.isArray(providerConfig.__demoCandidates) ? providerConfig.__demoCandidates : [];
+    for (let index = Number(providerConfig.__activeDemoIndex || 0) + 1; index < candidates.length; index += 1) {
+      const nextCandidate = candidates[index];
+      if (!nextCandidate) continue;
+      syncBuiltInConnectionToCandidate(providerConfig, nextCandidate, index);
+      try {
+        return await runner(providerConfig);
+      } catch (fallbackError) {
+        if (!shouldRetryBuiltInConnection(fallbackError) || index === candidates.length - 1) {
+          throw fallbackError;
+        }
+      }
+    }
+    throw error;
+  }
+}
+
+function buildConnectionStatus(connection) {
+  if (!connection) {
+    return {
+      available: false,
+      connectionSource: "none",
+      provider: "",
+      model: "",
+      fallbackActive: false,
+      statusLabel: "Not connected"
+    };
+  }
+  const preset = PROVIDER_PRESETS[connection.provider] || { label: "Provider" };
+  const builtIn = connection.__connectionSource === "built_in";
+  return {
+    available: true,
+    connectionSource: builtIn ? "built_in" : "user_override",
+    provider: connection.provider,
+    model: connection.model,
+    endpoint: connection.endpoint,
+    fallbackActive: Boolean(connection.__fallbackActive),
+    statusLabel: builtIn
+      ? `Connected: Demo ${preset.label} key${connection.__fallbackActive ? " (fallback active)" : ""}`
+      : `Connected: Your ${preset.label} key`
+  };
+}
+
+async function validateConnection(connection) {
+  const resolvedConnection = connection || resolveRequestConnection(null);
+  if (!resolvedConnection?.apiKey) {
+    return { ok: false, message: "API key is required.", connectionStatus: buildConnectionStatus(null) };
+  }
+  if (!/^https?:\/\//i.test(resolvedConnection.endpoint)) {
+    return { ok: false, message: "Endpoint must start with http:// or https://.", connectionStatus: buildConnectionStatus(resolvedConnection) };
   }
 
   try {
-    await runValidationProbe(connection);
+    await runValidationProbe(resolvedConnection);
     return {
       ok: true,
-      message: `${PROVIDER_PRESETS[connection.provider].label} validated using the configured model ${connection.model}.`
+      message: `${PROVIDER_PRESETS[resolvedConnection.provider].label} validated using the configured model ${resolvedConnection.model}.`,
+      connectionStatus: buildConnectionStatus(resolvedConnection)
     };
   } catch (error) {
     const normalizedError = normalizeOperationalError(error, {
-      providerConfig: connection,
+      providerConfig: resolvedConnection,
       phase: "validation"
     });
     logNormalizedError(normalizedError, "validation");
     return {
       ok: false,
       message: normalizedError.message || "Provider validation failed.",
-      error: serializePulseBoardError(normalizedError)
+      error: serializePulseBoardError(normalizedError),
+      connectionStatus: buildConnectionStatus(resolvedConnection)
     };
   }
 }
 
 async function runValidationProbe(providerConfig) {
-  switch (providerConfig.provider) {
-    case "openai":
-      return runOpenAIValidationProbe(providerConfig);
-    case "anthropic":
-      return runAnthropicValidationProbe(providerConfig);
-    case "gemini":
-      return runGeminiValidationProbe(providerConfig);
-    case "nvidia":
-      return runNvidiaValidationProbe(providerConfig);
-    default:
-      throw new Error("Unsupported provider.");
-  }
+  return withBuiltInConnectionFallback(providerConfig, async (effectiveConnection) => {
+    switch (effectiveConnection.provider) {
+      case "openai":
+        return runOpenAIValidationProbe(effectiveConnection);
+      case "anthropic":
+        return runAnthropicValidationProbe(effectiveConnection);
+      case "gemini":
+        return runGeminiValidationProbe(effectiveConnection);
+      case "nvidia":
+        return runNvidiaValidationProbe(effectiveConnection);
+      default:
+        throw new Error("Unsupported provider.");
+    }
+  });
 }
 
 async function runPulseBoardSession(input, emit) {
+  emit({ type: "connection_status", connectionStatus: buildConnectionStatus(input.connection) });
   const agentSpecs = getMonitoringAgentSpecs(input.mode);
   const monitoringPromises = agentSpecs.map((agent) =>
     runMonitoringAgent(input.connection, input.topic, input.mode, agent, { role: input.role })
@@ -604,6 +749,7 @@ async function runPulseBoardSession(input, emit) {
       successCount,
       error: serializePulseBoardError(buildInsufficientEvidenceError(byAgent, successCount))
     });
+    emit({ type: "connection_status", connectionStatus: buildConnectionStatus(input.connection) });
     emit({ type: "done" });
     return;
   }
@@ -632,6 +778,7 @@ async function runPulseBoardSession(input, emit) {
       error: serializePulseBoardError(normalizedError)
     });
   }
+  emit({ type: "connection_status", connectionStatus: buildConnectionStatus(input.connection) });
   emit({ type: "done" });
 }
 
@@ -1525,6 +1672,7 @@ async function crossReferenceSession(input, emit) {
 
   if (successCount === 0) {
     emit({ type: "synthesis_error", successCount, error: "Cross-reference unavailable. External intelligence could not be retrieved." });
+    emit({ type: "connection_status", connectionStatus: buildConnectionStatus(input.connection) });
     emit({ type: "done" });
     return;
   }
@@ -1536,6 +1684,7 @@ async function crossReferenceSession(input, emit) {
   } catch (error) {
     emit({ type: "synthesis_error", successCount, error: error.message || "Cross-reference unavailable. External intelligence could not be retrieved." });
   }
+  emit({ type: "connection_status", connectionStatus: buildConnectionStatus(input.connection) });
   emit({ type: "done" });
 }
 
@@ -2241,18 +2390,20 @@ async function runCrossReferenceSynthesis(providerConfig, topic, monitoringResul
 }
 
 async function runModelJson({ providerConfig, systemPrompt, userContent }) {
-  switch (providerConfig.provider) {
-    case "openai":
-      return runOpenAIJson(providerConfig, systemPrompt, userContent);
-    case "anthropic":
-      return runAnthropicJson(providerConfig, systemPrompt, userContent);
-    case "gemini":
-      return runGeminiJson(providerConfig, systemPrompt, userContent);
-    case "nvidia":
-      return runNvidiaJson(providerConfig, systemPrompt, userContent);
-    default:
-      throw new Error("Unsupported provider.");
-  }
+  return withBuiltInConnectionFallback(providerConfig, async (effectiveConnection) => {
+    switch (effectiveConnection.provider) {
+      case "openai":
+        return runOpenAIJson(effectiveConnection, systemPrompt, userContent);
+      case "anthropic":
+        return runAnthropicJson(effectiveConnection, systemPrompt, userContent);
+      case "gemini":
+        return runGeminiJson(effectiveConnection, systemPrompt, userContent);
+      case "nvidia":
+        return runNvidiaJson(effectiveConnection, systemPrompt, userContent);
+      default:
+        throw new Error("Unsupported provider.");
+    }
+  });
 }
 
 async function runOpenAIValidationProbe(providerConfig) {
